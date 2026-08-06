@@ -1,34 +1,59 @@
-# Virtual environment
+# Virtual Environments
 .venv/
+venv/
+ENV/
+env/
 
-# Python cache
+# Byte-compiled / Python cache
 __pycache__/
 *.py[cod]
+*$py.class
 
-# Build artifacts
+# Distribution / packaging
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
 *.egg-info/
+.installed.cfg
+*.egg
 
-# Test artifacts
+# Testing & Coverage
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+.nox/
+.tox/
 
-# Type checker
+# Type Checking & Linting
 .mypy_cache/
-
-# Ruff
 .ruff_cache/
 
-# Environment files
+# Environment variables
 .env
+.env.local
+.env.*.local
 
-# IDE
+# IDEs & Editor metadata
 .vscode/
 .idea/
+*.swp
+*.swo
+.~lock.*
 
-# Outputs
-outputs/logs/*
-outputs/plots/*
-outputs/reports/*
+# AI Assistant metadata
+.gemini/
+.claude/
+
+# Outputs directory contents
+outputs/*
+!outputs/.gitkeep
