@@ -1,44 +1,49 @@
-"""Dataset profiler for csv_analytics_agent."""
+"""Dataset profiler orchestrator for csv_analytics_agent."""
 
 from __future__ import annotations
 
 import pandas as pd
 
 from csv_analytics_agent.profiler.models import (
-    BasicColumnInfo,
     ColumnProfile,
     DatasetProfile,
     DatasetSummary,
     DuplicateSummary,
-    MissingValueSummary,
+    MissingSummary,
 )
-from csv_analytics_agent.profiler.statistics import StatisticsEngine
+from csv_analytics_agent.profiler.statistics import (
+    calculate_categorical_statistics,
+    calculate_datetime_statistics,
+    calculate_numeric_statistics,
+)
 
 
 class DatasetProfiler:
-    """Profiles a pandas DataFrame."""
-
-    def __init__(self, stats_engine: StatisticsEngine | None = None) -> None:
-        self._stats_engine = stats_engine or StatisticsEngine()
+    """Orchestrates dataset profiling for pandas DataFrames."""
 
     def profile(self, dataframe: pd.DataFrame) -> DatasetProfile:
-        """Generate a dataset profile.
+        """Generate a complete profile for an input pandas DataFrame.
 
         Args:
-            dataframe: Input pandas DataFrame.
+            dataframe: Input pandas DataFrame to analyze.
 
         Returns:
-            DatasetProfile containing dataset metadata and statistics.
+            DatasetProfile model containing summary, columns, missing, and duplicate metadata.
         """
+        summary = self._build_summary(dataframe)
+        missing = self._build_missing_summary(dataframe)
+        duplicates = self._build_duplicate_summary(dataframe)
+        columns = self._build_column_profiles(dataframe)
+
         return DatasetProfile(
-            summary=self._build_summary(dataframe),
-            columns=self._build_column_profiles(dataframe),
-            missing=self._build_missing_summary(dataframe),
-            duplicates=self._build_duplicate_summary(dataframe),
+            summary=summary,
+            columns=columns,
+            missing=missing,
+            duplicates=duplicates,
         )
 
     def _build_summary(self, dataframe: pd.DataFrame) -> DatasetSummary:
-        """Build dataset summary."""
+        """Calculate dataset-level row count, column count, and memory usage."""
         memory_usage = int(dataframe.memory_usage(deep=True).sum())
         return DatasetSummary(
             row_count=len(dataframe),
@@ -46,46 +51,47 @@ class DatasetProfiler:
             memory_usage_bytes=memory_usage,
         )
 
-    def _build_column_profiles(self, dataframe: pd.DataFrame) -> list[ColumnProfile]:
-        """Build metadata for every column."""
-        profiles: list[ColumnProfile] = []
-        row_count = len(dataframe)
-
-        for column in dataframe.columns:
-            series = dataframe[column]
-            missing = int(series.isna().sum())
-            percentage = 0.0 if row_count == 0 else (missing / row_count) * 100
-
-            num_stats = self._stats_engine.compute(series)
-
-            info = BasicColumnInfo(
-                name=str(column),
-                dtype=str(series.dtype),
-                missing_count=missing,
-                missing_percentage=percentage,
-                unique_count=int(series.nunique(dropna=True)),
-            )
-
-            profiles.append(
-                ColumnProfile(
-                    info=info,
-                    numeric=num_stats,
-                )
-            )
-
-        return profiles
-
-    def _build_missing_summary(self, dataframe: pd.DataFrame) -> MissingValueSummary:
-        """Build dataset missing-value summary."""
+    def _build_missing_summary(self, dataframe: pd.DataFrame) -> MissingSummary:
+        """Calculate total missing values and count of columns with missing data."""
         missing_per_column = dataframe.isna().sum()
-        return MissingValueSummary(
-            total_missing_values=int(missing_per_column.sum()),
-            columns_with_missing=int((missing_per_column > 0).sum()),
+        total_missing = int(missing_per_column.sum())
+        columns_with_missing = int((missing_per_column > 0).sum())
+
+        return MissingSummary(
+            total_missing_values=total_missing,
+            columns_with_missing=columns_with_missing,
         )
 
     def _build_duplicate_summary(self, dataframe: pd.DataFrame) -> DuplicateSummary:
-        """Build duplicate-row summary."""
-        duplicates = int(dataframe.duplicated().sum())
-        return DuplicateSummary(
-            duplicate_rows=duplicates,
-        )
+        """Calculate count of duplicate rows."""
+        duplicate_count = int(dataframe.duplicated().sum())
+        return DuplicateSummary(duplicate_rows=duplicate_count)
+
+    def _build_column_profiles(self, dataframe: pd.DataFrame) -> list[ColumnProfile]:
+        """Build column-level metadata profiles for all columns in DataFrame."""
+        profiles: list[ColumnProfile] = []
+        total_rows = len(dataframe)
+
+        for col_name in dataframe.columns:
+            series = dataframe[col_name]
+            missing_count = int(series.isna().sum())
+            missing_pct = 0.0 if total_rows == 0 else (missing_count / total_rows) * 100.0
+            unique_count = int(series.nunique(dropna=True))
+
+            numeric_stats = calculate_numeric_statistics(series)
+            categorical_stats = calculate_categorical_statistics(series)
+            datetime_stats = calculate_datetime_statistics(series)
+
+            profile = ColumnProfile(
+                name=str(col_name),
+                dtype=str(series.dtype),
+                missing_count=missing_count,
+                missing_percentage=missing_pct,
+                unique_count=unique_count,
+                numeric=numeric_stats,
+                categorical=categorical_stats,
+                datetime=datetime_stats,
+            )
+            profiles.append(profile)
+
+        return profiles
