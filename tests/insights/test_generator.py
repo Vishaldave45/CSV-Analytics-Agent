@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from csv_analytics_agent.insights.constants import RULE_ID_HIGH_MISSING
 from csv_analytics_agent.insights.generator import RULES, InsightGenerator
 from csv_analytics_agent.insights.models import (
     Insight,
@@ -76,7 +75,6 @@ def test_generate_single_rule_trigger() -> None:
     insights = generator.generate(profile)
 
     assert len(insights) == 1
-    assert insights[0].id == RULE_ID_HIGH_MISSING
     assert insights[0].severity == Severity.HIGH
     assert insights[0].category == InsightCategory.MISSING_VALUES
 
@@ -160,15 +158,14 @@ def test_generate_sort_order() -> None:
 def test_generate_sort_critical_severity() -> None:
     """Verify critical severity insight is placed at index 0."""
     critical_insight = Insight(
-        id="CRITICAL_SCHEMA",
-        category=InsightCategory.SCHEMA,
+        category=InsightCategory.DATA_QUALITY,
         severity=Severity.CRITICAL,
         title="Critical Schema Corruption",
         description="Dataset is corrupted.",
         recommendation="Fix ingestion pipeline.",
     )
+
     info_insight = Insight(
-        id="ID_COLUMN",
         category=InsightCategory.CARDINALITY,
         severity=Severity.INFO,
         title="ID Column",

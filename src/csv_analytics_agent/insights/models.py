@@ -18,7 +18,6 @@ class InsightCategory(str, Enum):
     OUTLIERS = "outliers"
     CARDINALITY = "cardinality"
     MEMORY = "memory"
-    SCHEMA = "schema"
 
 
 class Severity(str, Enum):
@@ -31,34 +30,23 @@ class Severity(str, Enum):
     CRITICAL = "critical"
 
 
-class ComparisonOperator(str, Enum):
-    """Comparison operators for evidence evaluation."""
-
-    GREATER_THAN = ">"
-    GREATER_THAN_OR_EQUAL = ">="
-    LESS_THAN = "<"
-    LESS_THAN_OR_EQUAL = "<="
-    EQUAL = "=="
-    NOT_EQUAL = "!="
-
-
 class Evidence(BaseModel):
     """Structured evidence backing a rule evaluation."""
 
     model_config = ConfigDict(frozen=True)
 
-    column_name: str | None = Field(
+    column: str | None = Field(
         default=None,
         description="Target column associated with the evidence, if applicable.",
     )
 
-    metric_name: str = Field(
+    metric: str = Field(
         ...,
         min_length=1,
-        description="Programmatic name of the metric (e.g. 'missing_percentage').",
+        description="Programmatic metric name (e.g. 'missing_percentage').",
     )
 
-    observed_value: float | int | str = Field(
+    value: float | int | str = Field(
         ...,
         description="Observed value of the metric.",
     )
@@ -68,22 +56,11 @@ class Evidence(BaseModel):
         description="Threshold value evaluated by the rule.",
     )
 
-    comparison: ComparisonOperator = Field(
-        ...,
-        description="Comparison operator applied during rule evaluation.",
-    )
-
 
 class Insight(BaseModel):
     """Represents a single deterministic insight backed by structured evidence."""
 
     model_config = ConfigDict(frozen=True)
-
-    id: str = Field(
-        ...,
-        min_length=1,
-        description="Unique programmatic identifier for the insight type.",
-    )
 
     category: InsightCategory
 

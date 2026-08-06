@@ -1,14 +1,6 @@
 """Unit tests for the deterministic rule engine."""
 
-from csv_analytics_agent.insights.constants import (
-    RULE_ID_DUPLICATES,
-    RULE_ID_HIGH_CARDINALITY,
-    RULE_ID_HIGH_MISSING,
-    RULE_ID_IDENTIFIER,
-    RULE_ID_MEDIUM_MISSING,
-)
 from csv_analytics_agent.insights.models import (
-    ComparisonOperator,
     InsightCategory,
     Severity,
 )
@@ -56,7 +48,7 @@ def _make_dummy_profile(
 
 
 def test_check_missing_values_high_threshold() -> None:
-    """Verify >= 30% missing values produces HIGH severity insight with structured evidence."""
+    """Verify >= 30% missing values produces HIGH severity insight with evidence."""
     col = ColumnProfile(
         name="salary",
         dtype="float64",
@@ -70,23 +62,20 @@ def test_check_missing_values_high_threshold() -> None:
 
     assert len(insights) == 1
     insight = insights[0]
-    assert insight.id == RULE_ID_HIGH_MISSING
     assert insight.category == InsightCategory.MISSING_VALUES
     assert insight.severity == Severity.HIGH
     assert len(insight.evidence) == 1
     evidence = insight.evidence[0]
-    assert evidence.column_name == "salary"
-    assert evidence.metric_name == "missing_percentage"
-    assert evidence.observed_value == 35.0
+    assert evidence.column == "salary"
+    assert evidence.metric == "missing_percentage"
+    assert evidence.value == 35.0
     assert evidence.threshold == 30.0
-    assert evidence.comparison == ComparisonOperator.GREATER_THAN_OR_EQUAL
     assert "salary" in insight.title
     assert "35.0%" in insight.description
 
 
 def test_check_missing_values_medium_threshold() -> None:
     """Verify 10% - 29.9% missing values produces MEDIUM severity insight."""
-
     col = ColumnProfile(
         name="age",
         dtype="float64",
@@ -99,16 +88,14 @@ def test_check_missing_values_medium_threshold() -> None:
 
     assert len(insights) == 1
     insight = insights[0]
-    assert insight.id == RULE_ID_MEDIUM_MISSING
     assert insight.category == InsightCategory.MISSING_VALUES
     assert insight.severity == Severity.MEDIUM
     assert len(insight.evidence) == 1
     evidence = insight.evidence[0]
-    assert evidence.column_name == "age"
-    assert evidence.metric_name == "missing_percentage"
-    assert evidence.observed_value == 15.0
+    assert evidence.column == "age"
+    assert evidence.metric == "missing_percentage"
+    assert evidence.value == 15.0
     assert evidence.threshold == 10.0
-    assert evidence.comparison == ComparisonOperator.GREATER_THAN_OR_EQUAL
     assert "age" in insight.title
 
 
@@ -140,22 +127,20 @@ def test_check_missing_values_boundaries() -> None:
 
 
 def test_check_duplicate_rows_detected() -> None:
-    """Verify duplicate rows produce a MEDIUM severity insight with structured evidence."""
+    """Verify duplicate rows produce a MEDIUM severity insight with evidence."""
     profile = _make_dummy_profile(row_count=100, duplicate_rows=5)
     insights = check_duplicate_rows(profile)
 
     assert len(insights) == 1
     insight = insights[0]
-    assert insight.id == RULE_ID_DUPLICATES
     assert insight.category == InsightCategory.DUPLICATES
     assert insight.severity == Severity.MEDIUM
     assert len(insight.evidence) == 1
     evidence = insight.evidence[0]
-    assert evidence.column_name is None
-    assert evidence.metric_name == "duplicate_rows"
-    assert evidence.observed_value == 5
+    assert evidence.column is None
+    assert evidence.metric == "duplicate_rows"
+    assert evidence.value == 5
     assert evidence.threshold == 0
-    assert evidence.comparison == ComparisonOperator.GREATER_THAN
     assert "5 duplicate row(s)" in insight.description
 
 
@@ -188,16 +173,14 @@ def test_check_identifier_columns() -> None:
 
     assert len(insights) == 1
     insight = insights[0]
-    assert insight.id == RULE_ID_IDENTIFIER
     assert insight.category == InsightCategory.CARDINALITY
     assert insight.severity == Severity.INFO
     assert len(insight.evidence) == 1
     evidence = insight.evidence[0]
-    assert evidence.column_name == "user_id"
-    assert evidence.metric_name == "unique_ratio"
-    assert evidence.observed_value == 1.0
+    assert evidence.column == "user_id"
+    assert evidence.metric == "unique_ratio"
+    assert evidence.value == 1.0
     assert evidence.threshold == 1.0
-    assert evidence.comparison == ComparisonOperator.EQUAL
     assert "user_id" in insight.title
 
 
@@ -231,16 +214,14 @@ def test_check_high_cardinality() -> None:
 
     assert len(insights) == 1
     insight = insights[0]
-    assert insight.id == RULE_ID_HIGH_CARDINALITY
     assert insight.category == InsightCategory.CARDINALITY
     assert insight.severity == Severity.LOW
     assert len(insight.evidence) == 1
     evidence = insight.evidence[0]
-    assert evidence.column_name == "zip_code"
-    assert evidence.metric_name == "unique_count"
-    assert evidence.observed_value == 150
+    assert evidence.column == "zip_code"
+    assert evidence.metric == "unique_count"
+    assert evidence.value == 150
     assert evidence.threshold == 100
-    assert evidence.comparison == ComparisonOperator.GREATER_THAN
     assert "zip_code" in insight.title
 
 

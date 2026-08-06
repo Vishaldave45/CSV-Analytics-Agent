@@ -2,24 +2,18 @@
 
 from __future__ import annotations
 
-from csv_analytics_agent.insights.constants import (
-    HIGH_CARDINALITY_THRESHOLD,
-    HIGH_MISSING_THRESHOLD,
-    MEDIUM_MISSING_THRESHOLD,
-    RULE_ID_DUPLICATES,
-    RULE_ID_HIGH_CARDINALITY,
-    RULE_ID_HIGH_MISSING,
-    RULE_ID_IDENTIFIER,
-    RULE_ID_MEDIUM_MISSING,
-)
 from csv_analytics_agent.insights.models import (
-    ComparisonOperator,
     Evidence,
     Insight,
     InsightCategory,
     Severity,
 )
 from csv_analytics_agent.profiler.models import DatasetProfile
+
+# Rule evaluation thresholds owned by business logic
+HIGH_MISSING_THRESHOLD: float = 30.0
+MEDIUM_MISSING_THRESHOLD: float = 10.0
+HIGH_CARDINALITY_THRESHOLD: int = 100
 
 
 def check_missing_values(profile: DatasetProfile) -> list[Insight]:
@@ -37,15 +31,13 @@ def check_missing_values(profile: DatasetProfile) -> list[Insight]:
         pct = col.missing_percentage
         if pct >= HIGH_MISSING_THRESHOLD:
             evidence = Evidence(
-                column_name=col.name,
-                metric_name="missing_percentage",
-                observed_value=round(pct, 2),
+                column=col.name,
+                metric="missing_percentage",
+                value=round(pct, 2),
                 threshold=HIGH_MISSING_THRESHOLD,
-                comparison=ComparisonOperator.GREATER_THAN_OR_EQUAL,
             )
             insights.append(
                 Insight(
-                    id=RULE_ID_HIGH_MISSING,
                     category=InsightCategory.MISSING_VALUES,
                     severity=Severity.HIGH,
                     title=f"High Missing Values in '{col.name}'",
@@ -62,15 +54,13 @@ def check_missing_values(profile: DatasetProfile) -> list[Insight]:
             )
         elif pct >= MEDIUM_MISSING_THRESHOLD:
             evidence = Evidence(
-                column_name=col.name,
-                metric_name="missing_percentage",
-                observed_value=round(pct, 2),
+                column=col.name,
+                metric="missing_percentage",
+                value=round(pct, 2),
                 threshold=MEDIUM_MISSING_THRESHOLD,
-                comparison=ComparisonOperator.GREATER_THAN_OR_EQUAL,
             )
             insights.append(
                 Insight(
-                    id=RULE_ID_MEDIUM_MISSING,
                     category=InsightCategory.MISSING_VALUES,
                     severity=Severity.MEDIUM,
                     title=f"Moderate Missing Values in '{col.name}'",
@@ -106,16 +96,14 @@ def check_duplicate_rows(profile: DatasetProfile) -> list[Insight]:
     pct = (duplicate_count / total_rows * 100.0) if total_rows > 0 else 0.0
 
     evidence = Evidence(
-        column_name=None,
-        metric_name="duplicate_rows",
-        observed_value=duplicate_count,
+        column=None,
+        metric="duplicate_rows",
+        value=duplicate_count,
         threshold=0,
-        comparison=ComparisonOperator.GREATER_THAN,
     )
 
     return [
         Insight(
-            id=RULE_ID_DUPLICATES,
             category=InsightCategory.DUPLICATES,
             severity=Severity.MEDIUM,
             title="Duplicate Rows Detected",
@@ -149,15 +137,13 @@ def check_identifier_columns(profile: DatasetProfile) -> list[Insight]:
     for col in profile.columns:
         if col.unique_count == total_rows and col.missing_count == 0:
             evidence = Evidence(
-                column_name=col.name,
-                metric_name="unique_ratio",
-                observed_value=1.0,
+                column=col.name,
+                metric="unique_ratio",
+                value=1.0,
                 threshold=1.0,
-                comparison=ComparisonOperator.EQUAL,
             )
             insights.append(
                 Insight(
-                    id=RULE_ID_IDENTIFIER,
                     category=InsightCategory.CARDINALITY,
                     severity=Severity.INFO,
                     title=f"Possible Identifier Column '{col.name}'",
@@ -192,15 +178,13 @@ def check_high_cardinality(profile: DatasetProfile) -> list[Insight]:
         if col.unique_count > HIGH_CARDINALITY_THRESHOLD and col.unique_count < total_rows:
             if col.categorical is not None or "str" in col.dtype or "object" in col.dtype:
                 evidence = Evidence(
-                    column_name=col.name,
-                    metric_name="unique_count",
-                    observed_value=col.unique_count,
+                    column=col.name,
+                    metric="unique_count",
+                    value=col.unique_count,
                     threshold=HIGH_CARDINALITY_THRESHOLD,
-                    comparison=ComparisonOperator.GREATER_THAN,
                 )
                 insights.append(
                     Insight(
-                        id=RULE_ID_HIGH_CARDINALITY,
                         category=InsightCategory.CARDINALITY,
                         severity=Severity.LOW,
                         title=f"High Cardinality in '{col.name}'",
