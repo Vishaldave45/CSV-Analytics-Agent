@@ -1,0 +1,34 @@
+
+[project]
+name = "csv-analytics-agent"
+version = "0.1.0"
+description = "Production-grade CSV Analytics Agent"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "langgraph",
+    "langchain-core",
+    "langchain-google-genai",
+    "faiss-cpu",
+    "sentence-transformers",
+    "pydantic-settings",
+    "tenacity",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "mypy",
+    "ruff",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[tool.hatch.build.targets.wheel]
+packages = ["src/csv_analytics_agent"]
