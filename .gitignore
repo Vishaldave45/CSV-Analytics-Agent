@@ -49,6 +49,7 @@ htmlcov/
 *.swp
 *.swo
 .~lock.*
+.~lock.*#
 
 # AI Assistant metadata
 .gemini/
