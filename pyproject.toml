@@ -7,6 +7,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 
 dependencies = [
+    "pydantic",
+    "pydantic-settings",
     "pandas",
     "numpy",
     "matplotlib",
@@ -15,7 +17,6 @@ dependencies = [
     "langchain-google-genai",
     "faiss-cpu",
     "sentence-transformers",
-    "pydantic-settings",
     "tenacity",
 ]
 
