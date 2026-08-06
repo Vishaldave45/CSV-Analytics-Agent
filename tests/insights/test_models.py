@@ -138,3 +138,12 @@ def test_enum_values() -> None:
     assert Severity.INFO.value == "info"
     assert InsightCategory.DATA_QUALITY.value == "data_quality"
     assert InsightCategory.CARDINALITY.value == "cardinality"
+
+
+def test_severity_priority_property() -> None:
+    """Verify Severity priority property ordering (CRITICAL < HIGH < MEDIUM < LOW < INFO)."""
+    assert Severity.CRITICAL.priority == 0
+    assert Severity.HIGH.priority == 1
+    assert Severity.MEDIUM.priority == 2
+    assert Severity.LOW.priority == 3
+    assert Severity.INFO.priority == 4

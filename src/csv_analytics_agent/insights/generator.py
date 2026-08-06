@@ -62,15 +62,4 @@ class InsightGenerator:
         Returns:
             List of Insight objects sorted by severity descending.
         """
-        severity_order: dict[str, int] = {
-            "critical": 0,
-            "high": 1,
-            "medium": 2,
-            "low": 3,
-            "info": 4,
-        }
-
-        return sorted(
-            insights,
-            key=lambda insight: severity_order.get(insight.severity.value, 99),
-        )
+        return sorted(insights, key=lambda insight: insight.severity.priority)

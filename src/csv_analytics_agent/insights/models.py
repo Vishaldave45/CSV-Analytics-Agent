@@ -29,6 +29,22 @@ class Severity(str, Enum):
     HIGH = "high"
     CRITICAL = "critical"
 
+    @property
+    def priority(self) -> int:
+        """Numeric priority order for sorting (lower value means higher severity priority).
+
+        Returns:
+            Integer priority rank (0 for critical, 4 for info).
+        """
+        priority_map: dict[str, int] = {
+            "critical": 0,
+            "high": 1,
+            "medium": 2,
+            "low": 3,
+            "info": 4,
+        }
+        return priority_map[self.value]
+
 
 class Evidence(BaseModel):
     """Structured evidence backing a rule evaluation."""
