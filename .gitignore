@@ -58,3 +58,6 @@ htmlcov/
 # Outputs directory contents
 outputs/*
 !outputs/.gitkeep
+
+# Temporary / Unpushed Directories
+stitch_csv_insight_agent/
