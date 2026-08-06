@@ -90,3 +90,12 @@ def test_calculate_datetime_statistics_non_datetime_and_empty() -> None:
 
     assert calculate_datetime_statistics(num_series) is None
     assert calculate_datetime_statistics(empty_dt_series) is None
+
+
+def test_to_float_helper() -> None:
+    from csv_analytics_agent.profiler.statistics import _to_float
+
+    assert _to_float(None) is None
+    assert _to_float(float("nan")) is None
+    assert _to_float(42.5) == 42.5
+
