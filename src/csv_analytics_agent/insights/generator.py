@@ -5,12 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from csv_analytics_agent.insights.models import Insight
-from csv_analytics_agent.insights.rules import (
-    check_duplicate_rows,
+from csv_analytics_agent.insights.rules.cardinality import (
     check_high_cardinality,
     check_identifier_columns,
-    check_missing_values,
 )
+from csv_analytics_agent.insights.rules.duplicates import check_duplicate_rows
+from csv_analytics_agent.insights.rules.missing import check_missing_values
 from csv_analytics_agent.profiler.models import DatasetProfile
 
 # Tuple of rule evaluation functions to execute during insight generation

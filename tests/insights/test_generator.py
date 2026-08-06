@@ -80,7 +80,7 @@ def test_generate_single_rule_trigger() -> None:
 
 
 def test_generate_multiple_rules_trigger() -> None:
-    """Verify multiple violations generate multiple insights."""
+    """Verify multiple rule violations generate multiple insights."""
     missing_col = ColumnProfile(
         name="age",
         dtype="float64",
@@ -164,7 +164,6 @@ def test_generate_sort_critical_severity() -> None:
         description="Dataset is corrupted.",
         recommendation="Fix ingestion pipeline.",
     )
-
     info_insight = Insight(
         category=InsightCategory.CARDINALITY,
         severity=Severity.INFO,
