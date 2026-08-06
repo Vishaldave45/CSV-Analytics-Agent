@@ -25,6 +25,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "mypy",
+    "pandas-stubs",
     "ruff",
 ]
 
