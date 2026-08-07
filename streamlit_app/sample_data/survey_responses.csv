@@ -1,0 +1,9 @@
+EmployeeID,Department,SatisfactionScore,Salary,Experience_Years,Remote_Status
+EMP-01,Engineering,4.5,95000.0,6,Remote
+EMP-02,Engineering,4.8,110000.0,8,Hybrid
+EMP-03,Marketing,3.2,68000.0,3,Onsite
+EMP-04,Sales,4.1,82000.0,5,Hybrid
+EMP-05,Sales,3.9,79000.0,4,Remote
+EMP-06,HR,4.0,72000.0,5,Hybrid
+EMP-07,Engineering,4.9,125000.0,10,Remote
+EMP-08,Marketing,3.5,71000.0,4,Hybrid

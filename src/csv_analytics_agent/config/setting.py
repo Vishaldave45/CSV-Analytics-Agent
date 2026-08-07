@@ -1,3 +1,7 @@
+"""Application Settings module using Pydantic Settings."""
+
+from __future__ import annotations
+
 from functools import lru_cache
 from pathlib import Path
 
@@ -6,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application Settings."""
+    """Application Settings for CSV Analytics Agent and Graph Runtime."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -27,6 +31,22 @@ class Settings(BaseSettings):
         default=500,
         ge=1,
         description="Maximum allowed CSV size in MB.",
+    )
+
+    checkpoint_path: Path = Field(
+        default=Path("sessions.db"),
+        description="SQLite database path for conversation state checkpointing.",
+    )
+
+    max_iterations: int = Field(
+        default=6,
+        ge=1,
+        description="Maximum loop iteration limit for LLM planner node.",
+    )
+
+    default_thread_id: str = Field(
+        default="default_thread",
+        description="Default thread identifier for graph checkpointing.",
     )
 
 

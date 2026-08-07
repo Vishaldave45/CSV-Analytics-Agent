@@ -1,0 +1,9 @@
+CustomerID,Tenure,Contract,MonthlyCharges,TotalCharges,Churn
+CUST-1001,12,Month-to-month,65.5,786.0,Yes
+CUST-1002,48,Two year,89.0,4272.0,No
+CUST-1003,3,Month-to-month,45.2,135.6,Yes
+CUST-1004,24,One year,74.8,1795.2,No
+CUST-1005,60,Two year,105.3,6318.0,No
+CUST-1006,6,Month-to-month,55.0,330.0,Yes
+CUST-1007,36,One year,82.4,2966.4,No
+CUST-1008,18,Month-to-month,70.1,1261.8,Yes

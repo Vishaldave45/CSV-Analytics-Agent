@@ -258,6 +258,32 @@ uv run pytest
 
 ---
 
+## 📡 Observability & Tracing
+
+The agent includes built-in, production-grade **LangSmith** observability for execution tracing, latency monitoring, and callback instrumentation (`csv_analytics_agent.observability`).
+
+### Key Features
+* **Zero Overhead when Disabled**: Tracing remains 100% optional. If disabled or if API keys are missing, the agent operates without crashing.
+* **Environment Configuration**: Controlled via standard environment variables or `.env` configuration.
+* **Centralized Metadata**: Automatically captures `thread_id`, `model_name`, `dataset_name`, and execution timestamps for every graph run.
+
+### Environment Variables
+
+```bash
+# Enable LangSmith Tracing
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=your_langsmith_api_key_here
+LANGCHAIN_PROJECT=csv-analytics-agent
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_SESSION=development
+LANGCHAIN_TAGS=local,csv-agent
+```
+
+### Disabling Tracing
+To disable tracing completely, set `LANGCHAIN_TRACING_V2=false` in your `.env` or environment.
+
+---
+
 ## 🗺️ Product Roadmap
 
 - [x] **Stage 1 — Data Loader & Validator** (`v0.1.0`)

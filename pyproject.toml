@@ -1,4 +1,3 @@
-
 [project]
 name = "csv-analytics-agent"
 version = "0.1.0"
@@ -18,7 +17,9 @@ dependencies = [
     "faiss-cpu",
     "sentence-transformers",
     "tenacity",
+    "streamlit>=1.61.1",
 ]
+
 
 [dependency-groups]
 dev = [
@@ -32,5 +33,13 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/csv_analytics_agent"]
+
+[tool.pyright]
+include = ["src", "streamlit_app", "tests"]
+executionEnvironments = [
+  { root = "." }
+]
+extraPaths = [".", "src"]

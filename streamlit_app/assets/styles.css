@@ -1,0 +1,160 @@
+/* LOGIC_OS_2.0 High-Tech Dark Modern UI Theme */
+
+:root {
+    --bg-dark: #090d16;
+    --card-bg: #0f172a;
+    --card-border: #1e293b;
+    --accent-cyan: #00f0ff;
+    --accent-teal: #14b8a6;
+    --accent-purple: #8b5cf6;
+    --text-primary: #f8fafc;
+    --text-muted: #94a3b8;
+    --badge-anomaly: #f43f5e;
+    --badge-quality: #f59e0b;
+    --badge-trend: #00f0ff;
+}
+
+/* Global App Container */
+.stApp {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Hide default Streamlit header & footer for clean LOGIC_OS aesthetic */
+header[data-testid="stHeader"] {
+    background-color: transparent;
+}
+
+footer {
+    visibility: hidden;
+}
+
+/* Brand Header Title */
+.brand-title {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #00f0ff 0%, #14b8a6 50%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.2rem;
+}
+
+.brand-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+}
+
+/* Custom Cards */
+.logic-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.logic-card:hover {
+    border-color: rgba(0, 240, 255, 0.4);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+}
+
+.logic-card-glowing {
+    border: 1px solid rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+/* Status Badges */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.badge-anomaly {
+    background: rgba(244, 63, 94, 0.15);
+    color: var(--badge-anomaly);
+    border: 1px solid rgba(244, 63, 94, 0.4);
+}
+
+.badge-quality {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--badge-quality);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-trend {
+    background: rgba(0, 240, 255, 0.15);
+    color: var(--badge-trend);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+}
+
+/* Metric Pill Cards */
+.metric-container {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Execution Timeline Badges */
+.timeline-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #1e293b;
+    color: #cbd5e1;
+    border: 1px solid #334155;
+    margin-right: 0.4rem;
+    margin-bottom: 0.4rem;
+}
+
+.timeline-step-active {
+    background: rgba(0, 240, 255, 0.15);
+    color: var(--accent-cyan);
+    border-color: rgba(0, 240, 255, 0.5);
+}
+
+/* Dropzone Styling */
+.dropzone-container {
+    border: 2px dashed #334155;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.5);
+    transition: all 0.2s ease;
+}
+
+.dropzone-container:hover {
+    border-color: var(--accent-cyan);
+    background: rgba(15, 23, 42, 0.8);
+}
