@@ -16,12 +16,14 @@ from csv_analytics_agent.visualization import (
 
 @pytest.fixture
 def sample_df() -> pd.DataFrame:
-    return pd.DataFrame({
-        "age": [25, 30, 35, 40, 45, 50],
-        "salary": [50000, 60000, 75000, 90000, 110000, 130000],
-        "department": ["HR", "IT", "IT", "HR", "Sales", "IT"],
-        "date": pd.date_range("2026-01-01", periods=6, freq="D"),
-    })
+    return pd.DataFrame(
+        {
+            "age": [25, 30, 35, 40, 45, 50],
+            "salary": [50000, 60000, 75000, 90000, 110000, 130000],
+            "department": ["HR", "IT", "IT", "HR", "Sales", "IT"],
+            "date": pd.date_range("2026-01-01", periods=6, freq="D"),
+        }
+    )
 
 
 def test_render_histogram(sample_df: pd.DataFrame) -> None:

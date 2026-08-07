@@ -5,11 +5,11 @@ axis->> column , lablel.
 
 ChartSpecification-->>chart type , title , axis , description .
 
-VisualizationRecommendation-->> Sometimes more than one chart is suitable.   
+VisualizationRecommendation-->> Sometimes more than one chart is suitable.
 -->> primary : chartspecification  &  alternatives : list(chartspecification)
 
 
-Analytics Engine                           
+Analytics Engine
         │
         ▼
 ChartSpecification
@@ -114,9 +114,7 @@ class VisualizationPlan(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    primary: ChartSpecification = Field(
-        ..., description="Primary recommended chart specification."
-    )
+    primary: ChartSpecification = Field(..., description="Primary recommended chart specification.")
     alternatives: list[ChartSpecification] = Field(
         default_factory=list,
         description="Alternative chart specifications.",
