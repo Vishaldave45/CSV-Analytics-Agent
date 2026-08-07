@@ -61,8 +61,7 @@ def test_create_insight_with_evidence() -> None:
     assert insight.title == "High missing rate in age"
     assert insight.description == "The age column contains 45% missing values."
     assert (
-        insight.recommendation
-        == "Consider imputing missing values or dropping column if unneeded."
+        insight.recommendation == "Consider imputing missing values or dropping column if unneeded."
     )
     assert len(insight.evidence) == 1
     assert insight.evidence[0].column == "age"

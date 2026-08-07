@@ -1,4 +1,3 @@
-
 class CSVAnalyticsError(Exception):
     """Base exception for all csv-analytics-agent exceptions."""
 

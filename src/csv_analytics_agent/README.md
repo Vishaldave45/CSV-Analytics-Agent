@@ -87,12 +87,13 @@ from typing import List
 from csv_analytics_agent.profiler.models import DatasetProfile
 from csv_analytics_agent.insights.models import Insight, Evidence, Severity, InsightCategory
 
+
 class MyCustomRule:
     """Evaluates custom domain conditions on a DatasetProfile."""
-    
+
     def evaluate(self, profile: DatasetProfile) -> List[Insight]:
         insights: List[Insight] = []
-        
+
         # Pure logic operating on frozen profile metadata
         if profile.summary.row_count < 10:
             evidence = Evidence(facts={"row_count": profile.summary.row_count, "min_required": 10})
@@ -104,7 +105,7 @@ class MyCustomRule:
                 evidence=evidence,
             )
             insights.append(insight)
-            
+
         return insights
 ```
 
@@ -114,6 +115,7 @@ Add your rule instance to the default rules list in `src/csv_analytics_agent/ins
 
 ```python
 from csv_analytics_agent.insights.rules.my_custom_rule import MyCustomRule
+
 
 def __init__(self, rules=None):
     if rules is None:

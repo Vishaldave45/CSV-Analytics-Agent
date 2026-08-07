@@ -40,8 +40,7 @@ def check_duplicate_rows(profile: DatasetProfile) -> list[Insight]:
             severity=Severity.MEDIUM,
             title="Duplicate Rows Detected",
             description=(
-                f"Found {duplicate_count} duplicate row(s) "
-                f"({pct:.1f}% of {total_rows} total rows)."
+                f"Found {duplicate_count} duplicate row(s) ({pct:.1f}% of {total_rows} total rows)."
             ),
             recommendation=(
                 "Review duplicate rows and consider deduplicating "

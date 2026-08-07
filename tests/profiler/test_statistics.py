@@ -98,4 +98,3 @@ def test_to_float_helper() -> None:
     assert _to_float(None) is None
     assert _to_float(float("nan")) is None
     assert _to_float(42.5) == 42.5
-

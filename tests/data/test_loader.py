@@ -53,8 +53,6 @@ def test_csv_loader_malformed_csv(tmp_path: Path) -> None:
         loader.load(csv_file)
 
 
-
-
 def test_csv_loader_invalid_encoding(tmp_path: Path) -> None:
     csv_file = tmp_path / "bad_encoding.csv"
     # Write invalid UTF-8 byte sequence
@@ -95,4 +93,3 @@ def test_csv_loader_non_existent_file(tmp_path: Path) -> None:
     loader = CSVLoader()
     with pytest.raises(FileValidationError):
         loader.load(missing)
-

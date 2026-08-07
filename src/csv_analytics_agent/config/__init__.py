@@ -1,6 +1,6 @@
 from .setting import Settings, get_settings
 
-__all__=[
+__all__ = [
     "Settings",
     "get_settings",
-] 
+]
