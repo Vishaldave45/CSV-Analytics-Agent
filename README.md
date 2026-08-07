@@ -5,8 +5,8 @@
 **A production-grade, evidence-driven tabular analytics framework built with Python 3.10+, Pydantic v2, and a deterministic layered pipeline & execution engine architecture.**
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Release](https://img.shields.io/badge/release-v0.5.0-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent/releases/tag/v0.5.0)
-[![Tests](https://img.shields.io/badge/tests-121%20passed-2ea44f?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent)
+[![Release](https://img.shields.io/badge/release-v0.6.0-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent/releases/tag/v0.6.0)
+[![Tests](https://img.shields.io/badge/tests-147%20passed-2ea44f?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-261230?style=for-the-badge&logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff)
 [![Type Checked](https://img.shields.io/badge/type%20checked-mypy-blue?style=for-the-badge&logo=python&logoColor=white)](https://github.com/python/mypy)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
@@ -17,10 +17,10 @@
 
 ## 🌟 Overview
 
-The **CSV Analytics Agent** converts raw tabular data (`.csv` files) into structured, evidence-backed insights, renderer-independent visualizations, and executable analytical capabilities. Designed around **Domain-Driven Design (DDD)** principles, the agent processes datasets through a strict, multi-stage pipeline where statistics, business rules, visualization recommendations, and capability execution engines operate deterministically before being exposed to agentic LLM planners or LangGraph workflows.
+The **CSV Analytics Agent** converts raw tabular data (`.csv` files) into structured, evidence-backed insights, renderer-independent visualizations, executable analytical capabilities, and deterministic natural-language query plans. Designed around **Domain-Driven Design (DDD)** principles, the agent processes datasets through a strict, multi-stage pipeline where statistics, business rules, visualization recommendations, capability execution engines, and query planning operate deterministically before being exposed to agentic LLM planners or LangGraph workflows.
 
 > [!IMPORTANT]
-> **Deterministic First, LLM Second**: Statistics, insights, visualization rules, and capability execution are evaluated deterministically using immutable Pydantic v2 models and provider abstractions. This eliminates hallucinated data summaries and guarantees 100% explainability and safety.
+> **Deterministic First, LLM Second**: Statistics, insights, visualization rules, capability execution, and query planning are evaluated deterministically using immutable Pydantic v2 models and provider abstractions. This eliminates hallucinated data summaries and guarantees 100% explainability and safety.
 
 ---
 
@@ -33,31 +33,31 @@ The **CSV Analytics Agent** converts raw tabular data (`.csv` files) into struct
 | 🔍 **Evidence Engine** | Pure business rules evaluate immutable dataset profiles to generate structured findings (`Insight`) backed by empirical facts (`Evidence`). |
 | 🎨 **Visualization Recommendation** | Pure rule engine maps dataset statistical profiles to optimal, renderer-independent chart specifications (`HISTOGRAM`, `BAR`, `LINE`, `SCATTER`, `BOXPLOT`, `PIE`, `HEATMAP`) and Matplotlib rendering. |
 | ⚡ **Execution Engine Framework** | Decouples high-level domain capabilities (`AnalyticsEngine`, `VisualizationEngine`) from underlying libraries (`PandasProvider`) registered inside a central `CapabilityRegistry`. |
+| 🧩 **Deterministic Rule Planner** | Translates natural-language questions into `ExecutionRequest` payloads with confidence scores and reasoning trace logs (`RulePlanner`, `QueryParser`, `CapabilityMatcher`). |
 | 🤖 **LLM Tool Schema Export** | `CapabilityRegistry` automatically exports function-calling JSON schemas for OpenAI, Anthropic, and Gemini LLM function-calling planners. |
-| 🧪 **Comprehensive Test Suite** | Every module, validation guard, statistical evaluator, provider, engine, and exception path is tested with full statement coverage. |
+| 🧪 **Comprehensive Test Suite** | Every module, validation guard, statistical evaluator, provider, engine, planner rule, and exception path is tested with full statement coverage. |
 
 ---
 
 ## 🏗️ Architecture & Pipeline Flow
 
-The framework follows a decoupled 5-tier architecture:
+The framework follows a decoupled 6-tier architecture:
 
 ```mermaid
 flowchart TD
-    A[📄 Raw CSV File] -->|Stage 1: Load & Validate| B(CSVLoader & CSVValidator)
-    B -->|Clean pandas.DataFrame| C(DatasetProfiler & Pure Stats)
-    C -->|Serialize| D["❄️ DatasetProfile (Immutable)"]
-    D -->|Stage 3: Pure Rule Evaluation| E(InsightGenerator)
-    E -->|Generate Ranked Findings| F["💡 List[Insight]"]
-    D & F -->|Stage 4: Visualization Engine| G(recommend_visualizations & render_chart)
-    G --> H["🎨 VisualizationPlan & Chart PNG"]
+    UserQuery["💬 User Question"] -->|Stage 6: Rule Planner| Planner(RulePlanner & QueryParser)
+    Planner -->|Capability Discovery| Reg(CapabilityRegistry)
+    Planner -->|Emit Payload| ExecReq["📦 ExecutionRequest (Confidence & Trace)"]
     
-    subgraph STAGE_5 ["⚡ Stage 5: Capability Engine Framework"]
-        I["🤖 LLM Planner / LangGraph"] -->|Query Function Schemas| J(CapabilityRegistry)
-        J -->|Lookup CapabilityRegistration| K(AnalyticsEngine / VisualizationEngine)
-        K -->|Select Provider Dynamically| L(PandasProvider / VisualizationProvider)
-        L -->|Execute Operation| M["📦 ExecutionResult[T]"]
-    end
+    RawCSV[📄 Raw CSV File] -->|Stage 1: Load & Validate| Loader(CSVLoader & CSVValidator)
+    Loader -->|Clean DataFrame| Profiler(DatasetProfiler)
+    Profiler -->|Immutable Metadata| Profile["❄️ DatasetProfile"]
+    Profile -->|Stage 3: Evidence Engine| Insights["💡 List[Insight]"]
+    Profile & Insights -->|Stage 4: Visualization| Viz(recommend_visualizations & render_chart)
+    
+    ExecReq & Reg -->|Stage 5: Execution Engine| Engine(AnalyticsEngine / VisualizationEngine)
+    Engine -->|Dynamic Provider Dispatch| Provider(PandasProvider)
+    Provider -->|Execute Operation| Result["📦 ExecutionResult[T]"]
 ```
 
 ### Layer Responsibilities
@@ -93,8 +93,14 @@ flowchart TD
                                │
                                ▼
  ┌───────────────────────────────────────────────────────────────────────────┐
- │ Stage 5 — Capability Engine Framework (`execution/`)                     │
+ │ Stage 5 — Execution Engine Framework (`execution/`)                       │
  │ (CapabilityRegistry ──> Domain Engines ──> Providers ──> Libraries)       │
+ └─────────────────────────────┬─────────────────────────────────────────────┘
+                               │
+                               ▼
+ ┌───────────────────────────────────────────────────────────────────────────┐
+ │ Stage 6 — Deterministic Rule-Based Planner Engine (`planner/`)            │
+ │ (User Question ──> RulePlanner ──> ExecutionRequest ──> ExecutionResult)   │
  └───────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -124,87 +130,64 @@ pip install -e ".[dev]"
 from pathlib import Path
 from csv_analytics_agent.data import CSVLoader
 from csv_analytics_agent.profiler import DatasetProfiler
-from csv_analytics_agent.insights import InsightGenerator
-from csv_analytics_agent.visualization import recommend_visualizations, render_chart
 from csv_analytics_agent.execution import (
     CapabilityRegistry,
     AnalyticsEngine,
     VisualizationEngine,
-    ExecutionRequest,
 )
+from csv_analytics_agent.planner import RulePlanner
 
-# 1. Load and validate CSV file safely
-file_path = Path("data/sample_dataset.csv")
-loader = CSVLoader(file_path=file_path)
-df = loader.load()
+# 1. Load CSV & Profile
+df = CSVLoader(Path("data/sample_dataset.csv")).load()
+profile = DatasetProfiler().profile(df)
 
-# 2. Compute pure dataset profile & statistics
-profiler = DatasetProfiler()
-profile = profiler.profile(df)
-
-# 3. Generate evidence-backed insights
-generator = InsightGenerator()
-insights = generator.generate(profile)
-
-# 4. Recommend visualization plan
-viz_plan = recommend_visualizations(profile, insights=insights)
-print(f"Primary Chart: {viz_plan.primary.chart_type.value} - {viz_plan.primary.title}")
-
-# 5. Execute capability via Execution Engine Framework
+# 2. Setup Execution Framework & Registry
 registry = CapabilityRegistry()
 analytics_engine = AnalyticsEngine()
 viz_engine = VisualizationEngine()
 
-# Register engine capabilities
 for desc in analytics_engine.list_capabilities():
     registry.register(desc, analytics_engine)
-
 for desc in viz_engine.list_capabilities():
     registry.register(desc, viz_engine)
 
-# Execute an aggregation request
-req = ExecutionRequest(
-    capability_name="aggregate",
-    target_columns=["salary"],
-    parameters={"operation": "mean"},
-)
-engine = registry.get_engine("aggregate")
-result = engine.execute_capability(req, df)
+# 3. Translate Question using Stage 6 Deterministic Planner
+planner = RulePlanner()
+question = "What is the average salary?"
+columns = list(df.columns)
 
-print(f"Status: {result.status.value}")
-print(f"Result: {result.message} -> {result.data}")
+plan_result = planner.plan(question, columns, registry)
+
+print(f"Confidence: {plan_result.confidence}")
+print(f"Matched Rule: {plan_result.matched_rule}")
+print("Reasoning Trace:")
+for step in plan_result.reasoning_trace:
+    print(f"  - {step}")
+
+# 4. Execute the planned request deterministically
+if plan_result.success and plan_result.execution_request:
+    req = plan_result.execution_request
+    engine = registry.get_engine(req.capability_name)
+    exec_result = engine.execute_capability(req, df)
+    print(f"\nExecution Outcome ({exec_result.status.value}): {exec_result.data}")
 ```
 
 ---
 
 ## 🧩 Domain Models & Exceptions
 
-### Domain Models (`execution/models.py`, `visualization/models.py`, `insights/models.py`, `profiler/models.py`)
+### Domain Models (`planner/models.py`, `execution/models.py`, `visualization/models.py`, `insights/models.py`)
 
 | Model | Immutability | Description |
 | :--- | :---: | :--- |
+| `PlannerResult` | `frozen=True` | Planning output container holding `ExecutionRequest`, `confidence`, `matched_rule`, and `reasoning_trace`. |
+| `ParsedIntent` | `frozen=True` | Extracted analytical intent, target columns, parameters, and raw query string. |
+| `IntentRule` | `frozen=True` | Declarative synonym rule mapping keywords to analytical intents. |
 | `CapabilityDescriptor` | `frozen=True` | Metadata defining a capability name, description, JSON schema, and default provider. |
 | `ExecutionRequest` | `frozen=True` | Payload requesting capability execution with column targets and parameters. |
 | `ExecutionResult[T]` | `frozen=True` | Type-safe generic result wrapper with status, message, payload data `T`, and timing. |
-| `CapabilityRegistration` | `frozen=True` | Registration metadata container linking a capability descriptor to its rank priority. |
 | `DatasetProfile` | `frozen=True` | Complete statistical breakdown of tabular dataset. |
 | `ChartSpecification` | `frozen=True` | Renderer-independent chart definition (type, title, axes, description). |
-| `VisualizationPlan` | `frozen=True` | Recommendation container holding primary and alternative chart specifications. |
-| `Insight` | `frozen=True` | Explainable finding containing title, category, severity score, and `Evidence`. |
-
-### Domain Exception Hierarchy (`exceptions/data_errors.py` & `execution/exceptions.py`)
-
-```text
-CSVAnalyticsError (Base Domain Exception)
-├── CSVLoaderError
-│   ├── CSVEncodingError
-│   ├── CSVParsingError
-│   └── EmptyCSVError
-└── ExecutionError
-    ├── ProviderError
-    ├── CapabilityNotFoundError
-    └── EngineValidationError
-```
 
 ---
 
@@ -219,22 +202,26 @@ csv-analytics-agent/
 │   ├── insights/           # Stage 3: Deterministic rules, generator & evidence
 │   ├── visualization/      # Stage 4: Chart recommendations & Matplotlib renderer
 │   ├── execution/          # Stage 5: Execution Engine Framework
-│   │   ├── models.py       # Domain models (CapabilityDescriptor, ExecutionRequest, ExecutionResult)
+│   │   ├── models.py       # Execution domain models
 │   │   ├── base.py         # Abstract base classes (BaseProvider, BaseEngine)
 │   │   ├── exceptions.py   # Execution exception hierarchy
 │   │   ├── registry.py     # CapabilityRegistry & LLM tool schema exporter
-│   │   ├── providers/      # Execution providers
-│   │   │   └── pandas.py   # PandasProvider encapsulating pandas operations
-│   │   └── domain/         # Domain engines
-│   │       ├── analytics.py     # AnalyticsEngine (aggregate, filter, group, sort, top_n)
-│   │       └── visualization.py # VisualizationEngine adapter wrapping Stage 4
+│   │   ├── providers/      # PandasProvider encapsulating pandas operations
+│   │   └── domain/         # AnalyticsEngine & VisualizationEngine adapters
+│   ├── planner/            # Stage 6: Deterministic Rule-Based Planner Engine
+│   │   ├── models.py       # Planner domain models (PlannerResult, ParsedIntent)
+│   │   ├── rules.py        # Synonym rule definitions & RuleEngine
+│   │   ├── parser.py       # QueryParser extracting columns & numeric parameters
+│   │   ├── matcher.py      # CapabilityMatcher discovering CapabilityRegistry
+│   │   └── planner.py      # RulePlanner orchestrator
 │   └── exceptions/         # Base exceptions
-├── tests/                  # Complete unit test suite (121 tests)
+├── tests/                  # Complete unit test suite (147 tests)
 │   ├── config/
 │   ├── data/
 │   ├── exceptions/
 │   ├── execution/
 │   ├── insights/
+│   ├── planner/
 │   ├── profiler/
 │   └── visualization/
 ├── pyproject.toml          # Project metadata, dependencies & tool settings
@@ -265,8 +252,8 @@ uv run pytest
 
 ### Current Verification Metrics
 
-- **Unit Tests**: `121 passed` in `0.68s`
-- **Type Safety**: `0 errors` (Strict MyPy mode across 39 source files)
+- **Unit Tests**: `147 passed` in `0.93s`
+- **Type Safety**: `0 errors` (Strict MyPy mode across 45 source files)
 - **Formatting**: 100% compliant with Ruff standards
 
 ---
@@ -283,8 +270,8 @@ uv run pytest
   - Automatic chart mapping and Matplotlib rendering engine.
 - [x] **Stage 5 — Execution Engine Framework** (`v0.5.0`)
   - Decoupled `CapabilityRegistry`, `AnalyticsEngine`, `VisualizationEngine`, `PandasProvider`.
-- [ ] **Stage 6 — Schema Vector Indexing & Semantic Search** (`v0.6.0`)
-  - Semantic column search with vector embeddings.
+- [x] **Stage 6 — Deterministic Rule-Based Planner Engine** (`v0.6.0`)
+  - `RulePlanner`, `QueryParser`, `CapabilityMatcher`, confidence scoring, and reasoning trace logs.
 - [ ] **Stage 7 — LangChain / LlamaIndex Tool Integrations** (`v0.7.0`)
   - Reusable agent tool adapters for LLM frameworks.
 - [ ] **Stage 8 — Gemini Tool Calling & Agentic Planner** (`v0.8.0`)
