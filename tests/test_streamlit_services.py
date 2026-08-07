@@ -30,7 +30,7 @@ def sample_csv_bytes() -> bytes:
 def test_session_service_operations() -> None:
     """Verify session state initialization and mutation helpers."""
     init_session_state()
-    assert get_state("model_name") == "gemini-1.5-flash"
+    assert get_state("model_name") == "gemini-2.5-flash"
 
     set_state("custom_key", "custom_val")
     assert get_state("custom_key") == "custom_val"

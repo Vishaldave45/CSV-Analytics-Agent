@@ -1,20 +1,21 @@
-"""Sidebar component matching LOGIC_OS_2.0 design mockup."""
+"""Sidebar navigation component matching LOGIC_OS_2.0 design system."""
 
 from __future__ import annotations
 
 import streamlit as st
 
+from streamlit_app.config import APP_SUBTITLE, APP_TITLE, APP_VERSION
 from streamlit_app.services.session import get_state, set_state
 
 
 def render_sidebar() -> None:
-    """Render LOGIC_OS_2.0 dark sidebar header, dataset status, and proactive insights."""
+    """Render LOGIC_OS_2.0 dark sidebar header, dataset status, proactive insights, and footer."""
     with st.sidebar:
         header_html = (
             '<div style="padding-bottom: 1rem; border-bottom: 1px solid #1e293b; '
             'margin-bottom: 1.2rem;">'
-            '<div class="brand-title">LOGIC_OS_2.0</div>'
-            '<div class="brand-subtitle">Tabular Analytics Agent</div></div>'
+            f'<div class="brand-title">{APP_TITLE}</div>'
+            f'<div class="brand-subtitle">{APP_SUBTITLE}</div></div>'
         )
         st.markdown(header_html, unsafe_allow_html=True)
 
@@ -27,11 +28,11 @@ def render_sidebar() -> None:
         st.markdown(f"**`{dataset_name}`**")
 
         if df is not None:
-            st.caption(f"{len(df)} rows × {len(df.columns)} columns")
+            st.caption(f"{len(df):,} rows × {len(df.columns)} columns")
         else:
             st.info("Upload a CSV file to begin analysis.")
 
-        # Render Active Filters
+        # Active Filters
         if active_filters:
             st.write("---")
             st.caption("ACTIVE FILTERS")
@@ -42,7 +43,7 @@ def render_sidebar() -> None:
                 set_state("active_filters", [])
                 st.rerun()
 
-        # Render Proactive Insights Sidebar List (from image.png mockup)
+        # Proactive Insights Sidebar List
         st.write("---")
         st.caption("PROACTIVE INSIGHTS")
 
@@ -70,8 +71,10 @@ def render_sidebar() -> None:
                     f'<div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem;">'
                     f"{insight.description}</div></div>"
                 )
-
                 st.markdown(card_html, unsafe_allow_html=True)
+
+        st.write("---")
+        st.caption(f"LOGIC_OS {APP_VERSION}")
 
 
 __all__ = ["render_sidebar"]

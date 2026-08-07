@@ -1,160 +1,188 @@
-/* LOGIC_OS_2.0 High-Tech Dark Modern UI Theme */
+/* LOGIC_OS 2.0 Dark Futuristic AI Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-    --bg-dark: #090d16;
-    --card-bg: #0f172a;
-    --card-border: #1e293b;
-    --accent-cyan: #00f0ff;
-    --accent-teal: #14b8a6;
-    --accent-purple: #8b5cf6;
-    --text-primary: #f8fafc;
-    --text-muted: #94a3b8;
-    --badge-anomaly: #f43f5e;
-    --badge-quality: #f59e0b;
-    --badge-trend: #00f0ff;
+  --bg-dark: #111111;
+  --bg-surface: #16161a;
+  --bg-card: #1c1c22;
+  --cyan-primary: #00f0ff;
+  --purple-secondary: #a855f7;
+  --border-color: #27272a;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --radius-card: 12px;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Global App Container */
+/* Base Body Styling */
 .stApp {
-    background-color: var(--bg-dark);
-    color: var(--text-primary);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-sans) !important;
 }
 
-/* Hide default Streamlit header & footer for clean LOGIC_OS aesthetic */
-header[data-testid="stHeader"] {
-    background-color: transparent;
+/* Sidebar Customization */
+section[data-testid="stSidebar"] {
+  background-color: var(--bg-surface) !important;
+  border-right: 1px solid var(--border-color) !important;
 }
 
-footer {
-    visibility: hidden;
-}
-
-/* Brand Header Title */
+/* Brand Headers & Typography */
 .brand-title {
-    font-family: 'Monaco', 'Consolas', monospace;
-    font-size: 2.2rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    background: linear-gradient(135deg, #00f0ff 0%, #14b8a6 50%, #8b5cf6 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.2rem;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #00f0ff 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
 }
 
 .brand-subtitle {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    font-weight: 400;
-    margin-bottom: 1.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.2rem;
 }
 
-/* Custom Cards */
+/* Logic Cards */
 .logic-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease-in-out;
 }
 
 .logic-card:hover {
-    border-color: rgba(0, 240, 255, 0.4);
-    box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.08);
 }
 
 .logic-card-glowing {
-    border: 1px solid rgba(0, 240, 255, 0.5);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+  border-color: rgba(0, 240, 255, 0.5);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
 }
 
-/* Status Badges */
-.badge {
-    display: inline-block;
-    padding: 0.25rem 0.6rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
-}
-
-.badge-anomaly {
-    background: rgba(244, 63, 94, 0.15);
-    color: var(--badge-anomaly);
-    border: 1px solid rgba(244, 63, 94, 0.4);
-}
-
-.badge-quality {
-    background: rgba(245, 158, 11, 0.15);
-    color: var(--badge-quality);
-    border: 1px solid rgba(245, 158, 11, 0.4);
-}
-
-.badge-trend {
-    background: rgba(0, 240, 255, 0.15);
-    color: var(--badge-trend);
-    border: 1px solid rgba(0, 240, 255, 0.4);
-}
-
-/* Metric Pill Cards */
-.metric-container {
-    background: #0f172a;
-    border: 1px solid #1e293b;
-    border-radius: 10px;
-    padding: 1rem;
-    text-align: center;
-}
-
-.metric-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--accent-cyan);
+/* Metric Cards */
+.metric-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: 1rem 1.25rem;
+  text-align: left;
 }
 
 .metric-label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Execution Timeline Badges */
-.timeline-step {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    background: #1e293b;
-    color: #cbd5e1;
-    border: 1px solid #334155;
-    margin-right: 0.4rem;
-    margin-bottom: 0.4rem;
+.metric-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--cyan-primary);
+  margin-top: 0.2rem;
+  font-family: var(--font-mono);
 }
 
-.timeline-step-active {
-    background: rgba(0, 240, 255, 0.15);
-    color: var(--accent-cyan);
-    border-color: rgba(0, 240, 255, 0.5);
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-/* Dropzone Styling */
-.dropzone-container {
-    border: 2px dashed #334155;
-    border-radius: 16px;
-    padding: 3rem 2rem;
-    text-align: center;
-    background: rgba(15, 23, 42, 0.5);
-    transition: all 0.2s ease;
+.badge-trend {
+  background-color: rgba(0, 240, 255, 0.15);
+  color: var(--cyan-primary);
+  border: 1px solid rgba(0, 240, 255, 0.3);
 }
 
-.dropzone-container:hover {
-    border-color: var(--accent-cyan);
-    background: rgba(15, 23, 42, 0.8);
+.badge-anomaly {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-quality {
+  background-color: rgba(168, 85, 247, 0.15);
+  color: var(--purple-secondary);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+/* Execution Details Panel */
+.execution-details-card {
+  background-color: #131318;
+  border: 1px solid #2d2d38;
+  border-radius: 8px;
+  padding: 0.9rem;
+  margin-top: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.execution-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed #272730;
+}
+
+.execution-row:last-child {
+  border-bottom: none;
+}
+
+.execution-key {
+  color: #94a3b8;
+}
+
+.execution-val {
+  color: #00f0ff;
+  font-weight: 600;
+}
+
+/* Buttons & Inputs */
+div.stButton > button {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+div.stButton > button:hover {
+  border-color: var(--cyan-primary) !important;
+  color: var(--cyan-primary) !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2) !important;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cyan-primary);
 }

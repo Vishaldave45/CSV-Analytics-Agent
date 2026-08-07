@@ -16,7 +16,7 @@ class GeminiLLM(BaseLLM):
 
     def __init__(
         self,
-        model_name: str = "gemini-1.5-flash",
+        model_name: str = "gemini-2.5-flash",
         temperature: float = 0.0,
         api_key: str | None = None,
         llm_instance: Any | None = None,
@@ -24,12 +24,13 @@ class GeminiLLM(BaseLLM):
         """Initialize GeminiLLM instance.
 
         Args:
-            model_name: Gemini model string identifier (default 'gemini-1.5-flash').
+            model_name: Gemini model string identifier (default 'gemini-2.5-flash').
             temperature: Sampling temperature float (default 0.0).
             api_key: Optional Google API key string.
             llm_instance: Optional pre-configured Runnable/Chat model for injection/testing.
         """
-        self._model_name = model_name
+        formatted_model = model_name.strip().replace(" ", "-") if model_name else "gemini-2.5-flash"
+        self._model_name = formatted_model
         self._temperature = temperature
         self._api_key = api_key or os.getenv("GOOGLE_API_KEY")
 
@@ -41,6 +42,7 @@ class GeminiLLM(BaseLLM):
                 temperature=self._temperature,
                 google_api_key=self._api_key or "DUMMY_KEY_FOR_MOCKING",
             )
+
 
     def bind_tools(self, tools: list[Any]) -> BaseLLM:
         """Bind tools to Gemini Chat model and return new GeminiLLM instance.
@@ -68,8 +70,18 @@ class GeminiLLM(BaseLLM):
         Returns:
             BaseMessage response emitted by ChatGoogleGenerativeAI.
         """
-        response = self._llm.invoke(cast(Any, input_data))
-        return cast(BaseMessage, response)
+        try:
+            response = self._llm.invoke(cast(Any, input_data))
+            return cast(BaseMessage, response)
+        except Exception as err:
+            err_str = str(err)
+            if "API_KEY_INVALID" in err_str or "INVALID_ARGUMENT" in err_str:
+                raise ValueError(
+                    "Invalid Google Gemini API Key. "
+                    "Please check your key at https://aistudio.google.com/app/apikey and enter it in Settings."
+                ) from err
+            raise
+
 
     def stream(self, input_data: list[BaseMessage] | str | dict[str, Any]) -> Any:
         """Stream token response chunks from Gemini LLM.

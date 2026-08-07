@@ -1,8 +1,10 @@
-"""Backend service bridge connecting Streamlit UI to CSV Analytics Agent framework."""
+"""Backend service bridge connecting Streamlit UI presentation layer to backend engines."""
 
 from __future__ import annotations
 
 import io
+import os
+from typing import Any
 
 import pandas as pd
 
@@ -18,89 +20,72 @@ from csv_analytics_agent.llm.gemini import GeminiLLM
 from csv_analytics_agent.memory.service import MemoryService
 from csv_analytics_agent.profiler.models import DatasetProfile
 from csv_analytics_agent.profiler.profiler import DatasetProfiler
+from csv_analytics_agent.visualization.exceptions import NoSuitableVisualizationError
 from csv_analytics_agent.visualization.models import ChartSpecification
 from csv_analytics_agent.visualization.recommender import recommend_visualizations
 from csv_analytics_agent.visualization.renderer import render_chart
 
 
-def load_dataset_from_bytes(content: bytes, filename: str) -> pd.DataFrame:
-    """Load DataFrame from uploaded byte stream.
-
-    Args:
-        content: Binary content of CSV file.
-        filename: Target filename string.
-
-    Returns:
-        Loaded pandas DataFrame.
-    """
+def upload_dataset(content: bytes, filename: str) -> pd.DataFrame:
+    """Load DataFrame from uploaded byte stream."""
     stream = io.BytesIO(content)
     return pd.read_csv(stream)
 
 
-def profile_dataset(df: pd.DataFrame, dataset_name: str = "dataset.csv") -> DatasetProfile:
-    """Generate DatasetProfile from a pandas DataFrame.
+def load_dataset_from_bytes(content: bytes, filename: str) -> pd.DataFrame:
+    """Alias for upload_dataset."""
+    return upload_dataset(content, filename)
 
-    Args:
-        df: Target pandas DataFrame.
-        dataset_name: Dataset identifier string.
 
-    Returns:
-        DatasetProfile instance.
-    """
+def get_profile(df: pd.DataFrame, dataset_name: str = "dataset.csv") -> DatasetProfile:
+    """Generate DatasetProfile from a pandas DataFrame using DatasetProfiler."""
     profiler = DatasetProfiler()
     return profiler.profile(df)
 
 
-def generate_insights_for_dataset(profile: DatasetProfile) -> list[Insight]:
-    """Generate structured Insights for a DatasetProfile.
+def profile_dataset(df: pd.DataFrame, dataset_name: str = "dataset.csv") -> DatasetProfile:
+    """Alias for get_profile."""
+    return get_profile(df, dataset_name)
 
-    Args:
-        profile: DatasetProfile instance.
 
-    Returns:
-        List of Insight objects.
-    """
+def get_insights(profile: DatasetProfile) -> list[Insight]:
+    """Generate structured Insights for a DatasetProfile using InsightGenerator."""
     generator = InsightGenerator()
     return generator.generate(profile)
+
+
+def generate_insights_for_dataset(profile: DatasetProfile) -> list[Insight]:
+    """Alias for get_insights."""
+    return get_insights(profile)
+
+
+def recommend_visualization(
+    profile: DatasetProfile, insights: list[Insight] | None = None
+) -> list[ChartSpecification]:
+    """Recommend ChartSpecifications for a DatasetProfile."""
+    try:
+        plan = recommend_visualizations(profile, insights=insights or [])
+        charts: list[ChartSpecification] = [plan.primary]
+        charts.extend(plan.alternatives)
+        return charts
+    except NoSuitableVisualizationError:
+        return []
 
 
 def recommend_visualizations_for_dataset(
     profile: DatasetProfile, insights: list[Insight] | None = None
 ) -> list[ChartSpecification]:
-    """Recommend ChartSpecifications for a DatasetProfile.
-
-    Args:
-        profile: DatasetProfile instance.
-        insights: Optional list of Insight objects.
-
-    Returns:
-        List of ChartSpecification objects.
-    """
-    plan = recommend_visualizations(profile, insights=insights or [])
-    charts: list[ChartSpecification] = [plan.primary]
-    charts.extend(plan.alternatives)
-    return charts
+    """Alias for recommend_visualization."""
+    return recommend_visualization(profile, insights=insights)
 
 
 def render_chart_image(spec: ChartSpecification, df: pd.DataFrame) -> bytes:
-    """Render ChartSpecification to PNG bytes.
-
-    Args:
-        spec: Target ChartSpecification.
-        df: Input pandas DataFrame context.
-
-    Returns:
-        PNG image bytes.
-    """
+    """Render ChartSpecification to PNG bytes via Matplotlib Visualization Engine."""
     return render_chart(spec, df)
 
 
 def build_configured_registry() -> CapabilityRegistry:
-    """Build a CapabilityRegistry populated with AnalyticsEngine and VisualizationEngine.
-
-    Returns:
-        Configured CapabilityRegistry.
-    """
+    """Build a CapabilityRegistry populated with AnalyticsEngine and VisualizationEngine."""
     registry = CapabilityRegistry()
     analytics_engine = AnalyticsEngine()
     viz_engine = VisualizationEngine()
@@ -116,32 +101,24 @@ def build_configured_registry() -> CapabilityRegistry:
 
 def create_agent_runtime(
     df: pd.DataFrame,
-    model_name: str = "gemini-1.5-flash",
+    model_name: str = "gemini-2.5-flash",
     temperature: float = 0.0,
     max_iterations: int = 6,
+    api_key: str | None = None,
+    **kwargs: Any,
 ) -> AgentRuntime:
-    """Create an AgentRuntime instance configured for the given DataFrame.
-
-    Args:
-        df: Active dataset pandas DataFrame.
-        model_name: Gemini model identifier.
-        temperature: LLM sampling temperature.
-        max_iterations: Maximum loop iterations.
-
-    Returns:
-        Configured AgentRuntime instance.
-    """
+    """Create an AgentRuntime instance configured for the given DataFrame."""
     registry = build_configured_registry()
     memory_service = MemoryService()
 
-    # Seed column memory index for Retrieval Node (Stage 7.5)
     for col in df.columns:
         memory_service.store(
             text=f"Column: {col} in dataset",
             metadata={"column_name": col},
         )
 
-    llm = GeminiLLM(model_name=model_name, temperature=temperature)
+    effective_api_key = api_key or kwargs.get("api_key") or os.getenv("GOOGLE_API_KEY")
+    llm = GeminiLLM(model_name=model_name, temperature=temperature, api_key=effective_api_key)
     settings = Settings(max_iterations=max_iterations)
 
     return AgentRuntime(
@@ -153,27 +130,44 @@ def create_agent_runtime(
     )
 
 
-def execute_agent_query(runtime: AgentRuntime, prompt: str, thread_id: str) -> AgentState:
-    """Execute query prompt via AgentRuntime.
+def ask_agent(
+    runtime: AgentRuntime,
+    prompt: str,
+    thread_id: str,
+    profile: "DatasetProfile | None" = None,
+) -> AgentState:
+    """Execute query prompt via AgentRuntime."""
+    return runtime.run(prompt, thread_id=thread_id, profile=profile)
 
-    Args:
-        runtime: Active AgentRuntime instance.
-        prompt: User query string.
-        thread_id: Session thread identifier.
 
-    Returns:
-        Resulting AgentState dictionary.
-    """
-    return runtime.run(prompt, thread_id=thread_id)
+def execute_agent_query(
+    runtime: AgentRuntime,
+    prompt: str,
+    thread_id: str,
+    profile: "DatasetProfile | None" = None,
+) -> AgentState:
+    """Alias for ask_agent."""
+    return ask_agent(runtime, prompt=prompt, thread_id=thread_id, profile=profile)
+
+
+def resume_thread(runtime: AgentRuntime, thread_id: str) -> AgentState | None:
+    """Resume state of a checkpointed thread via AgentRuntime."""
+    return runtime.get_state(thread_id)
 
 
 __all__ = [
+    "ask_agent",
     "build_configured_registry",
     "create_agent_runtime",
     "execute_agent_query",
     "generate_insights_for_dataset",
+    "get_insights",
+    "get_profile",
     "load_dataset_from_bytes",
     "profile_dataset",
+    "recommend_visualization",
     "recommend_visualizations_for_dataset",
     "render_chart_image",
+    "resume_thread",
+    "upload_dataset",
 ]

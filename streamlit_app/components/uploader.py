@@ -1,12 +1,11 @@
-"""Uploader component matching LOGIC_OS_2.0 hero upload screen."""
+"""Uploader component matching PAGE 1 Landing Page layout."""
 
 from __future__ import annotations
-
-from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
+from streamlit_app.config import EXAMPLE_QUESTIONS, SAMPLE_DATA_DIR, SAMPLE_DATASETS
 from streamlit_app.services.backend import (
     generate_insights_for_dataset,
     load_dataset_from_bytes,
@@ -15,11 +14,9 @@ from streamlit_app.services.backend import (
 )
 from streamlit_app.services.session import set_state
 
-SAMPLE_DATA_DIR = Path(__file__).parent.parent / "sample_data"
-
 
 def process_loaded_dataframe(df: pd.DataFrame, filename: str) -> None:
-    """Process loaded DataFrame through profiling, insights, and chart recommendation pipeline.
+    """Process loaded DataFrame through backend profiling, insights, and chart recommendation pipeline.
 
     Args:
         df: Loaded pandas DataFrame.
@@ -37,12 +34,12 @@ def process_loaded_dataframe(df: pd.DataFrame, filename: str) -> None:
 
 
 def render_uploader() -> None:
-    """Render LOGIC_OS_2.0 hero CSV dropzone and sample dataset quick loaders."""
+    """Render hero CSV dropzone, sample dataset quick loaders, and example question chips."""
     st.markdown(
         """
         <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 2rem;">
-            <h1 class="brand-title" style="font-size: 3rem;">LOGIC_OS_2.0</h1>
-            <p style="font-size: 1.1rem; color: #94a3b8;">Ask your data anything.</p>
+            <h1 class="brand-title" style="font-size: 3.2rem;">LOGIC_OS_2.0</h1>
+            <p style="font-size: 1.15rem; color: #94a3b8;">Autonomous Tabular Analytics Agent</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -57,10 +54,10 @@ def render_uploader() -> None:
     if uploaded_file is not None:
         content = uploaded_file.getvalue()
         filename = uploaded_file.name
-        with st.spinner(f"Processing '{filename}'..."):
+        with st.spinner(f"Analyzing '{filename}'..."):
             df = load_dataset_from_bytes(content, filename=filename)
             process_loaded_dataframe(df, filename=filename)
-        st.success(f"Loaded '{filename}' ({len(df)} rows × {len(df.columns)} columns)!")
+        st.success(f"Loaded '{filename}' ({len(df):,} rows × {len(df.columns)} columns)!")
         st.rerun()
 
     st.write("")
@@ -71,30 +68,28 @@ def render_uploader() -> None:
     )
     st.markdown(sample_hdr_html, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("📊 Sales Data", use_container_width=True):
-            file_path = SAMPLE_DATA_DIR / "sales_data.csv"
-            if file_path.exists():
-                df = pd.read_csv(file_path)
-                process_loaded_dataframe(df, filename="sales_data.csv")
-                st.rerun()
+    cols = st.columns(len(SAMPLE_DATASETS))
+    for idx, sample_info in enumerate(SAMPLE_DATASETS):
+        with cols[idx]:
+            if st.button(f"{sample_info['icon']} {sample_info['name']}", key=f"btn_sample_{idx}", use_container_width=True):
+                file_path = SAMPLE_DATA_DIR / sample_info["name"]
+                if file_path.exists():
+                    df = pd.read_csv(file_path)
+                    process_loaded_dataframe(df, filename=sample_info["name"])
+                    st.rerun()
 
-    with col2:
-        if st.button("👥 Customer Churn", use_container_width=True):
-            file_path = SAMPLE_DATA_DIR / "customer_churn.csv"
-            if file_path.exists():
-                df = pd.read_csv(file_path)
-                process_loaded_dataframe(df, filename="customer_churn.csv")
-                st.rerun()
+    st.write("")
+    st.markdown(
+        '<div style="text-align: center; margin-top: 1.5rem; margin-bottom: 0.8rem; '
+        'font-size: 0.85rem; color: #64748b; font-weight: 600; letter-spacing: 0.05em;">'
+        "EXAMPLE QUESTIONS YOU CAN ASK</div>",
+        unsafe_allow_html=True,
+    )
 
-    with col3:
-        if st.button("💬 Survey Responses", use_container_width=True):
-            file_path = SAMPLE_DATA_DIR / "survey_responses.csv"
-            if file_path.exists():
-                df = pd.read_csv(file_path)
-                process_loaded_dataframe(df, filename="survey_responses.csv")
-                st.rerun()
+    ex_cols = st.columns(len(EXAMPLE_QUESTIONS))
+    for idx, q_text in enumerate(EXAMPLE_QUESTIONS):
+        with ex_cols[idx]:
+            st.button(f"💡 {q_text}", key=f"btn_ex_home_{idx}", use_container_width=True)
 
     st.markdown(
         """

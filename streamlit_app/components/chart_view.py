@@ -1,4 +1,4 @@
-"""Chart recommendation visualizer component."""
+"""Chart specification viewer and image renderer component."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from streamlit_app.services.backend import render_chart_image
 
 
 def render_chart_views(charts: list[ChartSpecification], df: pd.DataFrame) -> None:
-    """Render recommended ChartSpecification cards and Matplotlib chart images.
+    """Render primary recommended ChartSpecification card and Matplotlib chart image with PNG download.
 
     Args:
         charts: List of recommended ChartSpecification objects.
@@ -31,7 +31,7 @@ def render_chart_views(charts: list[ChartSpecification], df: pd.DataFrame) -> No
     st.markdown(
         f"""
         <div class="logic-card logic-card-glowing">
-            <span class="badge badge-trend">{spec.chart_type.value} CHART — AUTO-RECOMMENDED</span>
+            <span class="badge badge-trend">{spec.chart_type.value.upper()} CHART — RECOMMENDED SPEC</span>
             <h3 style="margin-top: 0.4rem; color: #00f0ff;">{spec.title}</h3>
             <p style="color: #94a3b8; font-size: 0.9rem;">{spec.description}</p>
         </div>
@@ -42,6 +42,14 @@ def render_chart_views(charts: list[ChartSpecification], df: pd.DataFrame) -> No
     try:
         img_bytes = render_chart_image(spec, df)
         st.image(img_bytes, caption=spec.title, use_container_width=True)
+
+        st.download_button(
+            label="🖼️ Export Chart PNG",
+            data=img_bytes,
+            file_name=f"{spec.chart_type.value}_chart.png",
+            mime="image/png",
+            key=f"btn_dl_chart_{selected_chart_idx}",
+        )
     except Exception as err:
         st.error(f"Failed to render chart specification: {err}")
 

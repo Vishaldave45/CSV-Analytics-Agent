@@ -47,9 +47,10 @@ def recommend_bar(profile: DatasetProfile) -> ChartSpecification | None:
         chart_type=ChartType.BAR,
         title=f"Category Counts for {target_cat.name}",
         x_axis=Axis(column=target_cat.name, label=target_cat.name),
-        y_axis=Axis(column="count", label="Count"),
+        y_axis=None,
         description=f"Bar chart showing category frequencies for '{target_cat.name}'.",
     )
+
 
 
 def recommend_pie(profile: DatasetProfile) -> ChartSpecification | None:

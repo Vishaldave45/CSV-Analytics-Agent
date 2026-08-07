@@ -15,6 +15,7 @@ class ObservabilitySettings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     tracing_v2: bool = Field(
@@ -47,10 +48,12 @@ class ObservabilitySettings(BaseSettings):
         description="LangSmith session tag or environment mode.",
     )
 
-    tags: tuple[str, ...] = Field(
-        default=("local", "csv-agent"),
+    # Store as raw comma-separated string to avoid pydantic-settings JSON-parsing
+    # a plain "local,csv-agent" value from .env as complex type.
+    tags_raw: str = Field(
+        default="local,csv-agent",
         alias="LANGCHAIN_TAGS",
-        description="Global tags attached to all traced runs.",
+        description="Comma-separated global tags attached to all traced runs.",
     )
 
     metadata: dict[str, str] = Field(
@@ -58,6 +61,11 @@ class ObservabilitySettings(BaseSettings):
         alias="LANGCHAIN_METADATA",
         description="Global metadata payload for traced runs.",
     )
+
+    @property
+    def tags(self) -> list[str]:
+        """Return parsed list of tags from comma-separated raw string."""
+        return [t.strip() for t in self.tags_raw.split(",") if t.strip()]
 
 
 @lru_cache(maxsize=1)

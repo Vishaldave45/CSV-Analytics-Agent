@@ -68,10 +68,17 @@ def tool_node(
 
         try:
             engine = registry.get_engine(cap_name)
+            # Inject profile from state into context_metadata so
+            # VisualizationProvider.execute() can access it for recommend_visualization.
+            context_metadata: dict[str, object] = {"raw_query": cap_name}
+            profile = state.get("profile")
+            if profile is not None:
+                context_metadata["profile"] = profile
             request = ExecutionRequest(
                 capability_name=cap_name,
                 target_columns=target_columns,
                 parameters=parameters,
+                context_metadata=context_metadata,
             )
             exec_res = engine.execute_capability(request, dataframe)
         except CapabilityNotFoundError as err:

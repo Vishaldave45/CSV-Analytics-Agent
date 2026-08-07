@@ -1,47 +1,51 @@
-"""Page 6: Checkpointed Session History & Execution Log Table."""
+"""Page 6: Conversation History & Saved Threads."""
 
 from __future__ import annotations
 
 import streamlit as st
 
+from streamlit_app.components.footer import render_footer
+from streamlit_app.components.header import render_header
 from streamlit_app.components.sidebar import render_sidebar
-from streamlit_app.services.session import get_state
+from streamlit_app.config import APP_TITLE
+from streamlit_app.services.session import get_state, set_state
+from streamlit_app.theme import apply_custom_theme
 
 st.set_page_config(
-    page_title="History — LOGIC_OS_2.0",
+    page_title=f"History — {APP_TITLE}",
     page_icon="📜",
     layout="wide",
 )
 
+apply_custom_theme()
 render_sidebar()
 
 thread_id = get_state("thread_id")
 messages = get_state("messages", [])
-last_result = get_state("last_result")
 
-st.markdown("## 📜 Conversation & Execution History")
-st.caption(f"Session Thread ID: `{thread_id}`")
+render_header("Conversation History", icon="📜")
+
+st.caption(f"Active Thread ID: `{thread_id}`")
 st.write("---")
 
 if not messages:
-    st.info("No query execution history found in current session.")
-    st.stop()
+    st.info("No conversation history recorded in current session.")
+else:
+    st.markdown(f"### Thread `{thread_id}` ({len(messages)} messages)")
+    for idx, msg in enumerate(messages):
+        role = msg.get("role", "assistant")
+        content = msg.get("content", "")
+        st.markdown(f"**[{role.upper()}]**: {content}")
 
-st.markdown("### 💬 Message Log")
-for idx, msg in enumerate(messages):
-    role = msg.get("role", "unknown")
-    content = msg.get("content", "")
-    st.markdown(f"**[{idx + 1}] {role.upper()}**: {content}")
-
-if last_result:
     st.write("---")
-    st.markdown("### ⚡ Latest Execution Result Payload")
-    st.json(
-        {
-            "capability": last_result.capability_name,
-            "status": last_result.status.value,
-            "message": last_result.message,
-            "execution_time_ms": last_result.execution_time_ms,
-            "metadata": last_result.metadata,
-        }
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Resume Current Thread", type="primary", use_container_width=True):
+            st.success(f"Resumed thread {thread_id}")
+    with col2:
+        if st.button("Clear Thread Messages", use_container_width=True):
+            set_state("messages", [])
+            st.success("Messages cleared.")
+            st.rerun()
+
+render_footer()

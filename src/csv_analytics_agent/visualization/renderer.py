@@ -45,11 +45,22 @@ def render_chart(
     Raises:
         VisualizationError: If required columns are missing in DataFrame or rendering fails.
     """
-    required_cols = [spec.x_axis.column]
-    if spec.y_axis is not None:
-        required_cols.append(spec.y_axis.column)
+    missing_cols = []
+    if spec.x_axis.column not in df.columns:
+        missing_cols.append(spec.x_axis.column)
 
-    missing_cols = [col for col in required_cols if col not in df.columns]
+    if (
+        spec.y_axis is not None
+        and spec.chart_type not in (ChartType.HISTOGRAM, ChartType.PIE)
+        and spec.y_axis.column not in df.columns
+    ):
+        if spec.chart_type == ChartType.BAR and spec.y_axis.column not in df.columns:
+            pass  # Fall back to category counts
+        elif spec.chart_type == ChartType.BOXPLOT and spec.y_axis.column not in df.columns:
+            pass  # Fall back to single column boxplot
+        else:
+            missing_cols.append(spec.y_axis.column)
+
     if missing_cols:
         raise VisualizationError(
             f"Cannot render chart: missing column(s) {missing_cols} in provided DataFrame."
@@ -65,25 +76,25 @@ def render_chart(
 
         elif spec.chart_type == ChartType.BAR:
             x_data = [str(x) for x in df[spec.x_axis.column]]
-            if spec.y_axis is not None:
+            if spec.y_axis is not None and spec.y_axis.column in df.columns:
                 y_data = list(df[spec.y_axis.column])
                 ax.bar(x_data, y_data, color="#3182bd")
                 ax.set_ylabel(spec.y_axis.label or spec.y_axis.column)
             else:
                 counts = df[spec.x_axis.column].value_counts()
                 ax.bar([str(k) for k in counts.index], list(counts.values), color="#3182bd")
-                ax.set_ylabel("Count")
+                ax.set_ylabel(spec.y_axis.label if spec.y_axis else "Count")
             plt.xticks(rotation=45, ha="right")
 
         elif spec.chart_type == ChartType.LINE:
             x_data = list(df[spec.x_axis.column])
-            y_data = list(df[spec.y_axis.column]) if spec.y_axis else list(df.iloc[:, 0])
+            y_data = list(df[spec.y_axis.column]) if (spec.y_axis and spec.y_axis.column in df.columns) else list(df.iloc[:, 0])
             ax.plot(x_data, y_data, marker="o", color="#3182bd", linewidth=2)
             if spec.y_axis is not None:
                 ax.set_ylabel(spec.y_axis.label or spec.y_axis.column)
 
         elif spec.chart_type == ChartType.SCATTER:
-            y_col = spec.y_axis.column if spec.y_axis else spec.x_axis.column
+            y_col = (spec.y_axis.column if (spec.y_axis and spec.y_axis.column in df.columns) else spec.x_axis.column)
             y_label = (
                 (spec.y_axis.label or spec.y_axis.column)
                 if spec.y_axis is not None
@@ -93,7 +104,7 @@ def render_chart(
             ax.set_ylabel(y_label)
 
         elif spec.chart_type == ChartType.BOXPLOT:
-            if spec.y_axis is not None:
+            if spec.y_axis is not None and spec.y_axis.column in df.columns:
                 categories = list(df[spec.x_axis.column].unique())
                 data = [
                     list(df[df[spec.x_axis.column] == cat][spec.y_axis.column].dropna())
@@ -104,6 +115,7 @@ def render_chart(
             else:
                 ax.boxplot(list(df[spec.x_axis.column].dropna()))
                 ax.set_ylabel(spec.x_axis.label or spec.x_axis.column)
+
 
         elif spec.chart_type == ChartType.PIE:
             counts = df[spec.x_axis.column].value_counts()

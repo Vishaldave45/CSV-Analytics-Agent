@@ -28,12 +28,13 @@ def recommend_histogram(profile: DatasetProfile) -> ChartSpecification | None:
         chart_type=ChartType.HISTOGRAM,
         title=f"Distribution of {target.name}",
         x_axis=Axis(column=target.name, label=target.name),
-        y_axis=Axis(column="frequency", label="Frequency"),
+        y_axis=None,
         description=(
             f"Histogram showing the frequency distribution of continuous numeric "
             f"values in '{target.name}'."
         ),
     )
+
 
 
 def recommend_boxplot(profile: DatasetProfile) -> ChartSpecification | None:

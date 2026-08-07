@@ -19,6 +19,7 @@ from csv_analytics_agent.graph.state import AgentState, create_initial_state
 from csv_analytics_agent.llm.base import BaseLLM
 from csv_analytics_agent.memory.service import MemoryService
 from csv_analytics_agent.observability.callbacks import get_callbacks
+from csv_analytics_agent.profiler.models import DatasetProfile
 
 
 class AgentRuntime:
@@ -81,12 +82,19 @@ class AgentRuntime:
         """Return runtime callback handlers."""
         return list(self._callbacks)
 
-    def run(self, prompt: str, thread_id: str | None = None) -> AgentState:
+    def run(
+        self,
+        prompt: str,
+        thread_id: str | None = None,
+        profile: DatasetProfile | None = None,
+    ) -> AgentState:
         """Execute agent workflow for a given user prompt under a thread_id session.
 
         Args:
             prompt: User query string.
             thread_id: Optional thread identifier (defaults to settings.default_thread_id).
+            profile: Optional DatasetProfile to seed into the AgentState so visualization
+                     capabilities can access column statistics without re-profiling.
 
         Returns:
             Updated AgentState dictionary.
@@ -98,7 +106,7 @@ class AgentRuntime:
 
         config: RunnableConfig = cast(RunnableConfig, config_dict)
 
-        initial_state = create_initial_state()
+        initial_state = create_initial_state(profile=profile)
         initial_state["messages"] = [HumanMessage(content=prompt)]
 
         result_state = self._graph.invoke(initial_state, config=config)

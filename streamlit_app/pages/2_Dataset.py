@@ -4,46 +4,51 @@ from __future__ import annotations
 
 import streamlit as st
 
-from streamlit_app.components.profile_card import render_profile_cards
+from streamlit_app.components.dataframe_view import render_dataframe_view
+from streamlit_app.components.dataset_card import render_dataset_card
+from streamlit_app.components.footer import render_footer
+from streamlit_app.components.header import render_header
 from streamlit_app.components.sidebar import render_sidebar
+from streamlit_app.config import APP_TITLE
 from streamlit_app.services.session import get_state
+from streamlit_app.theme import apply_custom_theme
 
 st.set_page_config(
-    page_title="Dataset Overview — LOGIC_OS_2.0",
+    page_title=f"Dataset Overview — {APP_TITLE}",
     page_icon="📊",
     layout="wide",
 )
 
+apply_custom_theme()
 render_sidebar()
 
 df = get_state("raw_df")
 profile = get_state("profile")
 dataset_name = get_state("dataset_name", "Dataset")
 
-st.markdown(f"## 📊 Dataset Overview: `{dataset_name}`")
+render_header("Dataset Overview", icon="📊")
 
 if df is None or profile is None:
     st.warning("No dataset loaded yet. Please upload a CSV file on the Upload page.")
     st.stop()
 
-# 1. Render Summary KPI Cards
-render_profile_cards(profile)
+# 1. Render Dataset Overview KPI Card
+render_dataset_card(profile, dataset_name=dataset_name)
 st.write("---")
 
 # 2. Render Data Preview Table
-st.markdown("### 📄 Data Preview")
-st.dataframe(df.head(20), use_container_width=True)
+render_dataframe_view(df, title="Data Preview", max_rows=20)
 
-# 3. Render Column Data Profiles
+# 3. Render Column Data Profiles Table
 st.write("---")
 st.markdown("### 🔍 Column Profiles & Data Types")
 
 col_summary_data = []
-for col_prof in profile.column_profiles:
+for col_prof in profile.columns:
     col_summary_data.append(
         {
-            "Column Name": col_prof.column_name,
-            "Data Type": col_prof.data_type.value,
+            "Column Name": col_prof.name,
+            "Data Type": col_prof.dtype,
             "Missing Count": col_prof.missing_count,
             "Missing %": f"{col_prof.missing_percentage:.1f}%",
             "Unique Values": col_prof.unique_count,
@@ -56,3 +61,5 @@ st.dataframe(col_summary_data, use_container_width=True)
 st.write("---")
 st.markdown("### 📈 Numeric Summary Statistics")
 st.dataframe(df.describe().T, use_container_width=True)
+
+render_footer()

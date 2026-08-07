@@ -17,7 +17,7 @@ DEFAULT_SESSION_KEYS: dict[str, Any] = {
     "messages": [],
     "last_result": None,
     "active_filters": [],
-    "model_name": "gemini-1.5-flash",
+    "model_name": "gemini-2.5-flash",
     "temperature": 0.0,
     "max_iterations": 6,
     "tracing_enabled": False,

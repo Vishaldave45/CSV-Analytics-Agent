@@ -2,33 +2,57 @@
 
 from __future__ import annotations
 
+import os
+
 import streamlit as st
 
+from streamlit_app.components.footer import render_footer
+from streamlit_app.components.header import render_header
 from streamlit_app.components.sidebar import render_sidebar
+from streamlit_app.config import APP_TITLE
 from streamlit_app.services.session import clear_dataset_session, get_state, set_state
+from streamlit_app.theme import apply_custom_theme
 
 st.set_page_config(
-    page_title="Settings — LOGIC_OS_2.0",
+    page_title=f"Settings — {APP_TITLE}",
     page_icon="⚙️",
     layout="wide",
 )
 
+apply_custom_theme()
 render_sidebar()
 
-st.markdown("## ⚙️ Application & Runtime Settings")
+render_header("Application & Runtime Settings", icon="⚙️")
 st.write("---")
 
-# Model Settings
+# LLM Model Settings
 st.markdown("### 🤖 LLM Model Settings")
+api_key_input = st.text_input(
+    "Google Gemini API Key",
+    value=get_state("google_api_key", os.getenv("GOOGLE_API_KEY", "")),
+    type="password",
+    help="Enter your Google AI Studio Gemini API key from https://aistudio.google.com/app/apikey",
+)
 model_name = st.selectbox(
     "Gemini Model Name",
-    options=["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"],
+    options=["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-2.0-flash-lite"],
     index=0,
 )
 temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
 max_iterations = st.number_input("Max Loop Iterations", min_value=1, max_value=20, value=6, step=1)
 
 if st.button("Save Model Settings"):
+    if api_key_input:
+        set_state("google_api_key", api_key_input)
+        os.environ["GOOGLE_API_KEY"] = api_key_input
+        env_file = ".env"
+        lines = []
+        if os.path.exists(env_file):
+            with open(env_file, "r") as f:
+                lines = [l for l in f.readlines() if not l.startswith("GOOGLE_API_KEY=")]
+        lines.append(f"GOOGLE_API_KEY={api_key_input}\n")
+        with open(env_file, "w") as f:
+            f.writelines(lines)
     set_state("model_name", model_name)
     set_state("temperature", temperature)
     set_state("max_iterations", max_iterations)
@@ -36,13 +60,33 @@ if st.button("Save Model Settings"):
 
 st.write("---")
 
-# Observability Settings
+# LangSmith Observability Settings
 st.markdown("### 📡 LangSmith Observability")
+langchain_key_input = st.text_input(
+    "LangSmith API Key",
+    value=get_state("langchain_api_key", os.getenv("LANGCHAIN_API_KEY", "")),
+    type="password",
+    help="Enter your LangSmith API key (starts with lsv2_pt_...).",
+)
 tracing_enabled = st.checkbox("Enable LangSmith Tracing", value=get_state("tracing_enabled", False))
 
 if st.button("Save Observability Settings"):
     set_state("tracing_enabled", tracing_enabled)
+    os.environ["LANGCHAIN_TRACING_V2"] = "true" if tracing_enabled else "false"
+    if langchain_key_input:
+        set_state("langchain_api_key", langchain_key_input)
+        os.environ["LANGCHAIN_API_KEY"] = langchain_key_input
+        env_file = ".env"
+        lines = []
+        if os.path.exists(env_file):
+            with open(env_file, "r") as f:
+                lines = [l for l in f.readlines() if not l.startswith("LANGCHAIN_API_KEY=") and not l.startswith("LANGCHAIN_TRACING_V2=")]
+        lines.append(f"LANGCHAIN_TRACING_V2={'true' if tracing_enabled else 'false'}\n")
+        lines.append(f"LANGCHAIN_API_KEY={langchain_key_input}\n")
+        with open(env_file, "w") as f:
+            f.writelines(lines)
     st.success(f"LangSmith Tracing set to: {tracing_enabled}")
+
 
 st.write("---")
 
@@ -60,3 +104,5 @@ with col2:
         clear_dataset_session()
         st.success("Entire session state reset!")
         st.rerun()
+
+render_footer()

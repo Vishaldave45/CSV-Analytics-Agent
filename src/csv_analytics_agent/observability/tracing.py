@@ -76,7 +76,7 @@ def get_traced_metadata(
     thread_id: str,
     dataset_name: str = "dataset.csv",
     dataset_hash: str | None = None,
-    model_name: str = "gemini-1.5-flash",
+    model_name: str = "gemini-2.5-flash",
 ) -> dict[str, Any]:
     """Construct centralized run metadata payload for traced graph executions.
 
