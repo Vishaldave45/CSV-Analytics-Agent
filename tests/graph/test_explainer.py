@@ -13,7 +13,7 @@ from csv_analytics_agent.graph.state import create_initial_state
 def test_explainer_node_success_result() -> None:
     """Verify deterministic formatting of a successful ExecutionResult."""
     state = create_initial_state()
-    res: ExecutionResult[float] = ExecutionResult(
+    res: ExecutionResult = ExecutionResult(
         capability_name="aggregate",
         status=ExecutionStatus.SUCCESS,
         message="Calculated mean salary.",
@@ -29,18 +29,15 @@ def test_explainer_node_success_result() -> None:
 
     msg = update["messages"][0]
     assert isinstance(msg, AIMessage)
-    assert "✅ Analysis Outcome: Aggregate" in msg.content
-    assert "`success`" in msg.content
-    assert "Calculated mean salary." in msg.content
-    assert "**77000.0**" in msg.content
-    assert "- **column**: salary" in msg.content
-    assert "_Execution Time: 12.50 ms_" in msg.content
+    assert "77,000" in msg.content or "77000" in msg.content
+    assert "salary" in msg.content.lower()
+    assert "mean" in msg.content.lower()
 
 
 def test_explainer_node_failed_result() -> None:
-    """Verify deterministic formatting of a failed ExecutionResult."""
+    """Verify formatting of a failed ExecutionResult."""
     state = create_initial_state()
-    res: ExecutionResult[None] = ExecutionResult(
+    res: ExecutionResult = ExecutionResult(
         capability_name="filter",
         status=ExecutionStatus.FAILED,
         message="Column 'invalid_col' not found.",
@@ -53,8 +50,7 @@ def test_explainer_node_failed_result() -> None:
     msg = update["messages"][0]
 
     assert isinstance(msg, AIMessage)
-    assert "❌ Analysis Outcome: Filter" in msg.content
-    assert "`failed`" in msg.content
+    assert "Execution Failed: Filter" in msg.content
     assert "Column 'invalid_col' not found." in msg.content
 
 
@@ -72,7 +68,7 @@ def test_explainer_node_empty_last_result() -> None:
 
 def test_format_execution_explanation_deterministic() -> None:
     """Verify deterministic output matching for identical ExecutionResult inputs."""
-    res: ExecutionResult[int] = ExecutionResult(
+    res: ExecutionResult = ExecutionResult(
         capability_name="top_n",
         status=ExecutionStatus.SUCCESS,
         message="Extracted top 5 records.",
@@ -84,3 +80,18 @@ def test_format_execution_explanation_deterministic() -> None:
     out2 = format_execution_explanation(res)
     assert out1 == out2
     assert "Top_N" in out1
+
+
+def test_format_execution_explanation_chart_bytes() -> None:
+    """Verify that image bytes do not dump raw binary into markdown explanation."""
+    res = ExecutionResult(
+        capability_name="render_visualization",
+        status=ExecutionStatus.SUCCESS,
+        message="Rendered chart 'line' into PNG bytes.",
+        data=b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR",
+        metadata={"chart_type": "line", "title": "Revenue Trend"},
+    )
+    explanation = format_execution_explanation(res)
+    assert "Chart Generated" in explanation
+    assert "Revenue Trend" in explanation
+    assert "b'\\x89PNG" not in explanation

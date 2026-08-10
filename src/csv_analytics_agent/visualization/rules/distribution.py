@@ -36,7 +36,6 @@ def recommend_histogram(profile: DatasetProfile) -> ChartSpecification | None:
     )
 
 
-
 def recommend_boxplot(profile: DatasetProfile) -> ChartSpecification | None:
     """Recommend a boxplot for numeric column distribution, optionally grouped by category.
 

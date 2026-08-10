@@ -57,7 +57,7 @@ flowchart TD
     
     ExecReq & Reg -->|Stage 5: Execution Engine| Engine(AnalyticsEngine / VisualizationEngine)
     Engine -->|Dynamic Provider Dispatch| Provider(PandasProvider)
-    Provider -->|Execute Operation| Result["📦 ExecutionResult[T]"]
+    Provider -->|Execute Operation| Result["📦 ExecutionResult"]
 ```
 
 ### Layer Responsibilities
@@ -185,7 +185,7 @@ if plan_result.success and plan_result.execution_request:
 | `IntentRule` | `frozen=True` | Declarative synonym rule mapping keywords to analytical intents. |
 | `CapabilityDescriptor` | `frozen=True` | Metadata defining a capability name, description, JSON schema, and default provider. |
 | `ExecutionRequest` | `frozen=True` | Payload requesting capability execution with column targets and parameters. |
-| `ExecutionResult[T]` | `frozen=True` | Type-safe generic result wrapper with status, message, payload data `T`, and timing. |
+| `ExecutionResult` | `frozen=True` | Type-safe result wrapper with status, message, payload data `Any | None`, and timing. |
 | `DatasetProfile` | `frozen=True` | Complete statistical breakdown of tabular dataset. |
 | `ChartSpecification` | `frozen=True` | Renderer-independent chart definition (type, title, axes, description). |
 

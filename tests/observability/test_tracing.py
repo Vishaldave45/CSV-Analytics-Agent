@@ -51,15 +51,14 @@ def test_configure_langsmith_success() -> None:
         assert os.environ.get("LANGCHAIN_PROJECT") == "test-project"
 
 
-
 def test_get_traced_metadata() -> None:
     """Verify get_traced_metadata payload structure."""
     meta = get_traced_metadata(
         thread_id="t_meta_123",
         dataset_name="sales.csv",
-        model_name="gemini-2.5-flash",
+        model_name="gemini-2.0-flash",
     )
     assert meta["thread_id"] == "t_meta_123"
     assert meta["dataset_name"] == "sales.csv"
-    assert meta["model_name"] == "gemini-2.5-flash"
+    assert meta["model_name"] == "gemini-2.0-flash"
     assert "agent_version" in meta

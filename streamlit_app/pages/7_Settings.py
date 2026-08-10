@@ -33,13 +33,17 @@ api_key_input = st.text_input(
     type="password",
     help="Enter your Google AI Studio Gemini API key from https://aistudio.google.com/app/apikey",
 )
+avail_models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-lite"]
+curr_model = get_state("model_name", "gemini-2.0-flash")
+curr_index = avail_models.index(curr_model) if curr_model in avail_models else 0
+
 model_name = st.selectbox(
     "Gemini Model Name",
-    options=["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-2.0-flash-lite"],
-    index=0,
+    options=avail_models,
+    index=curr_index,
 )
-temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.0, step=0.1)
-max_iterations = st.number_input("Max Loop Iterations", min_value=1, max_value=20, value=6, step=1)
+temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=float(get_state("temperature", 0.0)), step=0.1)
+max_iterations = st.number_input("Max Loop Iterations", min_value=1, max_value=20, value=int(get_state("max_iterations", 6)), step=1)
 
 if st.button("Save Model Settings"):
     if api_key_input:
@@ -62,30 +66,54 @@ st.write("---")
 
 # LangSmith Observability Settings
 st.markdown("### 📡 LangSmith Observability")
+default_key = os.getenv("LANGSMITH_API_KEY") or os.getenv("LANGCHAIN_API_KEY", "")
 langchain_key_input = st.text_input(
     "LangSmith API Key",
-    value=get_state("langchain_api_key", os.getenv("LANGCHAIN_API_KEY", "")),
+    value=get_state("langchain_api_key", default_key),
     type="password",
     help="Enter your LangSmith API key (starts with lsv2_pt_...).",
 )
-tracing_enabled = st.checkbox("Enable LangSmith Tracing", value=get_state("tracing_enabled", False))
+default_tracing = (
+    os.getenv("LANGSMITH_TRACING") == "true" or os.getenv("LANGCHAIN_TRACING_V2") == "true"
+)
+tracing_enabled = st.checkbox(
+    "Enable LangSmith Tracing", value=get_state("tracing_enabled", default_tracing)
+)
 
 if st.button("Save Observability Settings"):
     set_state("tracing_enabled", tracing_enabled)
+    os.environ["LANGSMITH_TRACING"] = "true" if tracing_enabled else "false"
     os.environ["LANGCHAIN_TRACING_V2"] = "true" if tracing_enabled else "false"
+    os.environ["LANGSMITH_PROJECT"] = "csv-analytics-agent"
+    os.environ["LANGCHAIN_PROJECT"] = "csv-analytics-agent"
     if langchain_key_input:
         set_state("langchain_api_key", langchain_key_input)
+        os.environ["LANGSMITH_API_KEY"] = langchain_key_input
         os.environ["LANGCHAIN_API_KEY"] = langchain_key_input
         env_file = ".env"
         lines = []
         if os.path.exists(env_file):
             with open(env_file, "r") as f:
-                lines = [l for l in f.readlines() if not l.startswith("LANGCHAIN_API_KEY=") and not l.startswith("LANGCHAIN_TRACING_V2=")]
+                lines = [
+                    l
+                    for l in f.readlines()
+                    if not l.startswith("LANGCHAIN_API_KEY=")
+                    and not l.startswith("LANGCHAIN_TRACING_V2=")
+                    and not l.startswith("LANGSMITH_")
+                ]
+        lines.append(f"LANGSMITH_TRACING={'true' if tracing_enabled else 'false'}\n")
+        lines.append("LANGSMITH_PROJECT=csv-analytics-agent\n")
+        lines.append(f"LANGSMITH_API_KEY={langchain_key_input}\n")
         lines.append(f"LANGCHAIN_TRACING_V2={'true' if tracing_enabled else 'false'}\n")
+        lines.append("LANGCHAIN_PROJECT=csv-analytics-agent\n")
         lines.append(f"LANGCHAIN_API_KEY={langchain_key_input}\n")
         with open(env_file, "w") as f:
             f.writelines(lines)
-    st.success(f"LangSmith Tracing set to: {tracing_enabled}")
+
+    from csv_analytics_agent.observability.tracing import configure_langsmith
+
+    configure_langsmith()
+    st.success(f"LangSmith Tracing set to: {tracing_enabled} (Project: csv-analytics-agent)")
 
 
 st.write("---")

@@ -79,7 +79,7 @@ class GeminiLLM(BaseLLM):
 
     def __init__(
         self,
-        model_name: str = "gemini-2.5-flash",
+        model_name: str = "gemini-2.0-flash",
         temperature: float = 0.0,
         api_key: str | None = None,
         llm_instance: Any | None = None,
@@ -88,13 +88,13 @@ class GeminiLLM(BaseLLM):
         """Initialize GeminiLLM instance.
 
         Args:
-            model_name: Gemini model string identifier (default 'gemini-2.5-flash').
+            model_name: Gemini model string identifier (default 'gemini-2.0-flash').
             temperature: Sampling temperature float (default 0.0).
             api_key: Optional Google API key string.
             llm_instance: Optional pre-configured Runnable/Chat model for injection/testing.
             limiter: Optional pyrate_limiter.Limiter instance for rate limiting.
         """
-        formatted_model = model_name.strip().replace(" ", "-") if model_name else "gemini-2.5-flash"
+        formatted_model = model_name.strip().replace(" ", "-") if model_name else "gemini-2.0-flash"
         self._model_name = formatted_model
         self._temperature = temperature
         self._api_key = api_key or os.getenv("GOOGLE_API_KEY")
@@ -183,6 +183,11 @@ class GeminiLLM(BaseLLM):
                     "Invalid Google Gemini API Key. "
                     "Please check your key at https://aistudio.google.com/app/apikey "
                     "and enter it in Settings."
+                ) from err
+            if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str or "quota" in err_str.lower():
+                raise ValueError(
+                    f"Gemini API Quota / Rate Limit Exceeded (429) for '{self._model_name}'. "
+                    "Please try selecting 'gemini-1.5-flash' on the Settings page, or wait a minute before retrying."
                 ) from err
             raise
 

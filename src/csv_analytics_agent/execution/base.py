@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 import pandas as pd
 
@@ -38,7 +37,7 @@ class BaseProvider(ABC):
         pass
 
     @abstractmethod
-    def execute(self, request: ExecutionRequest, df: pd.DataFrame) -> ExecutionResult[Any]:
+    def execute(self, request: ExecutionRequest, df: pd.DataFrame) -> ExecutionResult:
         """Execute a capability request against a DataFrame.
 
         Args:
@@ -74,7 +73,7 @@ class BaseEngine(ABC):
         self,
         request: ExecutionRequest,
         df: pd.DataFrame,
-    ) -> ExecutionResult[Any]:
+    ) -> ExecutionResult:
         """Validate and coordinate capability execution via an underlying provider.
 
         Args:

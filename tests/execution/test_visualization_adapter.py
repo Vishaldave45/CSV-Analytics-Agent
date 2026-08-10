@@ -89,3 +89,44 @@ def test_visualization_engine_render(sample_df: pd.DataFrame) -> None:
     assert res.status == ExecutionStatus.SUCCESS
     assert isinstance(res.data, bytes)
     assert len(res.data) > 0
+
+
+def test_visualization_engine_render_flat_parameters(sample_df: pd.DataFrame) -> None:
+    """Test render_visualization with top-level flat parameters from LLM."""
+    engine = VisualizationEngine()
+    req = ExecutionRequest(
+        capability_name="render_visualization",
+        parameters={
+            "chart_type": "line",
+            "x_axis": "age",
+            "y_axis": "income",
+            "title": "Income over Age",
+        },
+    )
+    res = engine.execute_capability(req, sample_df)
+    assert res.status == ExecutionStatus.SUCCESS
+    assert isinstance(res.data, bytes)
+    assert len(res.data) > 0
+
+
+def test_visualization_engine_render_target_columns_fallback(sample_df: pd.DataFrame) -> None:
+    """Test render_visualization with target_columns fallback."""
+    engine = VisualizationEngine()
+    req = ExecutionRequest(
+        capability_name="render_visualization",
+        target_columns=["age", "income"],
+        parameters={"chart_type": "scatter"},
+    )
+    res = engine.execute_capability(req, sample_df)
+    assert res.status == ExecutionStatus.SUCCESS
+    assert isinstance(res.data, bytes)
+    assert len(res.data) > 0
+
+
+def test_visualization_engine_recommend_self_healing_profile(sample_df: pd.DataFrame) -> None:
+    """Test recommend_visualization when profile is not in context metadata."""
+    engine = VisualizationEngine()
+    req = ExecutionRequest(capability_name="recommend_visualization")
+    res = engine.execute_capability(req, sample_df)
+    assert res.status == ExecutionStatus.SUCCESS
+    assert res.data is not None

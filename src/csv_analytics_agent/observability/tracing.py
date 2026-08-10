@@ -35,24 +35,49 @@ def configure_langsmith(
     obs_settings = settings or get_observability_settings()
 
     # Check if tracing is explicitly enabled in config or env
-    tracing_enabled = obs_settings.tracing_v2 or os.getenv("LANGCHAIN_TRACING_V2") == "true"
+    tracing_enabled = (
+        obs_settings.tracing_v2
+        or os.getenv("LANGSMITH_TRACING") == "true"
+        or os.getenv("LANGCHAIN_TRACING_V2") == "true"
+    )
     if not tracing_enabled:
-        logger.info("LangSmith tracing is disabled (LANGCHAIN_TRACING_V2=false).")
+        logger.info("LangSmith tracing is disabled (LANGSMITH_TRACING=false).")
         return False
 
-    api_key = obs_settings.api_key or os.getenv("LANGCHAIN_API_KEY")
+    api_key = (
+        obs_settings.api_key
+        or os.getenv("LANGSMITH_API_KEY")
+        or os.getenv("LANGCHAIN_API_KEY")
+    )
     if not api_key:
         logger.warning(
-            "LangSmith tracing enabled, but no LANGCHAIN_API_KEY provided. "
+            "LangSmith tracing enabled, but no LANGSMITH_API_KEY / LANGCHAIN_API_KEY provided. "
             "Disabling tracing to prevent runtime errors."
         )
         return False
 
+    project = (
+        os.getenv("LANGSMITH_PROJECT")
+        or os.getenv("LANGCHAIN_PROJECT")
+        or obs_settings.project
+        or "csv-analytics-agent"
+    )
+    endpoint = (
+        os.getenv("LANGSMITH_ENDPOINT")
+        or os.getenv("LANGCHAIN_ENDPOINT")
+        or obs_settings.endpoint
+        or "https://api.smith.langchain.com"
+    )
+
     try:
+        os.environ["LANGSMITH_TRACING"] = "true"
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGSMITH_API_KEY"] = api_key
         os.environ["LANGCHAIN_API_KEY"] = api_key
-        os.environ["LANGCHAIN_PROJECT"] = obs_settings.project
-        os.environ["LANGCHAIN_ENDPOINT"] = obs_settings.endpoint
+        os.environ["LANGSMITH_PROJECT"] = project
+        os.environ["LANGCHAIN_PROJECT"] = project
+        os.environ["LANGSMITH_ENDPOINT"] = endpoint
+        os.environ["LANGCHAIN_ENDPOINT"] = endpoint
         os.environ["LANGCHAIN_SESSION"] = obs_settings.session
 
         if obs_settings.tags:
@@ -62,8 +87,8 @@ def configure_langsmith(
         register_callback(AgentTracingCallbackHandler(logger_instance=logger))
         logger.info(
             "LangSmith tracing enabled for project '%s' (Endpoint: %s)",
-            obs_settings.project,
-            obs_settings.endpoint,
+            project,
+            endpoint,
         )
         return True
 
@@ -76,7 +101,7 @@ def get_traced_metadata(
     thread_id: str,
     dataset_name: str = "dataset.csv",
     dataset_hash: str | None = None,
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-2.0-flash",
 ) -> dict[str, Any]:
     """Construct centralized run metadata payload for traced graph executions.
 

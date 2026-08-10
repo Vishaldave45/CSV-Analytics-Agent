@@ -6,8 +6,6 @@ by validating requests and selecting an appropriate provider dynamically.
 
 from __future__ import annotations
 
-from typing import Any
-
 import pandas as pd
 
 from csv_analytics_agent.execution.base import BaseEngine, BaseProvider
@@ -146,7 +144,7 @@ class AnalyticsEngine(BaseEngine):
         self,
         request: ExecutionRequest,
         df: pd.DataFrame,
-    ) -> ExecutionResult[Any]:
+    ) -> ExecutionResult:
         """Validate request and delegate execution to the best matching provider.
 
         Args:

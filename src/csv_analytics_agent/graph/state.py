@@ -44,11 +44,13 @@ class AgentState(TypedDict, total=False):
     profile: DatasetProfile | None
     dataset_hash: str | None
     active_filters: list[FilterPayload]
-    last_result: ExecutionResult[object] | None
+    last_result: ExecutionResult | None
     retrieved_columns: list[str]
     iteration_count: int
     planner_result: PlannerResult | None
     thread_id: str | None
+    executed_tools: list[str]
+    chart_bytes: bytes | None
     metadata: dict[str, MetadataValue]
 
 
@@ -78,6 +80,8 @@ def create_initial_state(
         iteration_count=0,
         planner_result=None,
         thread_id=thread_id,
+        executed_tools=[],
+        chart_bytes=None,
         metadata={},
     )
 

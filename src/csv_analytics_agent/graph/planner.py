@@ -69,8 +69,37 @@ def planner_node(
     tools = as_langchain_tools(descriptors, registry, dataframe)
 
     # 3. Bind Tools to LLM & Invoke
+    system_prompt = (
+        "You are an expert tabular analytics and visualization assistant. "
+        "You have access to execution tools to query, aggregate, filter, sort, and "
+        "render charts for a dataset.\n"
+        f"Available dataset columns: {list(dataframe.columns)}\n"
+        "MANDATORY INSTRUCTIONS:\n"
+        "1. You MUST ALWAYS call a tool to compute, aggregate, or visualize dataset data. "
+        "Do NOT respond with text answers without executing an appropriate tool.\n"
+        "2. When the user asks to 'compare', 'count across', 'break down by', "
+        "or calculate grouped metrics: call 'group' with by='<category_column>', "
+        "target='<column>', and operation='count' (for counts/frequencies) or 'mean'/'sum'.\n"
+        "3. When the user asks to 'show trend', 'plot', 'visualize', 'chart', 'graph', "
+        "or asks for a visual representation: call 'render_visualization' with parameters: "
+        "chart_type ('line' for trends, 'bar' for categories, 'histogram'/'boxplot' "
+        "for numeric distribution, 'scatter' for two numeric columns), "
+        "x_axis (column name), y_axis (optional column name), title (optional string).\n"
+        "4. When the user asks for single-column calculations (e.g. average, sum, min, max), "
+        "call 'aggregate'.\n"
+        "5. When the user asks for filtered records, top/bottom rows, or sorting, "
+        "call 'filter', 'top_n', or 'sort'.\n"
+        "6. Always match the requested metric precisely."
+    )
+
+    from langchain_core.messages import SystemMessage
+
+    raw_messages: list[BaseMessage] = state.get("messages", [])
+    messages: list[BaseMessage] = [SystemMessage(content=system_prompt)] + [
+        m for m in raw_messages if not isinstance(m, SystemMessage)
+    ]
+
     bound_llm = llm.bind_tools(tools)
-    messages: list[BaseMessage] = state.get("messages", [])
 
     logger.info(
         "planner_invoke",

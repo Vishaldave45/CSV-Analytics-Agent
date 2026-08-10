@@ -43,7 +43,7 @@ class PandasProvider(BaseProvider):
     def supports(self, capability: str) -> bool:
         return capability in SUPPORTED_CAPABILITIES
 
-    def execute(self, request: ExecutionRequest, df: pd.DataFrame) -> ExecutionResult[Any]:
+    def execute(self, request: ExecutionRequest, df: pd.DataFrame) -> ExecutionResult:
         """Execute capability request using pandas DataFrame operations.
 
         Args:
@@ -77,7 +77,7 @@ class PandasProvider(BaseProvider):
                 raise ProviderError(f"Unhandled capability '{request.capability_name}'.")
 
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-            return ExecutionResult[Any](
+            return ExecutionResult(
                 capability_name=request.capability_name,
                 status=ExecutionStatus.SUCCESS,
                 message=msg,
@@ -99,11 +99,26 @@ class PandasProvider(BaseProvider):
         if column not in df.columns:
             raise ProviderError(f"Column '{column}' not found in DataFrame.")
 
-        op = str(request.parameters.get("operation", "mean")).lower()
+        op_param = request.parameters.get("operation")
         series = df[column].dropna()
 
-        if series.empty and op != "count":
+        if series.empty and op_param != "count":
             raise ProviderError(f"Column '{column}' contains no non-null values for aggregation.")
+
+        is_numeric = pd.api.types.is_numeric_dtype(series)
+        if op_param:
+            op = str(op_param).lower()
+        else:
+            op = "mean" if is_numeric else "count"
+
+        # Coerce numeric if user requested mean/sum/median/std on non-numeric column
+        if op in ("mean", "sum", "median", "std", "var", "variance") and not is_numeric:
+            coerced = pd.to_numeric(series, errors="coerce").dropna()
+            if not coerced.empty and len(coerced) > len(series) * 0.5:
+                series = coerced
+                is_numeric = True
+            else:
+                op = "count"
 
         val: Any = None
         if op == "mean":
@@ -113,14 +128,14 @@ class PandasProvider(BaseProvider):
         elif op == "median":
             val = float(series.median())
         elif op == "min":
-            val = float(series.min())
+            val = float(series.min()) if is_numeric else str(series.min())
         elif op == "max":
-            val = float(series.max())
+            val = float(series.max()) if is_numeric else str(series.max())
         elif op == "count":
             val = float(len(series))
         elif op == "std":
             val = float(series.std())
-        elif op == "variance" or op == "var":
+        elif op in ("variance", "var"):
             val = float(series.var())
         elif op == "mode":
             val = str(series.mode().iloc[0]) if not series.mode().empty else None
@@ -171,18 +186,47 @@ class PandasProvider(BaseProvider):
         self, df: pd.DataFrame, request: ExecutionRequest
     ) -> tuple[dict[str, Any], str]:
         by_col = request.parameters.get("by")
-        target_col = request.parameters.get("target") or (
-            request.target_columns[0] if request.target_columns else None
-        )
-        op = str(request.parameters.get("operation", "mean")).lower()
+        target_col = request.parameters.get("target")
 
-        if not by_col or not target_col:
-            raise ProviderError("Group capability requires 'by' and 'target' column parameters.")
+        # Fallback to target_columns if by or target omitted
+        if not by_col and request.target_columns:
+            by_col = request.target_columns[0]
+            if len(request.target_columns) > 1 and not target_col:
+                target_col = request.target_columns[1]
+        elif by_col and not target_col and request.target_columns:
+            for tc in request.target_columns:
+                if tc != by_col:
+                    target_col = tc
+                    break
+
+        if not by_col:
+            raise ProviderError("Group capability requires 'by' column parameter.")
+        if not target_col:
+            target_col = by_col
 
         if by_col not in df.columns or target_col not in df.columns:
             raise ProviderError(f"Columns '{by_col}' and '{target_col}' must exist in DataFrame.")
 
-        grouped = df.groupby(by_col)[target_col]
+        is_numeric = pd.api.types.is_numeric_dtype(df[target_col])
+        op_param = request.parameters.get("operation")
+        if op_param:
+            op = str(op_param).lower()
+        else:
+            op = "mean" if (is_numeric and target_col != by_col) else "count"
+
+        # Coerce or fallback to count for non-numeric target columns
+        if op in ("mean", "sum", "min", "max") and not is_numeric:
+            coerced = pd.to_numeric(df[target_col], errors="coerce")
+            if coerced.notna().sum() > len(df) * 0.5:
+                temp_df = df[[by_col]].copy()
+                temp_df[target_col] = coerced
+                grouped = temp_df.groupby(by_col)[target_col]
+            else:
+                op = "count"
+                grouped = df.groupby(by_col)[target_col]
+        else:
+            grouped = df.groupby(by_col)[target_col]
+
         if op == "mean":
             res_series = grouped.mean()
         elif op == "sum":
@@ -196,7 +240,9 @@ class PandasProvider(BaseProvider):
         else:
             raise ProviderError(f"Unsupported group aggregation operation '{op}'.")
 
-        res_dict = {str(k): float(v) for k, v in res_series.to_dict().items()}
+        res_dict = {
+            str(k): float(v) if pd.notna(v) else 0.0 for k, v in res_series.to_dict().items()
+        }
         msg = f"Grouped by '{by_col}' calculating {op} on '{target_col}' ({len(res_dict)} groups)."
         return res_dict, msg
 

@@ -120,7 +120,10 @@ def build_graph(
         "tool",
         lambda s: tool_node(s, registry=registry, dataframe=dataframe),
     )
-    builder.add_node("explainer", explainer_node)
+    builder.add_node(
+        "explainer",
+        lambda s: explainer_node(s, dataframe=dataframe, llm=llm),
+    )
     builder.add_node(
         "memory_update",
         lambda s: memory_update_node(s, memory_service=memory_service),

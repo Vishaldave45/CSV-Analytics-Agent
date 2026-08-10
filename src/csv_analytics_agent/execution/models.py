@@ -7,11 +7,9 @@ results, descriptors, engine metadata, provider metadata, and registrations.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
-
-T = TypeVar("T")
 
 
 class ExecutionStatus(str, Enum):
@@ -105,7 +103,7 @@ class ExecutionRequest(BaseModel):
     )
 
 
-class ExecutionResult(BaseModel, Generic[T]):
+class ExecutionResult(BaseModel):
     """Unified result payload returned by engines and providers.
 
     Attributes:
@@ -122,7 +120,7 @@ class ExecutionResult(BaseModel, Generic[T]):
     capability_name: str = Field(..., min_length=1, description="Capability name executed.")
     status: ExecutionStatus = Field(..., description="Execution status outcome.")
     message: str = Field(..., min_length=1, description="Execution message details.")
-    data: T | None = Field(default=None, description="Result payload data.")
+    data: Any | None = Field(default=None, description="Result payload data.")
     execution_time_ms: float = Field(
         default=0.0,
         ge=0.0,

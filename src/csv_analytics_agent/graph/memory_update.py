@@ -51,7 +51,7 @@ def memory_update_node(
     """
     messages = state.get("messages", [])
     user_text = _extract_user_text(messages)
-    last_result: ExecutionResult[Any] | None = state.get("last_result")
+    last_result: ExecutionResult | None = state.get("last_result")
 
     if user_text and last_result is not None:
         narrative_text = (

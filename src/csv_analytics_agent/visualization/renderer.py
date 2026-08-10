@@ -87,15 +87,37 @@ def render_chart(
             plt.xticks(rotation=45, ha="right")
 
         elif spec.chart_type == ChartType.LINE:
-            x_data = list(df[spec.x_axis.column])
-            y_data = (
-                list(df[spec.y_axis.column])
-                if (spec.y_axis and spec.y_axis.column in df.columns)
-                else list(df.iloc[:, 0])
+            x_col = spec.x_axis.column
+            y_col = (
+                spec.y_axis.column if (spec.y_axis and spec.y_axis.column in df.columns) else None
             )
+
+            if y_col is not None and pd.api.types.is_numeric_dtype(df[y_col]):
+                sub_df = df[[x_col, y_col]].dropna()
+                try:
+                    dt_series = pd.to_datetime(sub_df[x_col], errors="coerce")
+                    if dt_series.notna().sum() > len(sub_df) * 0.5:
+                        sub_df["_sort_dt"] = dt_series
+                        sub_df = sub_df.sort_values("_sort_dt")
+                except Exception:
+                    pass
+
+                if sub_df[x_col].duplicated().any():
+                    grouped = sub_df.groupby(x_col, sort=False)[y_col].sum()
+                    x_data = [str(x) for x in grouped.index]
+                    y_data = [float(v) for v in grouped.values]
+                else:
+                    x_data = [str(x) for x in sub_df[x_col]]
+                    y_data = [float(v) for v in sub_df[y_col]]
+            else:
+                x_data = list(df[x_col])
+                y_data = list(df[y_col]) if y_col else list(df.iloc[:, 0])
+
             ax.plot(x_data, y_data, marker="o", color="#3182bd", linewidth=2)
             if spec.y_axis is not None:
                 ax.set_ylabel(spec.y_axis.label or spec.y_axis.column)
+            if len(x_data) > 6:
+                plt.xticks(rotation=45, ha="right")
 
         elif spec.chart_type == ChartType.SCATTER:
             y_col = (
@@ -123,7 +145,6 @@ def render_chart(
             else:
                 ax.boxplot(list(df[spec.x_axis.column].dropna()))
                 ax.set_ylabel(spec.x_axis.label or spec.x_axis.column)
-
 
         elif spec.chart_type == ChartType.PIE:
             counts = df[spec.x_axis.column].value_counts()

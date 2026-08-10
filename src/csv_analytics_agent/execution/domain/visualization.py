@@ -6,8 +6,6 @@ into the Stage 5 Execution Engine Framework without modifying Stage 4.
 
 from __future__ import annotations
 
-from typing import Any
-
 import pandas as pd
 
 from csv_analytics_agent.execution.base import BaseEngine, BaseProvider
@@ -46,17 +44,17 @@ class VisualizationProvider(BaseProvider):
     def supports(self, capability: str) -> bool:
         return capability in ("recommend_visualization", "render_visualization")
 
-    def execute(self, request: ExecutionRequest, df: pd.DataFrame) -> ExecutionResult[Any]:
+    def execute(self, request: ExecutionRequest, df: pd.DataFrame) -> ExecutionResult:
         if request.capability_name == "recommend_visualization":
             profile: DatasetProfile | None = request.context_metadata.get("profile")
             if profile is None:
-                raise ProviderError(
-                    "Capability 'recommend_visualization' requires 'profile' in context_metadata."
-                )
+                from csv_analytics_agent.profiler.profiler import DatasetProfiler
+
+                profile = DatasetProfiler().profile(df)
             plan: VisualizationPlan = recommend_visualizations(profile)
             chart_name = plan.primary.chart_type.value
             msg = f"Generated visualization plan with primary chart '{chart_name}'."
-            return ExecutionResult[VisualizationPlan](
+            return ExecutionResult(
                 capability_name=request.capability_name,
                 status=ExecutionStatus.SUCCESS,
                 message=msg,
@@ -67,20 +65,57 @@ class VisualizationProvider(BaseProvider):
             spec: ChartSpecification
             if isinstance(spec_dict, ChartSpecification):
                 spec = spec_dict
-            elif isinstance(spec_dict, dict):
-                spec = ChartSpecification.model_validate(spec_dict)
             else:
-                raise ProviderError(
-                    "Capability 'render_visualization' requires a valid 'spec' parameter."
+                raw_spec = (
+                    dict(spec_dict) if isinstance(spec_dict, dict) else dict(request.parameters)
                 )
+
+                # Target columns fallback if x_axis / y_axis omitted
+                if "x_axis" not in raw_spec and request.target_columns:
+                    raw_spec["x_axis"] = request.target_columns[0]
+                    if len(request.target_columns) > 1 and "y_axis" not in raw_spec:
+                        raw_spec["y_axis"] = request.target_columns[1]
+
+                # Convert string x_axis/y_axis to dicts
+                if isinstance(raw_spec.get("x_axis"), str):
+                    raw_spec["x_axis"] = {"column": raw_spec["x_axis"]}
+                if isinstance(raw_spec.get("y_axis"), str):
+                    raw_spec["y_axis"] = {"column": raw_spec["y_axis"]}
+
+                chart_type_val = str(raw_spec.get("chart_type", "line")).lower()
+                raw_spec["chart_type"] = chart_type_val
+
+                if "title" not in raw_spec or not raw_spec["title"]:
+                    x_col = (
+                        raw_spec.get("x_axis", {}).get("column", "")
+                        if isinstance(raw_spec.get("x_axis"), dict)
+                        else ""
+                    )
+                    y_col = (
+                        raw_spec.get("y_axis", {}).get("column", "")
+                        if isinstance(raw_spec.get("y_axis"), dict)
+                        else ""
+                    )
+                    raw_spec["title"] = f"{chart_type_val.title()} Chart ({y_col or x_col})"
+
+                if "description" not in raw_spec or not raw_spec["description"]:
+                    raw_spec["description"] = f"Rendered {chart_type_val} visualization chart."
+
+                try:
+                    spec = ChartSpecification.model_validate(raw_spec)
+                except Exception as err:
+                    raise ProviderError(
+                        f"Capability 'render_visualization' failed with invalid spec: {err}"
+                    ) from err
 
             save_path = request.parameters.get("save_path")
             img_bytes = render_chart(spec, df, save_path=save_path)
-            return ExecutionResult[bytes](
+            return ExecutionResult(
                 capability_name=request.capability_name,
                 status=ExecutionStatus.SUCCESS,
                 message=f"Rendered chart '{spec.chart_type.value}' into PNG bytes.",
                 data=img_bytes,
+                metadata={"chart_type": spec.chart_type.value, "title": spec.title},
             )
         else:
             raise ProviderError(
@@ -106,7 +141,10 @@ class VisualizationEngine(BaseEngine):
         return [
             CapabilityDescriptor(
                 name="recommend_visualization",
-                description="Generates a deterministic VisualizationPlan for a DatasetProfile.",
+                description=(
+                    "Generates a deterministic VisualizationPlan with chart recommendations "
+                    "for the dataset."
+                ),
                 parameters_schema={
                     "type": "object",
                     "properties": {},
@@ -115,20 +153,48 @@ class VisualizationEngine(BaseEngine):
             ),
             CapabilityDescriptor(
                 name="render_visualization",
-                description="Renders a ChartSpecification and DataFrame into PNG image bytes.",
+                description=(
+                    "Renders a visualization chart (line, bar, histogram, scatter, boxplot, "
+                    "pie, heatmap) into PNG image bytes. Parameters: chart_type, x_axis, "
+                    "y_axis, title."
+                ),
                 parameters_schema={
                     "type": "object",
                     "properties": {
+                        "chart_type": {
+                            "type": "string",
+                            "enum": [
+                                "line",
+                                "bar",
+                                "histogram",
+                                "scatter",
+                                "boxplot",
+                                "pie",
+                                "heatmap",
+                            ],
+                            "description": "Type of visualization chart.",
+                        },
+                        "x_axis": {
+                            "type": "string",
+                            "description": "Column name for primary X-axis.",
+                        },
+                        "y_axis": {
+                            "type": "string",
+                            "description": "Optional column name for Y-axis.",
+                        },
+                        "title": {
+                            "type": "string",
+                            "description": "Optional title of the chart.",
+                        },
                         "spec": {
                             "type": "object",
-                            "description": "ChartSpecification definition.",
+                            "description": "Optional nested ChartSpecification object.",
                         },
                         "save_path": {
                             "type": "string",
                             "description": "Optional output PNG file path.",
                         },
                     },
-                    "required": ["spec"],
                 },
                 provider_name="visualization_adapter",
             ),
@@ -138,7 +204,7 @@ class VisualizationEngine(BaseEngine):
         self,
         request: ExecutionRequest,
         df: pd.DataFrame,
-    ) -> ExecutionResult[Any]:
+    ) -> ExecutionResult:
         if request.capability_name not in self.metadata.supported_capabilities:
             raise EngineValidationError(
                 f"VisualizationEngine does not handle capability '{request.capability_name}'."

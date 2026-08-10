@@ -35,8 +35,8 @@ class DummyEngine(BaseEngine):
         self,
         request: ExecutionRequest,
         df: pd.DataFrame,
-    ) -> ExecutionResult[float]:
-        return ExecutionResult[float](
+    ) -> ExecutionResult:
+        return ExecutionResult(
             capability_name=request.capability_name,
             status=ExecutionStatus.SUCCESS,
             message="Dummy executed.",

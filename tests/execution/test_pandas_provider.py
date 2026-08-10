@@ -101,3 +101,43 @@ def test_pandas_provider_missing_column_raises_error(sample_df: pd.DataFrame) ->
     )
     with pytest.raises(ProviderError):
         provider.execute(req, sample_df)
+
+
+def test_pandas_provider_group_count_categorical(sample_df: pd.DataFrame) -> None:
+    """Verify group counting on categorical columns without operation specified."""
+    provider = PandasProvider()
+    req = ExecutionRequest(
+        capability_name="group",
+        parameters={"by": "department", "target": "department"},
+    )
+    res = provider.execute(req, sample_df)
+    assert res.status == ExecutionStatus.SUCCESS
+    assert isinstance(res.data, dict)
+    assert res.data["IT"] == 2.0
+    assert res.data["HR"] == 2.0
+    assert res.data["Sales"] == 1.0
+
+
+def test_pandas_provider_group_target_columns_fallback(sample_df: pd.DataFrame) -> None:
+    """Verify group counting using target_columns when by parameter is omitted."""
+    provider = PandasProvider()
+    req = ExecutionRequest(
+        capability_name="group",
+        target_columns=["department"],
+    )
+    res = provider.execute(req, sample_df)
+    assert res.status == ExecutionStatus.SUCCESS
+    assert isinstance(res.data, dict)
+    assert res.data["IT"] == 2.0
+
+
+def test_pandas_provider_aggregate_count_categorical(sample_df: pd.DataFrame) -> None:
+    """Verify aggregate on non-numeric column defaults to count."""
+    provider = PandasProvider()
+    req = ExecutionRequest(
+        capability_name="aggregate",
+        target_columns=["name"],
+    )
+    res = provider.execute(req, sample_df)
+    assert res.status == ExecutionStatus.SUCCESS
+    assert res.data == 5.0

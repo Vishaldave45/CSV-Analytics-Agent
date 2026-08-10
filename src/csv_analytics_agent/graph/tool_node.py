@@ -52,8 +52,9 @@ def tool_node(
         return {}
 
     tool_messages: list[ToolMessage] = []
-    last_result: ExecutionResult[Any] | None = None
+    last_result: ExecutionResult | None = None
     active_filters: list[FilterPayload] = list(state.get("active_filters", []))
+    executed_tools: list[str] = list(state.get("executed_tools", []))
 
     # Execute requested tool calls sequentially preserving order
     for call in last_ai_msg.tool_calls:
@@ -69,14 +70,13 @@ def tool_node(
             if k not in ("target_columns", "parameters"):
                 parameters[k] = v
 
+        context_metadata: dict[str, Any] = {
+            "profile": state.get("profile"),
+            "working_df": dataframe,
+        }
+
         try:
             engine = registry.get_engine(cap_name)
-            # Inject profile from state into context_metadata so
-            # VisualizationProvider.execute() can access it for recommend_visualization.
-            context_metadata: dict[str, object] = {"raw_query": cap_name}
-            profile = state.get("profile")
-            if profile is not None:
-                context_metadata["profile"] = profile
             request = ExecutionRequest(
                 capability_name=cap_name,
                 target_columns=target_columns,
@@ -112,6 +112,9 @@ def tool_node(
             )
 
         last_result = exec_res
+        if cap_name and cap_name not in executed_tools:
+            executed_tools.append(cap_name)
+
         logger.info(
             "tool_call_result",
             tool=cap_name,
@@ -125,7 +128,9 @@ def tool_node(
                 "capability": exec_res.capability_name,
                 "status": exec_res.status.value,
                 "message": exec_res.message,
-                "data": str(exec_res.data),
+                "data": str(exec_res.data)
+                if not isinstance(exec_res.data, bytes)
+                else f"<PNG image bytes: {len(exec_res.data)} bytes>",
             }
         )
 
@@ -145,6 +150,7 @@ def tool_node(
         "messages": tool_messages,
         "last_result": last_result,
         "active_filters": active_filters,
+        "executed_tools": executed_tools,
     }
     return state_update
 

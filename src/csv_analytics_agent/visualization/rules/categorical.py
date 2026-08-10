@@ -52,7 +52,6 @@ def recommend_bar(profile: DatasetProfile) -> ChartSpecification | None:
     )
 
 
-
 def recommend_pie(profile: DatasetProfile) -> ChartSpecification | None:
     """Recommend a pie chart for low-cardinality categorical data.
 

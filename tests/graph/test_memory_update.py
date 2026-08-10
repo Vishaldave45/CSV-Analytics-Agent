@@ -16,7 +16,7 @@ def test_memory_update_node_stores_context() -> None:
 
     state = create_initial_state()
     msg: BaseMessage = HumanMessage(content="What is the average salary?")
-    res: ExecutionResult[float] = ExecutionResult(
+    res: ExecutionResult = ExecutionResult(
         capability_name="aggregate",
         status=ExecutionStatus.SUCCESS,
         message="Calculated mean salary.",

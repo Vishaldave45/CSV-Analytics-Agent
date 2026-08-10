@@ -21,6 +21,9 @@ from csv_analytics_agent.llm.gemini import GeminiLLM
 from csv_analytics_agent.llm.rate_limiter import build_gemini_limiter
 from csv_analytics_agent.logging_config import get_logger
 from csv_analytics_agent.memory.service import MemoryService
+from csv_analytics_agent.persistence.db import get_session
+from csv_analytics_agent.persistence.hashing import compute_content_hash
+from csv_analytics_agent.persistence.repository import DatasetRepository
 from csv_analytics_agent.preprocessing.coercion import coerce_dataframe
 from csv_analytics_agent.profiler.models import DatasetProfile
 from csv_analytics_agent.profiler.profiler import DatasetProfiler
@@ -32,28 +35,50 @@ from csv_analytics_agent.visualization.renderer import render_chart
 logger = get_logger(__name__)
 
 
-def upload_dataset(content: bytes, filename: str) -> pd.DataFrame:
-    """Load DataFrame from uploaded byte stream via CSVLoader and coercion pipeline.
+def upload_dataset(content: bytes, filename: str) -> tuple[pd.DataFrame, DatasetProfile, str]:
+    """Load DataFrame and compute/fetch cached DatasetProfile for uploaded CSV bytes.
 
     Args:
         content: Raw bytes of the uploaded CSV file.
-        filename: Original filename used in error messages.
+        filename: Original filename used in error messages and dataset entity.
 
     Returns:
-        Validated and type-coerced pandas DataFrame.
+        Tuple of (validated_coerced_df, profile, content_hash).
 
     Raises:
         EmptyCSVError: If the file is empty.
         CSVEncodingError: If the file cannot be decoded.
         CSVParsingError: If the file cannot be parsed as CSV.
     """
+    content_hash = compute_content_hash(content)
+    repo = DatasetRepository(get_session())
+
     df = CSVLoader.load_from_bytes(content, filename=filename)
     coerced_df, report = coerce_dataframe(df)
     logger.info("dataset_coerced", filename=filename, **report.summary())
-    return coerced_df
+
+    cached_profile = repo.get_cached_profile(content_hash)
+    if cached_profile is not None:
+        logger.info("profile_cache_hit", content_hash=content_hash, filename=filename)
+        return coerced_df, cached_profile, content_hash
+
+    logger.info("profile_cache_miss", content_hash=content_hash, filename=filename)
+    profiler = DatasetProfiler()
+    profile = profiler.profile(coerced_df)
+
+    dataset = repo.get_by_hash(content_hash) or repo.create(
+        filename=filename,
+        content_hash=content_hash,
+        row_count=len(coerced_df),
+        column_count=len(coerced_df.columns),
+    )
+    repo.cache_profile(dataset.id, profile)
+    return coerced_df, profile, content_hash
 
 
-def load_dataset_from_bytes(content: bytes, filename: str) -> pd.DataFrame:
+def load_dataset_from_bytes(
+    content: bytes, filename: str
+) -> tuple[pd.DataFrame, DatasetProfile, str]:
     """Alias for upload_dataset."""
     return upload_dataset(content, filename)
 
@@ -122,7 +147,7 @@ def build_configured_registry() -> CapabilityRegistry:
 
 def create_agent_runtime(
     df: pd.DataFrame,
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-2.0-flash",
     temperature: float = 0.0,
     max_iterations: int = 6,
     api_key: str | None = None,
@@ -140,10 +165,7 @@ def create_agent_runtime(
 
     settings = Settings(max_iterations=max_iterations)
     effective_api_key = (
-        api_key
-        or kwargs.get("api_key")
-        or settings.google_api_key
-        or os.getenv("GOOGLE_API_KEY")
+        api_key or kwargs.get("api_key") or settings.google_api_key or os.getenv("GOOGLE_API_KEY")
     )
     limiter = build_gemini_limiter(settings)
     llm = GeminiLLM(
@@ -172,7 +194,7 @@ def create_agent_runtime(
 @st.cache_resource(show_spinner=False)
 def get_or_create_runtime(
     dataset_hash: str,
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-2.0-flash",
     temperature: float = 0.0,
     max_iterations: int = 6,
     api_key: str | None = None,
@@ -189,7 +211,6 @@ def get_or_create_runtime(
         max_iterations=max_iterations,
         api_key=api_key,
     )
-
 
 
 def ask_agent(

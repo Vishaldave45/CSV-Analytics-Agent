@@ -81,7 +81,7 @@ def as_langchain_tool(
         target_columns: list[str] | None = None,
         parameters: dict[str, Any] | None = None,
         **extra_kwargs: Any,
-    ) -> ExecutionResult[Any]:
+    ) -> ExecutionResult:
         merged_params = dict(parameters or {})
         merged_params.update(extra_kwargs)
 

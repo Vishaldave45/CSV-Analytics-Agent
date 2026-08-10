@@ -68,7 +68,7 @@ def test_agent_state_with_models() -> None:
         reasoning_trace=["Step 1"],
         success=True,
     )
-    last_result: ExecutionResult[object] = ExecutionResult(
+    last_result: ExecutionResult = ExecutionResult(
         capability_name="aggregate",
         status=ExecutionStatus.SUCCESS,
         message="Aggregated mean.",

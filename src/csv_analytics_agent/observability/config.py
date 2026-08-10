@@ -20,25 +20,25 @@ class ObservabilitySettings(BaseSettings):
 
     tracing_v2: bool = Field(
         default=False,
-        alias="LANGCHAIN_TRACING_V2",
-        description="Enable or disable LangSmith tracing (v2).",
+        validation_alias="LANGSMITH_TRACING",
+        description="Enable or disable LangSmith tracing.",
     )
 
     api_key: str | None = Field(
         default=None,
-        alias="LANGCHAIN_API_KEY",
+        validation_alias="LANGSMITH_API_KEY",
         description="LangSmith API key for metric upload.",
     )
 
     project: str = Field(
         default="csv-analytics-agent",
-        alias="LANGCHAIN_PROJECT",
+        validation_alias="LANGSMITH_PROJECT",
         description="LangSmith project identifier.",
     )
 
     endpoint: str = Field(
         default="https://api.smith.langchain.com",
-        alias="LANGCHAIN_ENDPOINT",
+        validation_alias="LANGSMITH_ENDPOINT",
         description="LangSmith endpoint URL.",
     )
 
