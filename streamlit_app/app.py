@@ -1,4 +1,4 @@
-"""LOGIC_OS_2.0 Main Entrypoint Application."""
+"""CSV Analytics Agent — Streamlit Application Entry Point."""
 
 from __future__ import annotations
 

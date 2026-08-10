@@ -22,10 +22,10 @@ from streamlit_app.config import (
     SAMPLE_DATASETS,
 )
 from streamlit_app.services.backend import (
-    generate_insights_for_dataset,
-    load_dataset_from_bytes,
-    profile_dataset,
-    recommend_visualizations_for_dataset,
+    get_insights,
+    get_profile,
+    recommend_visualization,
+    upload_dataset,
 )
 from streamlit_app.services.session import set_state
 
@@ -49,9 +49,9 @@ def process_loaded_dataframe(
         dataset_hash = hashlib.sha256(raw_bytes).hexdigest()
 
     if profile is None:
-        profile = profile_dataset(df, dataset_name=filename)
-    insights = generate_insights_for_dataset(profile)
-    charts = recommend_visualizations_for_dataset(profile, insights=insights)
+        profile = get_profile(df, dataset_name=filename)
+    insights = get_insights(profile)
+    charts = recommend_visualization(profile, insights=insights)
 
     set_state("raw_df", df)
     set_state("dataset_name", filename)
@@ -110,20 +110,22 @@ def render_uploader() -> None:
         try:
             with st.status(f"⚡ Ingesting '{filename}' into LOGIC_OS...", expanded=True) as status:
                 st.write("🔍 Parsing bytes and inspecting CSV encoding...")
-                df, profile, content_hash = load_dataset_from_bytes(content, filename=filename)
-                
+                df, profile, content_hash = upload_dataset(content, filename=filename)
+
                 st.write("📊 Computing column statistical DNA & data distributions...")
                 time.sleep(0.1)
-                
+
                 st.write("💡 Synthesizing proactive empirical data insights...")
                 process_loaded_dataframe(
                     df, filename=filename, dataset_hash=content_hash, profile=profile
                 )
-                
+
                 st.write("🎨 Recommending deterministic visualization specifications...")
                 status.update(label=f"✅ '{filename}' successfully analyzed!", state="complete")
 
-            st.success(f"🚀 Loaded **`{filename}`** ({len(df):,} rows × {len(df.columns)} columns)!")
+            st.success(
+                f"🚀 Loaded **`{filename}`** ({len(df):,} rows × {len(df.columns)} columns)!"
+            )
             st.rerun()
         except EmptyCSVError:
             st.error(
@@ -156,10 +158,12 @@ def render_uploader() -> None:
                 file_path = SAMPLE_DATA_DIR / sample_info["name"]
                 if file_path.exists():
                     try:
-                        with st.status(f"⚡ Loading sample '{sample_info['name']}'...", expanded=True) as status:
+                        with st.status(
+                            f"⚡ Loading sample '{sample_info['name']}'...", expanded=True
+                        ) as status:
                             st.write("Reading pre-indexed dataset bytes...")
                             raw_bytes = file_path.read_bytes()
-                            df, profile, content_hash = load_dataset_from_bytes(
+                            df, profile, content_hash = upload_dataset(
                                 raw_bytes, filename=sample_info["name"]
                             )
                             st.write("Evaluating column profiles & generating insights...")

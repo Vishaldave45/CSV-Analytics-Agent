@@ -148,8 +148,7 @@ def _interpret_grouped_data(
         )
 
         comparisons.append(
-            f"**{top_name} vs {bot_name}**: +{_format_number(delta_top_bot)} "
-            f"(+{pct_top_bot:.1f}%)"
+            f"**{top_name} vs {bot_name}**: +{_format_number(delta_top_bot)} (+{pct_top_bot:.1f}%)"
         )
 
         # Runner up comparison
@@ -167,9 +166,7 @@ def _interpret_grouped_data(
 
         for val, tied_keys in val_counts.items():
             if len(tied_keys) > 1:
-                comparisons.append(
-                    f"**{' and '.join(tied_keys)}**: Equal ({_format_number(val)})"
-                )
+                comparisons.append(f"**{' and '.join(tied_keys)}**: Equal ({_format_number(val)})")
 
         direct_answer = (
             f"**{top_name}** leads across all {len(sorted_items)} {by_col.lower()}s with "

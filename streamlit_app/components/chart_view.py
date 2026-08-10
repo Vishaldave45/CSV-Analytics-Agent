@@ -57,9 +57,9 @@ def render_chart_views(charts: list[ChartSpecification], df: pd.DataFrame) -> No
             {spec.description}
         </p>
         <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.8rem; padding-top: 0.6rem; border-top: 1px dashed #272730;">
-            <div>X-Axis: <strong style="color: #ecedff;">{spec.x_column or 'None'}</strong></div>
-            <div>Y-Axis: <strong style="color: #ecedff;">{spec.y_column or 'Count'}</strong></div>
-            <div>Aggregation: <strong style="color: #d0bcff;">{spec.aggregation or 'None'}</strong></div>
+            <div>X-Axis: <strong style="color: #ecedff;">{spec.x_column or "None"}</strong></div>
+            <div>Y-Axis: <strong style="color: #ecedff;">{spec.y_column or "Count"}</strong></div>
+            <div>Aggregation: <strong style="color: #d0bcff;">{spec.aggregation or "None"}</strong></div>
         </div>
     </div>
     """
@@ -67,7 +67,11 @@ def render_chart_views(charts: list[ChartSpecification], df: pd.DataFrame) -> No
 
     try:
         img_bytes = render_chart_image(spec, df)
-        st.image(img_bytes, caption=f"Deterministic Matplotlib Render: {spec.title}", use_container_width=True)
+        st.image(
+            img_bytes,
+            caption=f"Deterministic Matplotlib Render: {spec.title}",
+            use_container_width=True,
+        )
 
         col_dl, col_space = st.columns([1, 4])
         with col_dl:

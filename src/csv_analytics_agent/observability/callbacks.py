@@ -24,7 +24,12 @@ class AgentTracingCallbackHandler(BaseCallbackHandler):
         super().__init__()
         self.logger = logger_instance or logger
 
-    def on_llm_start(self, serialized: dict[str, Any] | None, prompts: list[str] | None, **kwargs: Any) -> None:
+    def on_llm_start(
+        self,
+        serialized: dict[str, Any] | None,
+        prompts: list[str] | None,
+        **kwargs: Any,
+    ) -> None:
         """Triggered when LLM invocation begins."""
         model_name = serialized.get("name", "LLM") if isinstance(serialized, dict) else "LLM"
         prompt_count = len(prompts) if isinstance(prompts, list) else 0
@@ -38,9 +43,18 @@ class AgentTracingCallbackHandler(BaseCallbackHandler):
         """Triggered when LLM encounters an exception."""
         self.logger.error("LLM Invocation Failed: %s", error)
 
-    def on_tool_start(self, serialized: dict[str, Any] | None, input_str: str | None, **kwargs: Any) -> None:
+    def on_tool_start(
+        self,
+        serialized: dict[str, Any] | None,
+        input_str: str | None,
+        **kwargs: Any,
+    ) -> None:
         """Triggered when tool execution starts."""
-        tool_name = serialized.get("name", "unknown_tool") if isinstance(serialized, dict) else "unknown_tool"
+        tool_name = (
+            serialized.get("name", "unknown_tool")
+            if isinstance(serialized, dict)
+            else "unknown_tool"
+        )
         self.logger.info("Tool Execution Started: '%s' with input: %s", tool_name, input_str)
 
     def on_tool_end(self, output: Any, **kwargs: Any) -> None:
@@ -60,7 +74,9 @@ class AgentTracingCallbackHandler(BaseCallbackHandler):
         self, serialized: dict[str, Any] | None, inputs: dict[str, Any] | None, **kwargs: Any
     ) -> None:
         """Triggered when graph node or chain starts."""
-        name = serialized.get("name", "Node/Chain") if isinstance(serialized, dict) else "Node/Chain"
+        name = (
+            serialized.get("name", "Node/Chain") if isinstance(serialized, dict) else "Node/Chain"
+        )
         self.logger.debug("Graph Step Started: '%s'", name)
 
     def on_chain_end(self, outputs: dict[str, Any], **kwargs: Any) -> None:
@@ -94,24 +110,8 @@ def get_callbacks() -> list[BaseCallbackHandler]:
     return list(_GLOBAL_CALLBACKS)
 
 
-class EvaluationDatasetPlaceholder:
-    """Placeholder for future LangSmith Evaluation Dataset integrations."""
-
-    def __init__(self, dataset_name: str = "csv_analytics_eval_v1") -> None:
-        self.dataset_name = dataset_name
-
-    def record_example(self, inputs: dict[str, Any], outputs: dict[str, Any]) -> None:
-        """Placeholder method for recording evaluation examples."""
-        logger.debug(
-            "Recorded evaluation example for dataset '%s': inputs=%s",
-            self.dataset_name,
-            list(inputs.keys()),
-        )
-
-
 __all__ = [
     "AgentTracingCallbackHandler",
-    "EvaluationDatasetPlaceholder",
     "clear_callbacks",
     "get_callbacks",
     "register_callback",

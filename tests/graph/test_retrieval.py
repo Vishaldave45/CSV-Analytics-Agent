@@ -65,7 +65,7 @@ def test_retrieval_node_empty_query_error() -> None:
     mock_memory = MagicMock(spec=MemoryService)
     state = create_initial_state()
 
-    with pytest.raises(EmptyQueryError, match="No conversation messages found"):
+    with pytest.raises(EmptyQueryError, match="No valid human user query found"):
         retrieval_node(state, memory_service=mock_memory)
 
     msg_empty: BaseMessage = HumanMessage(content="   ")

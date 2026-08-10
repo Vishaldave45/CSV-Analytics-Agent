@@ -15,7 +15,7 @@ from streamlit_app.components.footer import render_footer
 from streamlit_app.components.header import render_header
 from streamlit_app.components.sidebar import render_sidebar
 from streamlit_app.config import APP_TITLE
-from streamlit_app.services.backend import execute_agent_query, get_or_create_runtime
+from streamlit_app.services.backend import ask_agent, get_or_create_runtime
 from streamlit_app.services.session import get_state, set_state
 from streamlit_app.theme import apply_custom_theme
 
@@ -102,7 +102,7 @@ def run_query_pipeline(prompt_text: str) -> None:
 
     with st.spinner("🧠 LOGIC_OS evaluating deterministic query plan..."):
         try:
-            result_state = execute_agent_query(
+            result_state = ask_agent(
                 runtime,
                 prompt=prompt_text,
                 thread_id=thread_id,

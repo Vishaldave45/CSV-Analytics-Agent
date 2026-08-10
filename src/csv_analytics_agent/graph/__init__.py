@@ -17,6 +17,7 @@ from csv_analytics_agent.graph.explainer import (
     format_execution_explanation,
 )
 from csv_analytics_agent.graph.memory_update import memory_update_node
+from csv_analytics_agent.graph.message_utils import extract_last_human_text
 from csv_analytics_agent.graph.planner import (
     DEFAULT_MAX_ITERATIONS,
     planner_node,
@@ -61,6 +62,7 @@ __all__ = [
     "build_graph",
     "create_initial_state",
     "explainer_node",
+    "extract_last_human_text",
     "format_execution_explanation",
     "memory_update_node",
     "planner_node",

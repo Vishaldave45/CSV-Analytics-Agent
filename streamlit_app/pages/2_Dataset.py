@@ -59,7 +59,9 @@ with col_dna:
         else:
             type_badge = "badge-trend"
 
-        missing_text = f"{col.missing_percentage:.1f}% Missing" if col.missing_percentage > 0 else "0% Null"
+        missing_text = (
+            f"{col.missing_percentage:.1f}% Missing" if col.missing_percentage > 0 else "0% Null"
+        )
         missing_color = "#fbbf24" if col.missing_percentage > 0 else "#10b981"
 
         card_html = f"""
@@ -88,7 +90,7 @@ with col_dna:
 with col_stats:
     st.markdown("### 📈 Numeric Distribution & Summary")
     st.caption("Descriptive statistics computed deterministically across numeric dimensions")
-    
+
     numeric_df = df.select_dtypes(include=["number"])
     if not numeric_df.empty:
         st.dataframe(

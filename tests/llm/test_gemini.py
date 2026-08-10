@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
-from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME, _TRANSIENT_EXCEPTIONS, GeminiLLM
+from csv_analytics_agent.llm.gemini import _TRANSIENT_EXCEPTIONS, DEFAULT_MODEL_NAME, GeminiLLM
 
 
 def test_gemini_llm_mocked_invocation() -> None:

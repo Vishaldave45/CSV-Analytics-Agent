@@ -8,9 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from langchain_core.messages import BaseMessage, HumanMessage
-
 from csv_analytics_agent.exceptions.data_errors import CSVAnalyticsError
+from csv_analytics_agent.graph.message_utils import extract_last_human_text
 from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.memory.service import MemoryService
 
@@ -31,35 +30,6 @@ class EmptyQueryError(RetrievalError, ValueError):
     """Raised when the user query string is blank or missing from AgentState."""
 
     pass
-
-
-def _extract_user_query(messages: list[BaseMessage] | None) -> str:
-    """Extract string content from the last user message in conversation history.
-
-    Args:
-        messages: List of BaseMessage objects or None.
-
-    Returns:
-        Stripped user query string.
-
-    Raises:
-        EmptyQueryError: If no valid human query is found.
-    """
-    if not messages:
-        raise EmptyQueryError("No conversation messages found in AgentState.")
-
-    for msg in reversed(messages):
-        if isinstance(msg, HumanMessage) or getattr(msg, "type", "") == "human":
-            content = msg.content
-            if isinstance(content, str) and content.strip():
-                return content.strip()
-            if isinstance(content, list):
-                texts = [str(item) for item in content if isinstance(item, str)]
-                joined = " ".join(texts).strip()
-                if joined:
-                    return joined
-
-    raise EmptyQueryError("No valid human user query found in message history.")
 
 
 def retrieval_node(
@@ -83,7 +53,9 @@ def retrieval_node(
         RetrievalError: If memory service retrieval fails.
     """
     messages = state.get("messages", [])
-    query_text = _extract_user_query(messages)
+    query_text = extract_last_human_text(messages)
+    if not query_text:
+        raise EmptyQueryError("No valid human user query found in message history.")
 
     if memory_service.count() == 0:
         err_msg = "Dataset column index is empty in MemoryService. Index must be populated."

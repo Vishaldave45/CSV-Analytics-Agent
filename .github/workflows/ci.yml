@@ -31,8 +31,11 @@ jobs:
       - name: Run Ruff Linter
         run: uv run ruff check src/ tests/
 
+      - name: Run Ruff Format Check
+        run: uv run ruff format --check src/ tests/
+
       - name: Run MyPy Static Type Checker
         run: uv run mypy src/
 
-      - name: Run Pytest with Coverage
-        run: uv run pytest --cov=csv_analytics_agent --cov-report=term-missing
+      - name: Run Pytest (unit tests, excluding live LLM tests)
+        run: uv run pytest -m "not llm" --cov=csv_analytics_agent --cov-report=term-missing

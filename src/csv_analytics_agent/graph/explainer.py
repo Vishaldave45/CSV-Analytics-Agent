@@ -5,10 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 import pandas as pd
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.messages import AIMessage
 
 from csv_analytics_agent.execution.models import ExecutionResult, ExecutionStatus
 from csv_analytics_agent.graph.interpreter import interpret_execution_result
+from csv_analytics_agent.graph.message_utils import extract_last_human_text
 from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.llm.base import BaseLLM
 
@@ -68,18 +69,6 @@ def format_execution_explanation(result: ExecutionResult) -> str:
     return "\n".join(lines)
 
 
-def _extract_user_query(messages: list[BaseMessage] | None) -> str:
-    """Extract string content from the last human user message in history."""
-    if not messages:
-        return ""
-    for msg in reversed(messages):
-        if isinstance(msg, HumanMessage) or getattr(msg, "type", "") == "human":
-            content = msg.content
-            if isinstance(content, str) and content.strip():
-                return content.strip()
-    return ""
-
-
 def explainer_node(
     state: AgentState,
     dataframe: pd.DataFrame | None = None,
@@ -111,7 +100,7 @@ def explainer_node(
     if df is None:
         df = pd.DataFrame()
 
-    user_query = _extract_user_query(messages)
+    user_query = extract_last_human_text(messages)
     analytical_resp = interpret_execution_result(
         user_query=user_query,
         result=last_result,

@@ -5,15 +5,15 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
+from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
 from streamlit_app.services.backend import (
     build_configured_registry,
     create_agent_runtime,
-    generate_insights_for_dataset,
-    load_dataset_from_bytes,
-    recommend_visualizations_for_dataset,
+    get_insights,
+    recommend_visualization,
     render_chart_image,
+    upload_dataset,
 )
-from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
 from streamlit_app.services.session import (
     clear_dataset_session,
     get_state,
@@ -41,8 +41,8 @@ def test_session_service_operations() -> None:
 
 
 def test_backend_loader_and_profiler(sample_csv_bytes: bytes) -> None:
-    """Verify load_dataset_from_bytes and profile_dataset backend functions."""
-    df, profile, content_hash = load_dataset_from_bytes(sample_csv_bytes, filename="test.csv")
+    """Verify upload_dataset backend function."""
+    df, profile, content_hash = upload_dataset(sample_csv_bytes, filename="test.csv")
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 2
     assert "Product" in df.columns
@@ -52,13 +52,13 @@ def test_backend_loader_and_profiler(sample_csv_bytes: bytes) -> None:
 
 
 def test_backend_insights_and_visualization(sample_csv_bytes: bytes) -> None:
-    """Verify generate_insights and recommend_visualizations backend functions."""
-    df, profile, _ = load_dataset_from_bytes(sample_csv_bytes, filename="test.csv")
+    """Verify get_insights and recommend_visualization backend functions."""
+    df, profile, _ = upload_dataset(sample_csv_bytes, filename="test.csv")
 
-    insights = generate_insights_for_dataset(profile)
+    insights = get_insights(profile)
     assert isinstance(insights, list)
 
-    charts = recommend_visualizations_for_dataset(profile, insights=insights)
+    charts = recommend_visualization(profile, insights=insights)
     assert isinstance(charts, list)
     assert len(charts) > 0
 
@@ -73,7 +73,7 @@ def test_backend_build_registry_and_runtime(
 ) -> None:
     """Verify build_configured_registry and create_agent_runtime backend functions."""
     mock_memory_cls.return_value = MagicMock()
-    df, _, _ = load_dataset_from_bytes(sample_csv_bytes, filename="test.csv")
+    df, _, _ = upload_dataset(sample_csv_bytes, filename="test.csv")
     registry = build_configured_registry()
     assert len(registry.discover()) > 0
 

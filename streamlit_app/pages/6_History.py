@@ -32,7 +32,7 @@ if not messages:
     st.info("No conversation history recorded in current session.")
 else:
     st.markdown(f"### Thread `{thread_id}` ({len(messages)} messages)")
-    for idx, msg in enumerate(messages):
+    for _idx, msg in enumerate(messages):
         role = msg.get("role", "assistant")
         content = msg.get("content", "")
         st.markdown(f"**[{role.upper()}]**: {content}")

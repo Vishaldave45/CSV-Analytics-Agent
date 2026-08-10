@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import os
 from typing import Any, cast
 
@@ -84,6 +83,7 @@ def _should_retry_exception(exception: BaseException) -> bool:
 
     return isinstance(exception, _TRANSIENT_EXCEPTIONS)
 
+
 _retry_predicate = retry_if_exception(_should_retry_exception)
 
 
@@ -163,9 +163,8 @@ class GeminiLLM(BaseLLM):
 
     def _is_quota_error(self, error: Exception) -> bool:
         err_str = str(error)
-        return (
-            "API_KEY_INVALID" not in err_str
-            and ("RESOURCE_EXHAUSTED" in err_str or "429" in err_str or "quota" in err_str.lower())
+        return "API_KEY_INVALID" not in err_str and (
+            "RESOURCE_EXHAUSTED" in err_str or "429" in err_str or "quota" in err_str.lower()
         )
 
     def _get_fallback_model_name(self) -> str | None:
@@ -196,7 +195,6 @@ class GeminiLLM(BaseLLM):
                 ) from err
             if self._is_quota_error(err):
                 fallback_model = self._get_fallback_model_name()
-                fallback_model = self._get_fallback_model_name()
                 if fallback_model and self._owns_llm:
                     logger.warning(
                         "gemini_quota_fallback",
@@ -208,8 +206,9 @@ class GeminiLLM(BaseLLM):
                     return self._invoke_inner(input_data)
 
                 raise ValueError(
-                    f"Gemini API Quota / Rate Limit Exceeded (429) for '{self._model_name}'. "
-                    f"Try switching to '{DEFAULT_MODEL_NAME}' in Settings or wait 30-60 seconds before retrying."
+                    f"Gemini API Quota / Rate Limit Exceeded (429) for "
+                    f"'{self._model_name}'. Try switching to "
+                    f"'{DEFAULT_MODEL_NAME}' in Settings or wait 30-60s."
                 ) from err
             raise
 

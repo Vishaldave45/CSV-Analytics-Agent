@@ -36,7 +36,7 @@ def render_sidebar() -> None:
             "ACTIVE DATASET</div>",
             unsafe_allow_html=True,
         )
-        
+
         st.markdown(
             f"""
             <div style="background: rgba(20, 20, 26, 0.85); border: 1px solid #1e293b; border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem;">
@@ -65,12 +65,14 @@ def render_sidebar() -> None:
                 st.markdown(
                     f"""
                     <div style="background: rgba(76, 215, 246, 0.08); border: 1px solid rgba(76, 215, 246, 0.3); border-radius: 6px; padding: 0.4rem 0.6rem; margin-bottom: 0.4rem; font-family: var(--font-mono); font-size: 0.75rem; color: #acedff;">
-                        <code>{cols}</code>: {filt.get('parameters', '')}
+                        <code>{cols}</code>: {filt.get("parameters", "")}
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
-            if st.button("Reset Constraints", key="btn_reset_filters_sidebar", use_container_width=True):
+            if st.button(
+                "Reset Constraints", key="btn_reset_filters_sidebar", use_container_width=True
+            ):
                 set_state("active_filters", [])
                 st.rerun()
 

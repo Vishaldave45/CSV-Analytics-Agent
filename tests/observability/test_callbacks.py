@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from csv_analytics_agent.observability.callbacks import (
     AgentTracingCallbackHandler,
-    EvaluationDatasetPlaceholder,
     clear_callbacks,
     get_callbacks,
     register_callback,
@@ -43,10 +42,3 @@ def test_agent_tracing_callback_handler_events() -> None:
     handler.on_llm_start(None, None)
 
     assert mock_logger.info.call_count >= 3
-
-
-def test_evaluation_dataset_placeholder() -> None:
-    """Verify EvaluationDatasetPlaceholder method execution."""
-    eval_stub = EvaluationDatasetPlaceholder(dataset_name="eval_set")
-    assert eval_stub.dataset_name == "eval_set"
-    eval_stub.record_example(inputs={"q": "salary"}, outputs={"ans": "50000"})

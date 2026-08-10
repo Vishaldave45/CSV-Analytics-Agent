@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
@@ -46,9 +47,7 @@ def configure_langsmith(
         return False
 
     api_key = (
-        obs_settings.api_key
-        or os.getenv("LANGSMITH_API_KEY")
-        or os.getenv("LANGCHAIN_API_KEY")
+        obs_settings.api_key or os.getenv("LANGSMITH_API_KEY") or os.getenv("LANGCHAIN_API_KEY")
     )
     if not api_key:
         logger.warning(
@@ -115,14 +114,17 @@ def get_traced_metadata(
     Returns:
         Dictionary payload containing execution metadata fields.
     """
+    try:
+        _agent_version = version("csv-analytics-agent")
+    except PackageNotFoundError:
+        _agent_version = "dev"
+
     return {
         "thread_id": thread_id,
         "dataset_name": dataset_name,
         "dataset_hash": dataset_hash or "unhashed",
         "model_name": model_name,
-        "planner_version": "v0.7.6",
-        "execution_framework_version": "v0.5.0",
-        "agent_version": "v0.7.9",
+        "agent_version": _agent_version,
     }
 
 

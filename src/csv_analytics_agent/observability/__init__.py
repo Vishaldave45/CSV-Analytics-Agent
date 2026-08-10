@@ -2,7 +2,6 @@
 
 from csv_analytics_agent.observability.callbacks import (
     AgentTracingCallbackHandler,
-    EvaluationDatasetPlaceholder,
     clear_callbacks,
     get_callbacks,
     register_callback,
@@ -18,7 +17,6 @@ from csv_analytics_agent.observability.tracing import (
 
 __all__ = [
     "AgentTracingCallbackHandler",
-    "EvaluationDatasetPlaceholder",
     "ObservabilitySettings",
     "clear_callbacks",
     "configure_langsmith",

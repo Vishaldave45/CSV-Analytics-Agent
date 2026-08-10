@@ -6,8 +6,7 @@ import os
 
 import streamlit as st
 
-from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME, AVAILABLE_MODELS
-
+from csv_analytics_agent.llm.gemini import AVAILABLE_MODELS, DEFAULT_MODEL_NAME
 from streamlit_app.components.footer import render_footer
 from streamlit_app.components.header import render_header
 from streamlit_app.components.sidebar import render_sidebar
@@ -44,8 +43,20 @@ model_name = st.selectbox(
     options=avail_models,
     index=curr_index,
 )
-temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=float(get_state("temperature", 0.0)), step=0.1)
-max_iterations = st.number_input("Max Loop Iterations", min_value=1, max_value=20, value=int(get_state("max_iterations", 6)), step=1)
+temperature = st.slider(
+    "Temperature",
+    min_value=0.0,
+    max_value=1.0,
+    value=float(get_state("temperature", 0.0)),
+    step=0.1,
+)
+max_iterations = st.number_input(
+    "Max Loop Iterations",
+    min_value=1,
+    max_value=20,
+    value=int(get_state("max_iterations", 6)),
+    step=1,
+)
 
 if st.button("Save Model Settings"):
     if api_key_input:
@@ -54,8 +65,8 @@ if st.button("Save Model Settings"):
         env_file = ".env"
         lines = []
         if os.path.exists(env_file):
-            with open(env_file, "r") as f:
-                lines = [l for l in f.readlines() if not l.startswith("GOOGLE_API_KEY=")]
+            with open(env_file) as f:
+                lines = [line for line in f.readlines() if not line.startswith("GOOGLE_API_KEY=")]
         lines.append(f"GOOGLE_API_KEY={api_key_input}\n")
         with open(env_file, "w") as f:
             f.writelines(lines)
@@ -95,13 +106,13 @@ if st.button("Save Observability Settings"):
         env_file = ".env"
         lines = []
         if os.path.exists(env_file):
-            with open(env_file, "r") as f:
+            with open(env_file) as f:
                 lines = [
-                    l
-                    for l in f.readlines()
-                    if not l.startswith("LANGCHAIN_API_KEY=")
-                    and not l.startswith("LANGCHAIN_TRACING_V2=")
-                    and not l.startswith("LANGSMITH_")
+                    line
+                    for line in f.readlines()
+                    if not line.startswith("LANGCHAIN_API_KEY=")
+                    and not line.startswith("LANGCHAIN_TRACING_V2=")
+                    and not line.startswith("LANGSMITH_")
                 ]
         lines.append(f"LANGSMITH_TRACING={'true' if tracing_enabled else 'false'}\n")
         lines.append("LANGSMITH_PROJECT=csv-analytics-agent\n")

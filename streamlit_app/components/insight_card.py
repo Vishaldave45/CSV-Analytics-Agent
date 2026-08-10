@@ -38,7 +38,10 @@ def render_insight_cards(insights: list[Insight]) -> None:
             border_color = "#fbbf24"
             badge_cls = "badge-anomaly"
             icon_char = "⚠️"
-        elif "trend" in insight.category.value.lower() or "correlation" in insight.category.value.lower():
+        elif (
+            "trend" in insight.category.value.lower()
+            or "correlation" in insight.category.value.lower()
+        ):
             border_color = "#4cd7f6"
             badge_cls = "badge-trend"
             icon_char = "📈"
@@ -47,8 +50,10 @@ def render_insight_cards(insights: list[Insight]) -> None:
             badge_cls = "badge-quality"
             icon_char = "🔍"
 
-        badge_txt = f"{icon_char} {insight.category.value.upper()} • {insight.severity.value.upper()}"
-        
+        badge_txt = (
+            f"{icon_char} {insight.category.value.upper()} • {insight.severity.value.upper()}"
+        )
+
         card_html = f"""
         <div class="glass-panel" style="border-left: 4px solid {border_color}; margin-bottom: 1rem;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">

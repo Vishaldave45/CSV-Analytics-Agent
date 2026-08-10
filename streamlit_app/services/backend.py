@@ -76,33 +76,16 @@ def upload_dataset(content: bytes, filename: str) -> tuple[pd.DataFrame, Dataset
     return coerced_df, profile, content_hash
 
 
-def load_dataset_from_bytes(
-    content: bytes, filename: str
-) -> tuple[pd.DataFrame, DatasetProfile, str]:
-    """Alias for upload_dataset."""
-    return upload_dataset(content, filename)
-
-
 def get_profile(df: pd.DataFrame, dataset_name: str = "dataset.csv") -> DatasetProfile:
     """Generate DatasetProfile from a pandas DataFrame using DatasetProfiler."""
     profiler = DatasetProfiler()
     return profiler.profile(df)
 
 
-def profile_dataset(df: pd.DataFrame, dataset_name: str = "dataset.csv") -> DatasetProfile:
-    """Alias for get_profile."""
-    return get_profile(df, dataset_name)
-
-
 def get_insights(profile: DatasetProfile) -> list[Insight]:
     """Generate structured Insights for a DatasetProfile using InsightGenerator."""
     generator = InsightGenerator()
     return generator.generate(profile)
-
-
-def generate_insights_for_dataset(profile: DatasetProfile) -> list[Insight]:
-    """Alias for get_insights."""
-    return get_insights(profile)
 
 
 def recommend_visualization(
@@ -116,13 +99,6 @@ def recommend_visualization(
         return charts
     except NoSuitableVisualizationError:
         return []
-
-
-def recommend_visualizations_for_dataset(
-    profile: DatasetProfile, insights: list[Insight] | None = None
-) -> list[ChartSpecification]:
-    """Alias for recommend_visualization."""
-    return recommend_visualization(profile, insights=insights)
 
 
 def render_chart_image(spec: ChartSpecification, df: pd.DataFrame) -> bytes:
@@ -223,35 +199,14 @@ def ask_agent(
     return runtime.run(prompt, thread_id=thread_id, profile=profile)
 
 
-def execute_agent_query(
-    runtime: AgentRuntime,
-    prompt: str,
-    thread_id: str,
-    profile: DatasetProfile | None = None,
-) -> AgentState:
-    """Alias for ask_agent."""
-    return ask_agent(runtime, prompt=prompt, thread_id=thread_id, profile=profile)
-
-
-def resume_thread(runtime: AgentRuntime, thread_id: str) -> AgentState | None:
-    """Resume state of a checkpointed thread via AgentRuntime."""
-    return runtime.get_state(thread_id)
-
-
 __all__ = [
     "ask_agent",
     "build_configured_registry",
     "create_agent_runtime",
-    "execute_agent_query",
-    "generate_insights_for_dataset",
     "get_insights",
     "get_or_create_runtime",
     "get_profile",
-    "load_dataset_from_bytes",
-    "profile_dataset",
     "recommend_visualization",
-    "recommend_visualizations_for_dataset",
     "render_chart_image",
-    "resume_thread",
     "upload_dataset",
 ]

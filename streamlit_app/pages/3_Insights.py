@@ -43,10 +43,10 @@ st.markdown(
             Total Findings: <strong style="color: #4cd7f6;">{len(insights)}</strong>
         </div>
         <div style="background: rgba(14, 14, 18, 0.8); border: 1px solid #1e293b; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-mono); font-size: 0.85rem;">
-            Critical / High: <strong style="color: {'#f43f5e' if crit_count > 0 else '#10b981'};">{crit_count}</strong>
+            Critical / High: <strong style="color: {"#f43f5e" if crit_count > 0 else "#10b981"};">{crit_count}</strong>
         </div>
         <div style="background: rgba(14, 14, 18, 0.8); border: 1px solid #1e293b; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-mono); font-size: 0.85rem;">
-            Medium / Warnings: <strong style="color: {'#fbbf24' if warn_count > 0 else '#e5e1e4'};">{warn_count}</strong>
+            Medium / Warnings: <strong style="color: {"#fbbf24" if warn_count > 0 else "#e5e1e4"};">{warn_count}</strong>
         </div>
         <div style="background: rgba(14, 14, 18, 0.8); border: 1px solid #1e293b; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-mono); font-size: 0.85rem;">
             Informational: <strong style="color: #d0bcff;">{info_count}</strong>
