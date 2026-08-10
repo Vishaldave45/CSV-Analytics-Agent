@@ -13,7 +13,10 @@ from csv_analytics_agent.graph.adapter import as_langchain_tools
 from csv_analytics_agent.graph.models import PlannerResult
 from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.llm.base import BaseLLM
+from csv_analytics_agent.llm.python_generator import BasePythonCodeGenerator
 from csv_analytics_agent.logging_config import get_logger
+from csv_analytics_agent.python_engine.base import BasePythonExecutor
+from csv_analytics_agent.python_engine.tool import create_python_analysis_tool
 
 logger = get_logger(__name__)
 
@@ -25,6 +28,8 @@ def planner_node(
     llm: BaseLLM,
     registry: CapabilityRegistry,
     dataframe: pd.DataFrame,
+    python_generator: BasePythonCodeGenerator | None = None,
+    python_executor: BasePythonExecutor | None = None,
     max_iterations: int = DEFAULT_MAX_ITERATIONS,
 ) -> dict[str, Any]:
     """LangGraph node binding execution tools to an LLM and generating tool calls.
@@ -34,6 +39,8 @@ def planner_node(
         llm: Abstract BaseLLM instance.
         registry: CapabilityRegistry instance.
         dataframe: Target dataset pandas DataFrame context.
+        python_generator: Optional BasePythonCodeGenerator instance.
+        python_executor: Optional BasePythonExecutor instance.
         max_iterations: Maximum loop iteration limit before routing to explainer (default 6).
 
     Returns:
@@ -66,30 +73,30 @@ def planner_node(
 
     # 2. Discover Capabilities & Convert to StructuredTools via Stage 7.2 Adapter
     descriptors = registry.discover()
-    tools = as_langchain_tools(descriptors, registry, dataframe)
+    tools = list(as_langchain_tools(descriptors, registry, dataframe))
 
-    # 3. Bind Tools to LLM & Invoke
+    # 3. Add Python Analysis Tool if dependencies are provided
+    if python_generator is not None and python_executor is not None:
+        py_tool = create_python_analysis_tool(
+            generator=python_generator,
+            executor=python_executor,
+            dataframe=dataframe,
+            schema=state.get("profile"),
+            retrieved_columns=state.get("retrieved_columns"),
+            dataset_hash=state.get("dataset_hash"),
+        )
+        tools.append(py_tool)
+
+    # 4. Bind Tools to LLM & Invoke
     system_prompt = (
-        "You are an expert tabular analytics and visualization assistant. "
-        "You have access to execution tools to query, aggregate, filter, sort, and "
-        "render charts for a dataset.\n"
-        f"Available dataset columns: {list(dataframe.columns)}\n"
-        "MANDATORY INSTRUCTIONS:\n"
-        "1. You MUST ALWAYS call a tool to compute, aggregate, or visualize dataset data. "
-        "Do NOT respond with text answers without executing an appropriate tool.\n"
-        "2. When the user asks to 'compare', 'count across', 'break down by', "
-        "or calculate grouped metrics: call 'group' with by='<category_column>', "
-        "target='<column>', and operation='count' (for counts/frequencies) or 'mean'/'sum'.\n"
-        "3. When the user asks to 'show trend', 'plot', 'visualize', 'chart', 'graph', "
-        "or asks for a visual representation: call 'render_visualization' with parameters: "
-        "chart_type ('line' for trends, 'bar' for categories, 'histogram'/'boxplot' "
-        "for numeric distribution, 'scatter' for two numeric columns), "
-        "x_axis (column name), y_axis (optional column name), title (optional string).\n"
-        "4. When the user asks for single-column calculations (e.g. average, sum, min, max), "
-        "call 'aggregate'.\n"
-        "5. When the user asks for filtered records, top/bottom rows, or sorting, "
-        "call 'filter', 'top_n', or 'sort'.\n"
-        "6. Always match the requested metric precisely."
+        "You are an expert tabular analytics and visualization assistant.\n"
+        f"Available dataset columns: {list(dataframe.columns)}\n\n"
+        "TOOL SELECTION GUIDELINES:\n"
+        "1. For standard structured analytical queries (grouping, filtering, aggregate stats, top_n, sort, standard charts):\n"
+        "   Call the matching deterministic capability tool (e.g. 'aggregate', 'group', 'filter', 'top_n', 'sort', 'render_visualization').\n"
+        "2. For open-ended Python analysis, complex statistical tests, custom mathematical formulas, multi-step data transformations, or custom Plotly/Matplotlib charts:\n"
+        "   Call the 'python_analysis' tool with a clear, detailed analytical question string.\n"
+        "3. Always execute a tool to answer analytical data questions. Do NOT respond with plain text guesses."
     )
 
     from langchain_core.messages import SystemMessage

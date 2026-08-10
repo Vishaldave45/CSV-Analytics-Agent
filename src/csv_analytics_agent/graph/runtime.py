@@ -17,9 +17,15 @@ from csv_analytics_agent.graph.build import build_graph
 from csv_analytics_agent.graph.checkpoint import SqliteSaver
 from csv_analytics_agent.graph.state import AgentState, create_initial_state
 from csv_analytics_agent.llm.base import BaseLLM
+from csv_analytics_agent.llm.python_generator import (
+    BasePythonCodeGenerator,
+    GeminiPythonCodeGenerator,
+)
 from csv_analytics_agent.memory.service import MemoryService
 from csv_analytics_agent.observability.callbacks import get_callbacks
 from csv_analytics_agent.profiler.models import DatasetProfile
+from csv_analytics_agent.python_engine.base import BasePythonExecutor
+from csv_analytics_agent.python_engine.sandbox import create_python_executor
 
 
 class AgentRuntime:
@@ -31,6 +37,8 @@ class AgentRuntime:
         registry: CapabilityRegistry,
         memory_service: MemoryService,
         dataframe: pd.DataFrame,
+        python_generator: BasePythonCodeGenerator | None = None,
+        python_executor: BasePythonExecutor | None = None,
         settings: Settings | None = None,
         checkpointer: BaseCheckpointSaver[Any] | None = None,
         callbacks: list[BaseCallbackHandler] | None = None,
@@ -42,6 +50,8 @@ class AgentRuntime:
             registry: CapabilityRegistry instance containing domain capabilities.
             memory_service: MemoryService instance for vector retrieval/persistence.
             dataframe: Target pandas DataFrame context.
+            python_generator: Optional BasePythonCodeGenerator instance.
+            python_executor: Optional BasePythonExecutor instance.
             settings: Optional Settings instance (defaults to get_settings()).
             checkpointer: Optional BaseCheckpointSaver instance (defaults to SqliteSaver).
             callbacks: Optional list of LangChain BaseCallbackHandler instances.
@@ -52,6 +62,9 @@ class AgentRuntime:
         self._dataframe = dataframe
         self._settings = settings or get_settings()
         self._callbacks = callbacks if callbacks is not None else get_callbacks()
+
+        self._python_generator = python_generator or GeminiPythonCodeGenerator(llm=self._llm)
+        self._python_executor = python_executor or create_python_executor(settings=self._settings)
 
         if checkpointer is not None:
             self._checkpointer: BaseCheckpointSaver[Any] = checkpointer
@@ -64,6 +77,8 @@ class AgentRuntime:
             registry=self._registry,
             memory_service=self._memory_service,
             dataframe=self._dataframe,
+            python_generator=self._python_generator,
+            python_executor=self._python_executor,
             checkpointer=self._checkpointer,
         )
 

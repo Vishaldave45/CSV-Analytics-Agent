@@ -19,7 +19,9 @@ from csv_analytics_agent.graph.router import RouterDecision, RouterIntent, route
 from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.graph.tool_node import tool_node
 from csv_analytics_agent.llm.base import BaseLLM
+from csv_analytics_agent.llm.python_generator import BasePythonCodeGenerator
 from csv_analytics_agent.memory.service import MemoryService
+from csv_analytics_agent.python_engine.base import BasePythonExecutor
 
 
 def reset_node(state: AgentState) -> dict[str, Any]:
@@ -93,6 +95,8 @@ def build_graph(
     registry: CapabilityRegistry,
     memory_service: MemoryService,
     dataframe: pd.DataFrame,
+    python_generator: BasePythonCodeGenerator | None = None,
+    python_executor: BasePythonExecutor | None = None,
     checkpointer: BaseCheckpointSaver[Any] | None = None,
 ) -> CompiledStateGraph[AgentState, Any, Any]:
     """Construct and compile the LangGraph agent state graph workflow.
@@ -102,6 +106,8 @@ def build_graph(
         registry: CapabilityRegistry instance containing registered domain engines.
         memory_service: MemoryService instance for vector retrieval and persistence.
         dataframe: Target dataset pandas DataFrame context.
+        python_generator: Optional BasePythonCodeGenerator instance.
+        python_executor: Optional BasePythonExecutor instance.
         checkpointer: Optional BaseCheckpointSaver instance for state persistence.
 
     Returns:
@@ -114,11 +120,24 @@ def build_graph(
     builder.add_node("retrieval", lambda s: retrieval_node(s, memory_service=memory_service))
     builder.add_node(
         "planner",
-        lambda s: planner_node(s, llm=llm, registry=registry, dataframe=dataframe),
+        lambda s: planner_node(
+            s,
+            llm=llm,
+            registry=registry,
+            dataframe=dataframe,
+            python_generator=python_generator,
+            python_executor=python_executor,
+        ),
     )
     builder.add_node(
         "tool",
-        lambda s: tool_node(s, registry=registry, dataframe=dataframe),
+        lambda s: tool_node(
+            s,
+            registry=registry,
+            dataframe=dataframe,
+            python_generator=python_generator,
+            python_executor=python_executor,
+        ),
     )
     builder.add_node(
         "explainer",
