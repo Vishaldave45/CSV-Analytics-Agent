@@ -1,0 +1,30 @@
+[
+  {
+    "id": "case_1_category_order_count",
+    "question": "Compare order counts across categories.",
+    "required_columns": ["category"],
+    "allowed_output_types": ["table", "dataframe", "interactive"],
+    "expected_code_snippet": "df.groupby('category')"
+  },
+  {
+    "id": "case_2_average_unit_price",
+    "question": "What is the average unit_price?",
+    "required_columns": ["unit_price"],
+    "allowed_output_types": ["scalar"],
+    "expected_code_snippet": "df['unit_price'].mean()"
+  },
+  {
+    "id": "case_3_revenue_trend_over_time",
+    "question": "Show revenue trend over time.",
+    "required_columns": ["order_date", "revenue"],
+    "allowed_output_types": ["interactive", "image", "table"],
+    "expected_code_snippet": "order_date"
+  },
+  {
+    "id": "case_4_correlation_revenue_quantity",
+    "question": "Calculate correlation between revenue and quantity.",
+    "required_columns": ["revenue", "quantity"],
+    "allowed_output_types": ["scalar", "table"],
+    "expected_code_snippet": "corr"
+  }
+]
