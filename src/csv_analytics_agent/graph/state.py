@@ -13,7 +13,7 @@ from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 from csv_analytics_agent.execution.models import ExecutionResult
-from csv_analytics_agent.planner.models import PlannerResult
+from csv_analytics_agent.graph.models import PlannerResult
 from csv_analytics_agent.profiler.models import DatasetProfile
 
 # Precise type aliases avoiding untyped Any

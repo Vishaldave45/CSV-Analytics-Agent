@@ -5,11 +5,11 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.graph.message import add_messages
 
 from csv_analytics_agent.execution.models import ExecutionResult, ExecutionStatus
+from csv_analytics_agent.graph.models import PlannerResult
 from csv_analytics_agent.graph.state import (
     AgentState,
     create_initial_state,
 )
-from csv_analytics_agent.planner.models import PlannerResult
 from csv_analytics_agent.profiler.models import (
     DatasetProfile,
     DatasetSummary,

@@ -16,6 +16,9 @@ from csv_analytics_agent.execution.models import (
 )
 from csv_analytics_agent.execution.registry import CapabilityRegistry
 from csv_analytics_agent.graph.state import AgentState, FilterPayload
+from csv_analytics_agent.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def tool_node(
@@ -82,6 +85,12 @@ def tool_node(
             )
             exec_res = engine.execute_capability(request, dataframe)
         except CapabilityNotFoundError as err:
+            logger.warning(
+                "tool_call_failed",
+                tool=cap_name,
+                error_type="CapabilityNotFoundError",
+                error=str(err),
+            )
             exec_res = ExecutionResult(
                 capability_name=cap_name,
                 status=ExecutionStatus.FAILED,
@@ -89,6 +98,12 @@ def tool_node(
                 data=None,
             )
         except Exception as err:
+            logger.warning(
+                "tool_call_failed",
+                tool=cap_name,
+                error_type=type(err).__name__,
+                error=str(err),
+            )
             exec_res = ExecutionResult(
                 capability_name=cap_name,
                 status=ExecutionStatus.FAILED,
@@ -97,6 +112,12 @@ def tool_node(
             )
 
         last_result = exec_res
+        logger.info(
+            "tool_call_result",
+            tool=cap_name,
+            status=exec_res.status.value,
+            success=exec_res.status == ExecutionStatus.SUCCESS,
+        )
 
         # Serialize result payload for ToolMessage content
         tool_content = json.dumps(

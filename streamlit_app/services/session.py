@@ -60,7 +60,7 @@ def set_state(key: str, value: Any) -> None:
 
 
 def clear_dataset_session() -> None:
-    """Reset dataset profile, insights, charts, and message history."""
+    """Reset dataset profile, insights, charts, message history, and cached runtimes."""
     st.session_state["raw_df"] = None
     st.session_state["profile"] = None
     st.session_state["insights"] = []
@@ -69,6 +69,12 @@ def clear_dataset_session() -> None:
     st.session_state["last_result"] = None
     st.session_state["active_filters"] = []
     st.session_state["thread_id"] = f"session_{uuid.uuid4().hex[:10]}"
+
+    # Purge any cached AgentRuntime instances so a new dataset always gets a
+    # fresh runtime with re-indexed column embeddings.
+    runtime_keys = [k for k in st.session_state if k.startswith("_agent_runtime_")]
+    for key in runtime_keys:
+        del st.session_state[key]
 
 
 __all__ = [

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-import io
 import os
 from typing import Any
 
 import pandas as pd
+import streamlit as st
 
 from csv_analytics_agent.config.setting import Settings
+from csv_analytics_agent.data.loader import CSVLoader
 from csv_analytics_agent.execution.domain.analytics import AnalyticsEngine
 from csv_analytics_agent.execution.domain.visualization import VisualizationEngine
 from csv_analytics_agent.execution.registry import CapabilityRegistry
@@ -17,7 +18,10 @@ from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.insights.generator import InsightGenerator
 from csv_analytics_agent.insights.models import Insight
 from csv_analytics_agent.llm.gemini import GeminiLLM
+from csv_analytics_agent.llm.rate_limiter import build_gemini_limiter
+from csv_analytics_agent.logging_config import get_logger
 from csv_analytics_agent.memory.service import MemoryService
+from csv_analytics_agent.preprocessing.coercion import coerce_dataframe
 from csv_analytics_agent.profiler.models import DatasetProfile
 from csv_analytics_agent.profiler.profiler import DatasetProfiler
 from csv_analytics_agent.visualization.exceptions import NoSuitableVisualizationError
@@ -25,11 +29,28 @@ from csv_analytics_agent.visualization.models import ChartSpecification
 from csv_analytics_agent.visualization.recommender import recommend_visualizations
 from csv_analytics_agent.visualization.renderer import render_chart
 
+logger = get_logger(__name__)
+
 
 def upload_dataset(content: bytes, filename: str) -> pd.DataFrame:
-    """Load DataFrame from uploaded byte stream."""
-    stream = io.BytesIO(content)
-    return pd.read_csv(stream)
+    """Load DataFrame from uploaded byte stream via CSVLoader and coercion pipeline.
+
+    Args:
+        content: Raw bytes of the uploaded CSV file.
+        filename: Original filename used in error messages.
+
+    Returns:
+        Validated and type-coerced pandas DataFrame.
+
+    Raises:
+        EmptyCSVError: If the file is empty.
+        CSVEncodingError: If the file cannot be decoded.
+        CSVParsingError: If the file cannot be parsed as CSV.
+    """
+    df = CSVLoader.load_from_bytes(content, filename=filename)
+    coerced_df, report = coerce_dataframe(df)
+    logger.info("dataset_coerced", filename=filename, **report.summary())
+    return coerced_df
 
 
 def load_dataset_from_bytes(content: bytes, filename: str) -> pd.DataFrame:
@@ -117,24 +138,65 @@ def create_agent_runtime(
             metadata={"column_name": col},
         )
 
-    effective_api_key = api_key or kwargs.get("api_key") or os.getenv("GOOGLE_API_KEY")
-    llm = GeminiLLM(model_name=model_name, temperature=temperature, api_key=effective_api_key)
     settings = Settings(max_iterations=max_iterations)
+    effective_api_key = (
+        api_key
+        or kwargs.get("api_key")
+        or settings.google_api_key
+        or os.getenv("GOOGLE_API_KEY")
+    )
+    limiter = build_gemini_limiter(settings)
+    llm = GeminiLLM(
+        model_name=model_name,
+        temperature=temperature,
+        api_key=effective_api_key,
+        limiter=limiter,
+    )
 
-    return AgentRuntime(
+    runtime = AgentRuntime(
         llm=llm,
         registry=registry,
         memory_service=memory_service,
         dataframe=df,
         settings=settings,
     )
+    logger.info(
+        "agent_runtime_created",
+        model=model_name,
+        columns=len(df.columns),
+        max_iterations=max_iterations,
+    )
+    return runtime
+
+
+@st.cache_resource(show_spinner=False)
+def get_or_create_runtime(
+    dataset_hash: str,
+    model_name: str = "gemini-2.5-flash",
+    temperature: float = 0.0,
+    max_iterations: int = 6,
+    api_key: str | None = None,
+    _df: pd.DataFrame | None = None,
+) -> AgentRuntime:
+    """Get or create cached AgentRuntime keyed by dataset_hash + model configuration."""
+    if _df is None:
+        raise ValueError("DataFrame context (_df) is required to initialize AgentRuntime.")
+    logger.info("agent_runtime_cache_lookup", dataset_hash=dataset_hash, model=model_name)
+    return create_agent_runtime(
+        df=_df,
+        model_name=model_name,
+        temperature=temperature,
+        max_iterations=max_iterations,
+        api_key=api_key,
+    )
+
 
 
 def ask_agent(
     runtime: AgentRuntime,
     prompt: str,
     thread_id: str,
-    profile: "DatasetProfile | None" = None,
+    profile: DatasetProfile | None = None,
 ) -> AgentState:
     """Execute query prompt via AgentRuntime."""
     return runtime.run(prompt, thread_id=thread_id, profile=profile)
@@ -144,7 +206,7 @@ def execute_agent_query(
     runtime: AgentRuntime,
     prompt: str,
     thread_id: str,
-    profile: "DatasetProfile | None" = None,
+    profile: DatasetProfile | None = None,
 ) -> AgentState:
     """Alias for ask_agent."""
     return ask_agent(runtime, prompt=prompt, thread_id=thread_id, profile=profile)
@@ -162,6 +224,7 @@ __all__ = [
     "execute_agent_query",
     "generate_insights_for_dataset",
     "get_insights",
+    "get_or_create_runtime",
     "get_profile",
     "load_dataset_from_bytes",
     "profile_dataset",

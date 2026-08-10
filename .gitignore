@@ -3,11 +3,16 @@
 venv/
 ENV/
 env/
+env.bak/
+venv.bak/
+.uv/
 
 # Byte-compiled / Python cache
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.pyd
 
 # Distribution / packaging
 build/
@@ -22,9 +27,11 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Testing & Coverage
 .pytest_cache/
@@ -33,31 +40,86 @@ wheels/
 htmlcov/
 .nox/
 .tox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 
 # Type Checking & Linting
 .mypy_cache/
 .ruff_cache/
+.pytype/
+.dmypy.json
+dmypy.json
 
-# Environment variables
+# Jupyter Notebooks & Data Science
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# Environment variables & Secrets
 .env
 .env.local
 .env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+
+# Streamlit specific
+.streamlit/secrets.toml
+.streamlit/credentials.toml
+
+# Databases & Session Storage
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.duckdb
+sessions.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Outputs & Temporary Data
+outputs/*
+!outputs/**/.gitkeep
+!outputs/.gitkeep
+temp/
+tmp/
+uploads/
+cache/
 
 # IDEs & Editor metadata
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 .~lock.*
 .~lock.*#
 
-# AI Assistant metadata
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# AI Assistant & Tool metadata
 .gemini/
 .claude/
-
-# Outputs directory contents
-outputs/*
-!outputs/.gitkeep
-
-# Temporary / Unpushed Directories
+.cursor/
+.antigravity/
 stitch_csv_insight_agent/

@@ -49,6 +49,17 @@ class Settings(BaseSettings):
         description="Default thread identifier for graph checkpointing.",
     )
 
+    gemini_rpm: int = Field(
+        default=10,
+        ge=1,
+        description="Gemini API rate limit: maximum requests per minute (free tier).",
+    )
+
+    google_api_key: str | None = Field(
+        default=None,
+        description="Google AI Studio API key (read from GOOGLE_API_KEY env var).",
+    )
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

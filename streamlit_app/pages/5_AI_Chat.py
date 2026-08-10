@@ -2,19 +2,23 @@
 
 from __future__ import annotations
 
+import logging
 import os
 
 import streamlit as st
 
+from csv_analytics_agent.exceptions.data_errors import CSVAnalyticsError
 from streamlit_app.components.chat_box import render_chat_messages
 from streamlit_app.components.followup_buttons import render_followup_buttons
 from streamlit_app.components.footer import render_footer
 from streamlit_app.components.header import render_header
 from streamlit_app.components.sidebar import render_sidebar
 from streamlit_app.config import APP_TITLE
-from streamlit_app.services.backend import create_agent_runtime, execute_agent_query
+from streamlit_app.services.backend import execute_agent_query, get_or_create_runtime
 from streamlit_app.services.session import get_state, set_state
 from streamlit_app.theme import apply_custom_theme
+
+logger = logging.getLogger(__name__)
 
 st.set_page_config(
     page_title=f"AI Chat — {APP_TITLE}",
@@ -28,6 +32,7 @@ render_sidebar()
 df = get_state("raw_df")
 profile = get_state("profile")
 dataset_name = get_state("dataset_name", "Dataset")
+dataset_hash = get_state("dataset_hash") or "default_hash"
 thread_id = get_state("thread_id")
 messages = get_state("messages", [])
 model_name = get_state("model_name", "gemini-2.5-flash")
@@ -42,6 +47,15 @@ if not google_api_key:
 if df is None:
     st.warning("No dataset loaded yet. Please upload a CSV file on the Upload page.")
     st.stop()
+
+# --- AgentRuntime: process-level cache via st.cache_resource keyed on dataset_hash + config ---
+runtime = get_or_create_runtime(
+    dataset_hash=dataset_hash,
+    model_name=model_name,
+    max_iterations=max_iterations,
+    api_key=google_api_key,
+    _df=df,
+)
 
 # Active Filters Header Bar
 active_filters = get_state("active_filters", [])
@@ -62,18 +76,12 @@ user_query = st.chat_input("Ask a question about your data... e.g. 'top 5 produc
 
 
 def run_query_pipeline(prompt_text: str) -> None:
-    """Execute query prompt through AgentRuntime and update UI state."""
+    """Execute query prompt through the cached AgentRuntime and update UI state."""
     messages.append({"role": "user", "content": prompt_text})
     set_state("messages", messages)
 
     with st.spinner("Logic Engine executing query plan..."):
         try:
-            runtime = create_agent_runtime(
-                df=df,
-                model_name=model_name,
-                max_iterations=max_iterations,
-                api_key=google_api_key,
-            )
             result_state = execute_agent_query(
                 runtime,
                 prompt=prompt_text,
@@ -134,7 +142,26 @@ def run_query_pipeline(prompt_text: str) -> None:
             set_state("last_result", last_result)
             set_state("active_filters", result_state.get("active_filters", []))
 
+        except CSVAnalyticsError as domain_err:
+            logger.exception("Domain error during agent query for thread %s", thread_id)
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": f"⚠️ {domain_err}",
+                    "metadata": {
+                        "router_node": "⚡ DOMAIN ERROR",
+                        "planner_rule": "error",
+                        "tool_name": "error",
+                        "engine_provider": "None",
+                        "retrieved_columns": [],
+                        "iteration_count": 0,
+                        "thread_id": thread_id,
+                    },
+                }
+            )
+            set_state("messages", messages)
         except Exception as err:
+            logger.exception("Unexpected error during agent query for thread %s", thread_id)
             messages.append(
                 {
                     "role": "assistant",

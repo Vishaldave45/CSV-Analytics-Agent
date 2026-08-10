@@ -18,6 +18,8 @@ dependencies = [
     "sentence-transformers",
     "tenacity",
     "streamlit>=1.61.1",
+    "structlog",
+    "pyrate-limiter",
 ]
 
 

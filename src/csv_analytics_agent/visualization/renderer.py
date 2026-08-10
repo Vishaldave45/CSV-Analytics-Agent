@@ -83,18 +83,26 @@ def render_chart(
             else:
                 counts = df[spec.x_axis.column].value_counts()
                 ax.bar([str(k) for k in counts.index], list(counts.values), color="#3182bd")
-                ax.set_ylabel(spec.y_axis.label if spec.y_axis else "Count")
+                ax.set_ylabel((spec.y_axis.label or "Count") if spec.y_axis else "Count")
             plt.xticks(rotation=45, ha="right")
 
         elif spec.chart_type == ChartType.LINE:
             x_data = list(df[spec.x_axis.column])
-            y_data = list(df[spec.y_axis.column]) if (spec.y_axis and spec.y_axis.column in df.columns) else list(df.iloc[:, 0])
+            y_data = (
+                list(df[spec.y_axis.column])
+                if (spec.y_axis and spec.y_axis.column in df.columns)
+                else list(df.iloc[:, 0])
+            )
             ax.plot(x_data, y_data, marker="o", color="#3182bd", linewidth=2)
             if spec.y_axis is not None:
                 ax.set_ylabel(spec.y_axis.label or spec.y_axis.column)
 
         elif spec.chart_type == ChartType.SCATTER:
-            y_col = (spec.y_axis.column if (spec.y_axis and spec.y_axis.column in df.columns) else spec.x_axis.column)
+            y_col = (
+                spec.y_axis.column
+                if (spec.y_axis and spec.y_axis.column in df.columns)
+                else spec.x_axis.column
+            )
             y_label = (
                 (spec.y_axis.label or spec.y_axis.column)
                 if spec.y_axis is not None

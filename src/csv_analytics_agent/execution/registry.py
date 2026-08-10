@@ -10,6 +10,9 @@ from csv_analytics_agent.execution.models import (
     CapabilityDescriptor,
     CapabilityRegistration,
 )
+from csv_analytics_agent.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class CapabilityRegistry:
@@ -45,6 +48,7 @@ class CapabilityRegistry:
         )
         self._registrations[descriptor.name] = reg
         self._bound_engines[descriptor.name] = engine
+        logger.debug("capability_registered", name=descriptor.name, priority=priority)
 
     def unregister(self, name: str) -> None:
         """Unregister a capability by name.
@@ -114,7 +118,9 @@ class CapabilityRegistry:
             regs = [r for r in regs if r.descriptor.name.startswith(capability_prefix)]
 
         sorted_regs = sorted(regs, key=lambda r: r.priority, reverse=True)
-        return [r.descriptor for r in sorted_regs]
+        descriptors = [r.descriptor for r in sorted_regs]
+        logger.debug("capability_discovered", count=len(descriptors), prefix=capability_prefix)
+        return descriptors
 
     def export_llm_schema(self) -> list[dict[str, Any]]:
         """Export OpenAI/Anthropic/Gemini function calling schemas for all capabilities.
