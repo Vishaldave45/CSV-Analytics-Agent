@@ -51,6 +51,7 @@ coverage.xml
 .pytype/
 .dmypy.json
 dmypy.json
+pyrightconfig.json
 
 # Jupyter Notebooks & Data Science
 .ipynb_checkpoints/
@@ -82,6 +83,7 @@ dmypy.json
 *.sqlite3
 *.duckdb
 sessions.db
+app_metadata.db
 
 # Logs
 *.log
@@ -98,6 +100,9 @@ temp/
 tmp/
 uploads/
 cache/
+*.parquet
+py_sandbox_*/
+docker_sandbox_*/
 
 # IDEs & Editor metadata
 .vscode/

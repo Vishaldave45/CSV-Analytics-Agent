@@ -77,6 +77,22 @@ class PythonSandboxPolicy(BaseModel):
         default=None,
         description="Optional maximum memory limit in megabytes.",
     )
+    memory_mb: int = Field(
+        default=512,
+        description="Memory limit in megabytes for sandbox process/container.",
+    )
+    cpu_limit: float = Field(
+        default=1.0,
+        description="CPU limit core count for sandbox execution.",
+    )
+    pids_limit: int = Field(
+        default=64,
+        description="Maximum process PID count limit for sandbox execution.",
+    )
+    image_name: str = Field(
+        default="csv-analytics-python:latest",
+        description="Docker image name for containerized execution.",
+    )
     allowed_imports: frozenset[str] = Field(
         default=DEFAULT_ALLOWED_IMPORTS,
         description="Frozenset of allowed top-level module names.",
@@ -104,11 +120,25 @@ class PythonSandboxPolicy(BaseModel):
             raise ValueError("Byte limit values must be greater than 0.")
         return value
 
-    @field_validator("max_memory_mb")
+    @field_validator("memory_mb", "pids_limit")
     @classmethod
-    def _validate_max_memory(cls, value: int | None) -> int | None:
-        if value is not None and value <= 0:
-            raise ValueError("max_memory_mb must be greater than 0 if specified.")
+    def _validate_positive_ints(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("Value must be greater than 0.")
+        return value
+
+    @field_validator("cpu_limit")
+    @classmethod
+    def _validate_positive_float(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("cpu_limit must be greater than 0.")
+        return value
+
+    @field_validator("image_name")
+    @classmethod
+    def _validate_image_name(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("image_name must not be empty or whitespace-only.")
         return value
 
 

@@ -2,13 +2,14 @@
 
 # 📊 CSV Analytics Agent
 
-**A production-grade, evidence-driven tabular analytics framework built with Python 3.10+, Pydantic v2, and a deterministic layered pipeline & execution engine architecture.**
+**An Enterprise-Grade, Deterministic & Agentic Tabular Data Analytics Engine built with Python 3.10+, Pydantic v2, LangGraph, FAISS Vector Memory, and Multi-Backend Secure Execution Sandboxes.**
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Release](https://img.shields.io/badge/release-v0.6.0-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent/releases/tag/v0.6.0)
-[![Tests](https://img.shields.io/badge/tests-147%20passed-2ea44f?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent)
+[![Release](https://img.shields.io/badge/release-v0.8.3-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent/releases)
+[![Tests](https://img.shields.io/badge/tests-267%20passed-2ea44f?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent)
+[![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen?style=for-the-badge&logo=codecov&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-261230?style=for-the-badge&logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff)
-[![Type Checked](https://img.shields.io/badge/type%20checked-mypy-blue?style=for-the-badge&logo=python&logoColor=white)](https://github.com/python/mypy)
+[![Type Checked](https://img.shields.io/badge/type%20checked-mypy%20strict-blue?style=for-the-badge&logo=python&logoColor=white)](https://github.com/python/mypy)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 
 </div>
@@ -17,307 +18,377 @@
 
 ## 🌟 Overview
 
-The **CSV Analytics Agent** converts raw tabular data (`.csv` files) into structured, evidence-backed insights, renderer-independent visualizations, executable analytical capabilities, and deterministic natural-language query plans. Designed around **Domain-Driven Design (DDD)** principles, the agent processes datasets through a strict, multi-stage pipeline where statistics, business rules, visualization recommendations, capability execution engines, and query planning operate deterministically before being exposed to agentic LLM planners or LangGraph workflows.
+The **CSV Analytics Agent** is an end-to-end, evidence-backed tabular data intelligence platform. It converts raw `.csv` datasets into empirical statistical profiles, proactive business insights, renderer-independent visualization specifications, vector-indexed semantic memory, and safe dynamic analytical executions.
+
+Built upon **Domain-Driven Design (DDD)** and **Clean Architecture** principles, the platform enforces a strict operational principle:
 
 > [!IMPORTANT]
-> **Deterministic First, LLM Second**: Statistics, insights, visualization rules, capability execution, and query planning are evaluated deterministically using immutable Pydantic v2 models and provider abstractions. This eliminates hallucinated data summaries and guarantees 100% explainability and safety.
+> **Deterministic First, LLM Second**: Statistical computations, data profiling, proactive rule evaluations, chart recommendations, and capability execution engines are evaluated **deterministically** using pure Python, Pandas, and immutable Pydantic v2 domain models. The LLM (Gemini via LangChain/LangGraph) operates purely as an orchestrator and narrative synthesizer. This architecture completely eliminates statistical hallucinations and guarantees 100% explainable, reproducible analytical outcomes.
 
 ---
 
-## ✨ Key Capabilities
+## ✨ System Features & Capabilities
 
-| Feature | Description |
-| :--- | :--- |
-| 🛡️ **Robust Data Loader** | Validates structural integrity, missing files, non-empty bounds, and automatically detects encodings (`utf-8`, `latin-1`, `cp1252`, `iso-8859-1`). |
-| 📊 **Pure Dataset Profiler** | Computes missing value ratios, row duplicates, memory distribution, and column-level statistical profiles without side effects. |
-| 🔍 **Evidence Engine** | Pure business rules evaluate immutable dataset profiles to generate structured findings (`Insight`) backed by empirical facts (`Evidence`). |
-| 🎨 **Visualization Recommendation** | Pure rule engine maps dataset statistical profiles to optimal, renderer-independent chart specifications (`HISTOGRAM`, `BAR`, `LINE`, `SCATTER`, `BOXPLOT`, `PIE`, `HEATMAP`) and Matplotlib rendering. |
-| ⚡ **Execution Engine Framework** | Decouples high-level domain capabilities (`AnalyticsEngine`, `VisualizationEngine`) from underlying libraries (`PandasProvider`) registered inside a central `CapabilityRegistry`. |
-| 🧩 **Deterministic Rule Planner** | Translates natural-language questions into `ExecutionRequest` payloads with confidence scores and reasoning trace logs (`RulePlanner`, `QueryParser`, `CapabilityMatcher`). |
-| 🤖 **LLM Tool Schema Export** | `CapabilityRegistry` automatically exports function-calling JSON schemas for OpenAI, Anthropic, and Gemini LLM function-calling planners. |
-| 🧪 **Comprehensive Test Suite** | Every module, validation guard, statistical evaluator, provider, engine, planner rule, and exception path is tested with full statement coverage. |
+| Capability | Module / Layer | Description |
+| :--- | :--- | :--- |
+| 🛡️ **Robust Ingestion & Coercion** | `preprocessing/` | Auto-detects encodings (`utf-8`, `latin-1`, `cp1252`, `iso-8859-1`), validates structural integrity, coercively parses numeric/date types, and generates MD5/SHA256 dataset hashes. |
+| 📊 **Column Statistical DNA** | `profiler/` | Computes pure summary statistics (row/col count, missingness ratios, exact row duplicates, cardinality, memory distribution, min/max/mean/std, quantiles) without side effects. |
+| 🔍 **Proactive Evidence Engine** | `insights/` | Pure business rules evaluate immutable dataset profiles to synthesize ranked findings (`Insight`) paired with empirical data facts (`Evidence`). |
+| 🎨 **Visualization Engine** | `visualization/` | Rule-based recommender maps statistical metadata to renderer-independent chart specifications (`HISTOGRAM`, `BAR`, `LINE`, `SCATTER`, `BOXPLOT`, `PIE`, `HEATMAP`) and renders high-res Matplotlib PNGs. |
+| ⚡ **Capability Execution Framework** | `execution/` | Decouples domain capabilities (`AnalyticsEngine`, `VisualizationEngine`) from underlying providers (`PandasProvider`) registered inside a centralized `CapabilityRegistry`. |
+| 🧠 **Semantic Vector Memory** | `memory/` | Index dataset column schemas and metadata into a local FAISS vector store (`SentenceTransformers`) for semantic column retrieval during agentic planning. |
+| 🛡️ **Multi-Layer Python Sandbox** | `python_engine/` | Executes dynamic, LLM-generated Python analysis code within an isolated subprocess (`SubprocessBackend`) or hardened unprivileged Docker container (`DockerBackend`) guarded by AST static analysis. |
+| 🔄 **LangGraph Stateful Runtime** | `graph/` | StateGraph workflow featuring `SqliteSaver` thread checkpointing, plan-execute loops, memory retrieval nodes, and conversational state persistence. |
+| 📡 **LangSmith Telemetry & Tracing** | `observability/` | Native callback instrumentation (`AgentTracingCallbackHandler`) for tracking latency, token metrics, tool invocations, and thread metadata. |
+| 🖥️ **Streamlit Web Dashboard** | `streamlit_app/` | Multi-page Streamlit application providing interactive dataset exploration, Bento-style statistical cards, insights tables, chart rendering, settings, and AI chat interface. |
 
 ---
 
 ## 🏗️ Architecture & Pipeline Flow
 
-The framework follows a decoupled 6-tier architecture:
+The platform separates data ingestion, statistical profiling, memory indexing, graph orchestration, and sandboxed code execution into distinct, modular layers:
 
 ```mermaid
 flowchart TD
-    UserQuery["💬 User Question"] -->|Stage 6: Rule Planner| Planner(RulePlanner & QueryParser)
-    Planner -->|Capability Discovery| Reg(CapabilityRegistry)
-    Planner -->|Emit Payload| ExecReq["📦 ExecutionRequest (Confidence & Trace)"]
+    UserQuery["💬 User Query / Question"] --> AgentRuntime["🤖 LangGraph Agent Runtime"]
     
-    RawCSV[📄 Raw CSV File] -->|Stage 1: Load & Validate| Loader(CSVLoader & CSVValidator)
-    Loader -->|Clean DataFrame| Profiler(DatasetProfiler)
-    Profiler -->|Immutable Metadata| Profile["❄️ DatasetProfile"]
-    Profile -->|Stage 3: Evidence Engine| Insights["💡 List[Insight]"]
-    Profile & Insights -->|Stage 4: Visualization| Viz(recommend_visualizations & render_chart)
+    subgraph Data Pipeline
+        RawCSV["📄 Raw CSV File"] --> Loader["🛡️ Data Loader & Coercion"]
+        Loader --> Profiler["📊 Dataset Profiler"]
+        Profiler --> Profile["❄️ Immutable DatasetProfile"]
+        Profile --> InsightsEngine["🔍 Insights & Evidence Engine"]
+        Profile & InsightsEngine --> VizEngine["🎨 Visualization Engine"]
+    end
+
+    subgraph Vector Memory
+        Profile --> MemoryService["🧠 FAISS Vector Indexer"]
+        MemoryService --> VectorStore[("⚡ FAISS Vector Store")]
+    end
+
+    subgraph Agent Execution & Tooling
+        AgentRuntime --> RetrievalNode["🔍 Semantic Retrieval Node"]
+        VectorStore -.-> RetrievalNode
+        AgentRuntime --> CapabilityReg["⚡ Capability Registry"]
+        AgentRuntime --> PythonEngine["🔒 Python Sandbox Engine"]
+        
+        PythonEngine --> ASTValidator{"🛡️ AST Pre-Validator"}
+        ASTValidator -->|Valid| SandboxBackend["🐳 Subprocess / Docker Sandbox"]
+        ASTValidator -->|Violation| ErrorResult["❌ PythonValidationError"]
+    end
+
+    CapabilityReg --> DeterministicResult["📦 ExecutionResult"]
+    SandboxBackend --> SandboxResult["📦 PythonExecutionResult"]
     
-    ExecReq & Reg -->|Stage 5: Execution Engine| Engine(AnalyticsEngine / VisualizationEngine)
-    Engine -->|Dynamic Provider Dispatch| Provider(PandasProvider)
-    Provider -->|Execute Operation| Result["📦 ExecutionResult"]
-```
-
-### Layer Responsibilities
-
-```text
-                           ┌────────────────────────┐
-                           │      Raw CSV File      │
-                           └───────────┬────────────┘
-                                       │
-                                       ▼
- ┌───────────────────────────────────────────────────────────────────────────┐
- │ Stage 1 — Data Ingestion & Validation Layer                               │
- │ (Handles encoding auto-detection, schema checks, structural balance)     │
- └─────────────────────────────┬─────────────────────────────────────────────┘
-                               │
-                               ▼
- ┌───────────────────────────────────────────────────────────────────────────┐
- │ Stage 2 — Dataset Profiling & Statistical Engine                          │
- │ (Row/Col summary, Missing values, Memory distribution, Column profiles)  │
- └─────────────────────────────┬─────────────────────────────────────────────┘
-                               │
-                               ▼
- ┌───────────────────────────────────────────────────────────────────────────┐
- │ Stage 3 — Insights Engine & Structured Evidence Generation                │
- │ (Evaluates missing, duplicates, cardinality; emits Insight & Evidence)    │
- └─────────────────────────────┬─────────────────────────────────────────────┘
-                               │
-                               ▼
- ┌───────────────────────────────────────────────────────────────────────────┐
- │ Stage 4 — Visualization Recommendation & Rendering Engine                 │
- │ (Maps statistical metadata to ChartSpecification & renders Matplotlib PNG)│
- └─────────────────────────────┬─────────────────────────────────────────────┘
-                               │
-                               ▼
- ┌───────────────────────────────────────────────────────────────────────────┐
- │ Stage 5 — Execution Engine Framework (`execution/`)                       │
- │ (CapabilityRegistry ──> Domain Engines ──> Providers ──> Libraries)       │
- └─────────────────────────────┬─────────────────────────────────────────────┘
-                               │
-                               ▼
- ┌───────────────────────────────────────────────────────────────────────────┐
- │ Stage 6 — Deterministic Rule-Based Planner Engine (`planner/`)            │
- │ (User Question ──> RulePlanner ──> ExecutionRequest ──> ExecutionResult)   │
- └───────────────────────────────────────────────────────────────────────────┘
+    DeterministicResult --> Explainer["💬 Synthesizer / Explainer Node"]
+    SandboxResult --> Explainer
+    Explainer --> FinalResponse["🚀 User Response & Visualizations"]
 ```
 
 ---
 
-## ⚡ Quickstart
+## 🔒 Security Architecture & Python Sandboxing
 
-### Installation
+The **CSV Analytics Agent** features a dedicated multi-layer execution domain (`python_engine`) engineered to execute dynamically generated Python code securely.
 
-Clone the repository and set up your virtual environment using `uv` (recommended) or `pip`:
+> [!WARNING]
+> **Security Limitation Note**: Subprocess and container isolation provide a local development and container execution boundary, but are not equivalent to a formally verified microVM sandbox (e.g., gVisor or Firecracker).
+
+```text
+       Generated Python Source Code
+                    │
+                    ▼
+  ┌───────────────────────────────────┐
+  │ Layer 1: AST Pre-Execution Check  │  <-- Inspects imports, attributes, builtins
+  └─────────────────┬─────────────────┘
+                    │ Valid
+                    ▼
+  ┌───────────────────────────────────┐
+  │ Layer 2: Environment Stripping   │  <-- Removes GOOGLE_API_KEY, secrets, etc.
+  └─────────────────┬─────────────────┘
+                    │
+                    ▼
+  ┌───────────────────────────────────┐
+  │ Layer 3: Execution Isolation      │
+  │   - SubprocessBackend (Local)     │  <-- Isolated temp directory + timeout caps
+  │   - DockerBackend (Container)     │  <-- Unprivileged, read-only root, no net
+  └───────────────────────────────────┘
+```
+
+### Defense-in-Depth Security Controls
+
+1. **AST Static Code Analysis (`validate_python_code`)**:
+   - Inspects AST nodes prior to execution without running code.
+   - Rejects unapproved or high-risk imports (`os`, `sys`, `subprocess`, `socket`, `pathlib`, `shutil`, `ctypes`, `importlib`, etc.).
+   - Rejects dangerous builtins (`exec`, `eval`, `compile`, `__import__`, `open`, `input`, `breakpoint`).
+   - Blocks dangerous attribute introspection (`__subclasses__`, `__globals__`, `__code__`, `__closure__`, `__builtins__`).
+2. **Subprocess Backend (`SubprocessBackend`)**:
+   - Executes validated code in a clean, isolated temporary workspace (`py_sandbox_*`).
+   - Purges parent process secrets and API keys (`GOOGLE_API_KEY`, etc.) from environment variables.
+   - Enforces execution timeouts and stdout/stderr byte caps.
+3. **Docker Container Backend (`DockerBackend`)**:
+   - Executes code inside an unprivileged Docker container (`--user 1000:1000`).
+   - Disables network access by default (`--network none`).
+   - Mounts read-only root filesystem (`--read-only`) with isolated temporary workspace (`/workspace`).
+   - Drops Linux capabilities (`--cap-drop=ALL`, `--security-opt no-new-privileges:true`).
+   - Restricts system resources (`--memory 512m`, `--cpus 1.0`, `--pids-limit 64`).
+
+---
+
+## ⚡ Quickstart & Installation
+
+### 1. Prerequisites
+- **Python**: 3.10 or higher
+- **Package Manager**: [`uv`](https://github.com/astral-sh/uv) (recommended) or `pip`
+- **Docker** (optional, required only for containerized sandbox execution)
+
+### 2. Clone & Install Dependencies
 
 ```bash
 # Clone the repository
 git clone https://github.com/Vishaldave45/CSV-Analytics-Agent.git
 cd CSV-Analytics-Agent
 
-# Sync dependencies with uv (creates .venv automatically)
+# Install dependencies using uv (creates .venv automatically)
 uv sync
 
-# Or using standard pip in editable mode
+# Or using standard pip
 pip install -e ".[dev]"
 ```
 
-### Python API Example
+### 3. Environment Configuration
+
+Copy the example environment file and configure optional keys:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+```ini
+# Application & Gemini LLM Settings
+GOOGLE_API_KEY=AIzaSy_your_key_here
+
+# Python Execution Engine Sandbox Configuration
+PYTHON_EXECUTION_BACKEND=subprocess  # Options: 'subprocess' or 'container'
+PYTHON_SANDBOX_IMAGE=csv-analytics-python:latest
+PYTHON_SANDBOX_MEMORY_MB=512
+PYTHON_SANDBOX_CPU_LIMIT=1.0
+PYTHON_SANDBOX_PIDS_LIMIT=64
+PYTHON_SANDBOX_TIMEOUT_SECONDS=30
+PYTHON_SANDBOX_NETWORK=false
+
+# LangSmith Tracing (Optional)
+LANGCHAIN_TRACING_V2=false
+LANGCHAIN_API_KEY=your_langsmith_key_here
+```
+
+### 4. Build Docker Sandbox Image (Optional)
+
+If using containerized Python execution (`PYTHON_EXECUTION_BACKEND=container`), build the sandbox image:
+
+```bash
+docker build -t csv-analytics-python:latest ./sandbox
+```
+
+### 5. Launch the Streamlit Web Dashboard
+
+```bash
+uv run streamlit run streamlit_app/app.py
+```
+
+Open your browser at `http://localhost:8501`.
+
+---
+
+## 💻 Programmatic Python API Usage
+
+### 1. Data Ingestion & Statistical Profiling
 
 ```python
-from pathlib import Path
-from csv_analytics_agent.data import CSVLoader
+import pandas as pd
+from csv_analytics_agent.preprocessing import load_and_coerce_csv
 from csv_analytics_agent.profiler import DatasetProfiler
-from csv_analytics_agent.execution import (
-    CapabilityRegistry,
-    AnalyticsEngine,
-    VisualizationEngine,
+
+# Load CSV with automatic encoding detection and coercion
+df, profile, content_hash = load_and_coerce_csv("data/sales_data.csv")
+
+print(f"Dataset Loaded: {profile.summary.row_count} rows x {profile.summary.column_count} columns")
+print(f"Dataset Hash: {content_hash}")
+```
+
+### 2. Proactive Insights & Visualization Recommendation
+
+```python
+from csv_analytics_agent.insights import InsightsGenerator
+from csv_analytics_agent.visualization import recommend_visualizations, render_chart_to_bytes
+
+# Generate proactive empirical insights
+insights = InsightsGenerator().generate(profile)
+for insight in insights:
+    print(f"[{insight.severity.value.upper()}] {insight.title}: {insight.description}")
+
+# Generate chart specifications & render PNG image bytes
+charts = recommend_visualizations(profile, insights=insights)
+if charts:
+    img_bytes = render_chart_to_bytes(charts[0], df)
+    with open("chart.png", "wb") as f:
+        f.write(img_bytes)
+```
+
+### 3. Secure Python Sandbox Execution
+
+```python
+from csv_analytics_agent.python_engine import (
+    PythonExecutionRequest,
+    create_python_executor,
 )
-from csv_analytics_agent.planner import RulePlanner
 
-# 1. Load CSV & Profile
-df = CSVLoader(Path("data/sample_dataset.csv")).load()
-profile = DatasetProfiler().profile(df)
+# Instantiate executor via factory (subprocess or container)
+executor = create_python_executor(mode="subprocess")
 
-# 2. Setup Execution Framework & Registry
-registry = CapabilityRegistry()
-analytics_engine = AnalyticsEngine()
-viz_engine = VisualizationEngine()
+# Define analytical code request
+request = PythonExecutionRequest(
+    code="""
+import math
+total_revenue = df['revenue'].sum()
+avg_quantity = df['quantity'].mean()
+result_summary = f"Revenue: ${total_revenue:,.2f}, Avg Qty: {avg_quantity:.1f}"
+""",
+    question="Calculate revenue and average quantity",
+)
 
-for desc in analytics_engine.list_capabilities():
-    registry.register(desc, analytics_engine)
-for desc in viz_engine.list_capabilities():
-    registry.register(desc, viz_engine)
+# Execute code safely against target DataFrame
+result = executor.execute(request, df)
 
-# 3. Translate Question using Stage 6 Deterministic Planner
-planner = RulePlanner()
-question = "What is the average salary?"
-columns = list(df.columns)
+print(f"Success: {result.success}")
+print(f"Captured stdout: {result.stdout}")
+for artifact in result.artifacts:
+    print(f"Artifact [{artifact.artifact_type.value}]: {artifact.name} = {artifact.data}")
+```
 
-plan_result = planner.plan(question, columns, registry)
+### 4. LangGraph Agent Runtime Execution
 
-print(f"Confidence: {plan_result.confidence}")
-print(f"Matched Rule: {plan_result.matched_rule}")
-print("Reasoning Trace:")
-for step in plan_result.reasoning_trace:
-    print(f"  - {step}")
+```python
+from csv_analytics_agent.graph.runtime import AgentRuntime
 
-# 4. Execute the planned request deterministically
-if plan_result.success and plan_result.execution_request:
-    req = plan_result.execution_request
-    engine = registry.get_engine(req.capability_name)
-    exec_result = engine.execute_capability(req, df)
-    print(f"\nExecution Outcome ({exec_result.status.value}): {exec_result.data}")
+# Initialize stateful AgentRuntime with registered capabilities and memory
+runtime = AgentRuntime.create_default(df=df, dataset_name="sales_data.csv")
+
+# Execute natural-language query through LangGraph workflow
+response_state = runtime.invoke("What is the average revenue per product category?")
+
+# Access generated agent response
+messages = response_state.get("messages", [])
+print("Agent Response:", messages[-1].content if messages else "No response")
 ```
 
 ---
 
-## 🧩 Domain Models & Exceptions
-
-### Domain Models (`planner/models.py`, `execution/models.py`, `visualization/models.py`, `insights/models.py`)
-
-| Model | Immutability | Description |
-| :--- | :---: | :--- |
-| `PlannerResult` | `frozen=True` | Planning output container holding `ExecutionRequest`, `confidence`, `matched_rule`, and `reasoning_trace`. |
-| `ParsedIntent` | `frozen=True` | Extracted analytical intent, target columns, parameters, and raw query string. |
-| `IntentRule` | `frozen=True` | Declarative synonym rule mapping keywords to analytical intents. |
-| `CapabilityDescriptor` | `frozen=True` | Metadata defining a capability name, description, JSON schema, and default provider. |
-| `ExecutionRequest` | `frozen=True` | Payload requesting capability execution with column targets and parameters. |
-| `ExecutionResult` | `frozen=True` | Type-safe result wrapper with status, message, payload data `Any | None`, and timing. |
-| `DatasetProfile` | `frozen=True` | Complete statistical breakdown of tabular dataset. |
-| `ChartSpecification` | `frozen=True` | Renderer-independent chart definition (type, title, axes, description). |
-
----
-
-## 🛠️ Project Structure
+## 🛠️ Repository & Project Directory Structure
 
 ```text
 csv-analytics-agent/
 ├── src/csv_analytics_agent/
-│   ├── config/             # Environment settings & configuration management
-│   ├── data/               # Stage 1: Data loader, encoding detector & CSV validator
-│   ├── profiler/           # Stage 2: Dataset profiler & pure column statistics
-│   ├── insights/           # Stage 3: Deterministic rules, generator & evidence
-│   ├── visualization/      # Stage 4: Chart recommendations & Matplotlib renderer
-│   ├── execution/          # Stage 5: Execution Engine Framework
-│   │   ├── models.py       # Execution domain models
-│   │   ├── base.py         # Abstract base classes (BaseProvider, BaseEngine)
-│   │   ├── exceptions.py   # Execution exception hierarchy
-│   │   ├── registry.py     # CapabilityRegistry & LLM tool schema exporter
-│   │   ├── providers/      # PandasProvider encapsulating pandas operations
-│   │   └── domain/         # AnalyticsEngine & VisualizationEngine adapters
-│   ├── planner/            # Stage 6: Deterministic Rule-Based Planner Engine
-│   │   ├── models.py       # Planner domain models (PlannerResult, ParsedIntent)
-│   │   ├── rules.py        # Synonym rule definitions & RuleEngine
-│   │   ├── parser.py       # QueryParser extracting columns & numeric parameters
-│   │   ├── matcher.py      # CapabilityMatcher discovering CapabilityRegistry
-│   │   └── planner.py      # RulePlanner orchestrator
-│   └── exceptions/         # Base exceptions
-├── tests/                  # Complete unit test suite (147 tests)
+│   ├── config/             # Pydantic Settings & environment config management
+│   ├── exceptions/         # System-wide base exception hierarchy
+│   ├── llm/                # LangChain LLM abstraction & Gemini API integration
+│   ├── preprocessing/      # Stage 1: File loading, encoding detection & coercion
+│   ├── profiler/           # Stage 2: Pure dataset statistics & column profiling
+│   ├── insights/           # Stage 3: Proactive evidence & business rules engine
+│   ├── visualization/      # Stage 4: Renderer-agnostic chart spec & Matplotlib renderer
+│   ├── execution/          # Stage 5: CapabilityRegistry, AnalyticsEngine, PandasProvider
+│   ├── persistence/        # Stage 7.1: SQLite metadata storage & SHA256 hashing
+│   ├── memory/             # Stage 7.5: FAISS vector store & column semantic search
+│   ├── observability/      # Stage 7.8: LangSmith callback handlers & tracing setup
+│   ├── graph/              # Stage 7.9: LangGraph StateGraph, SqliteSaver, AgentRuntime
+│   └── python_engine/      # Stage 8.1–8.3: Secure Python execution sandbox domain
+│       ├── models.py       # Immutable Pydantic v2 request/result/artifact domain models
+│       ├── base.py         # BasePythonExecutor abstract base class
+│       ├── errors.py       # Python engine domain exception hierarchy
+│       ├── policy.py       # PythonSandboxPolicy & AST static code validator
+│       ├── backends.py     # SubprocessBackend & unprivileged DockerBackend
+│       └── sandbox.py      # PythonSandboxExecutor, DockerPythonExecutor & factory
+├── streamlit_app/          # Streamlit Multi-Page Web Application
+│   ├── app.py              # Application entrypoint
+│   ├── config.py           # Presentation UI configuration
+│   ├── theme.py            # Custom CSS dark glassmorphism design system
+│   ├── components/         # Reusable Streamlit UI components (header, footer, cards, sidebar)
+│   ├── pages/              # Streamlit pages (Overview, Dataset, Insights, Chat, Settings, etc.)
+│   └── services/           # Gateway backend bridge & session state services
+├── sandbox/                # Docker sandbox container build context
+│   ├── Dockerfile          # Unprivileged non-root Python 3.10 sandbox image build file
+│   └── requirements.txt    # Sandbox dependencies (pandas, numpy, scipy, matplotlib, plotly)
+├── tests/                  # Complete unit test suite (267 passing tests)
 │   ├── config/
-│   ├── data/
-│   ├── exceptions/
-│   ├── execution/
-│   ├── insights/
-│   ├── planner/
-│   ├── profiler/
+│   ├── graph/
+│   ├── llm/
+│   ├── memory/
+│   ├── observability/
+│   ├── persistence/
+│   ├── python_engine/      # Unit, security, backend, factory & Docker integration tests
+│   ├── streamlit_app/
 │   └── visualization/
-├── pyproject.toml          # Project metadata, dependencies & tool settings
-├── mypy.ini                # Strict MyPy configuration
-├── ruff.toml              # Ruff linter & formatter rules
-└── README.md               # Root documentation
+├── .env.example            # Environment variable template
+├── pyproject.toml          # Project configuration & dependencies (uv / hatchling)
+├── ruff.toml              # Ruff linter & formatter configuration
+├── mypy.ini                # Strict MyPy static type checker configuration
+└── README.md               # Root technical documentation
 ```
 
 ---
 
-## 🧪 Quality Assurance & Testing
+## 🧪 Quality Assurance & Test Verification
 
-The project maintains strict quality controls:
+The codebase maintains strict quality controls, 100% type annotations, zero linter warnings, and comprehensive test coverage:
 
 ```bash
-# Code linting & style enforcement with Ruff
+# 1. Run Ruff Linter
 uv run ruff check .
 
-# Code formatting check
+# 2. Run Ruff Formatting Check
 uv run ruff format --check .
 
-# Strict static type checking with MyPy
+# 3. Run MyPy Static Type Checker (Strict Mode)
 uv run mypy src
 
-# Run pytest suite
-uv run pytest
+# 4. Run Unit Test Suite (excluding live LLM and Docker tests)
+uv run pytest -m "not llm and not docker"
+
+# 5. Run Unit Test Suite with Statement Coverage
+uv run pytest --cov=csv_analytics_agent --cov-report=term-missing -m "not llm and not docker"
+
+# 6. Run Docker Integration Tests (requires Docker daemon)
+uv run pytest -m docker
 ```
 
-### Current Verification Metrics
+### Current Quality Metrics
 
-- **Unit Tests**: `147 passed` in `0.93s`
-- **Type Safety**: `0 errors` (Strict MyPy mode across 45 source files)
-- **Formatting**: 100% compliant with Ruff standards
-
----
-
-## 📡 Observability & Tracing
-
-The agent includes built-in, production-grade **LangSmith** observability for execution tracing, latency monitoring, and callback instrumentation (`csv_analytics_agent.observability`).
-
-### Key Features
-* **Zero Overhead when Disabled**: Tracing remains 100% optional. If disabled or if API keys are missing, the agent operates without crashing.
-* **Environment Configuration**: Controlled via standard environment variables or `.env` configuration.
-* **Centralized Metadata**: Automatically captures `thread_id`, `model_name`, `dataset_name`, and execution timestamps for every graph run.
-
-### Environment Variables
-
-```bash
-# Enable LangSmith Tracing
-LANGCHAIN_TRACING_V2=true
-LANGCHAIN_API_KEY=your_langsmith_api_key_here
-LANGCHAIN_PROJECT=csv-analytics-agent
-LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
-LANGCHAIN_SESSION=development
-LANGCHAIN_TAGS=local,csv-agent
-```
-
-### Disabling Tracing
-To disable tracing completely, set `LANGCHAIN_TRACING_V2=false` in your `.env` or environment.
+| Check | Tool | Result |
+| :--- | :--- | :--- |
+| **Linting** | Ruff v0.9+ | **0 Errors** across all files |
+| **Formatting** | Ruff Formatter | **196 Files Formatted** |
+| **Type Checking** | MyPy Strict | **0 Errors** across 82 source files |
+| **Unit Tests** | Pytest | **267 Passed** (0 failures) |
+| **Test Coverage** | Pytest-Cov | **89% Total Coverage** |
 
 ---
 
-## 🗺️ Product Roadmap
+## 🗺️ Product Roadmap & Stage Progress
 
-- [x] **Stage 1 — Data Loader & Validator** (`v0.1.0`)
-  - Auto-encoding detection, file checks, structural validation.
-- [x] **Stage 2 — Dataset Profiler & Pure Statistics** (`v0.2.0`)
-  - Summary metrics, missing/duplicate analytics, column-level profiles.
-- [x] **Stage 3 — Deterministic Insights Engine & Evidence** (`v0.3.0`)
-  - Pure rule evaluation (`MissingDataRule`, `DuplicateRowsRule`, `HighCardinalityRule`), severity ranking.
-- [x] **Stage 4 — Visualization Recommendation & Rendering Engine** (`v0.4.0`)
-  - Automatic chart mapping and Matplotlib rendering engine.
-- [x] **Stage 5 — Execution Engine Framework** (`v0.5.0`)
-  - Decoupled `CapabilityRegistry`, `AnalyticsEngine`, `VisualizationEngine`, `PandasProvider`.
-- [x] **Stage 6 — Deterministic Rule-Based Planner Engine** (`v0.6.0`)
-  - `RulePlanner`, `QueryParser`, `CapabilityMatcher`, confidence scoring, and reasoning trace logs.
-- [ ] **Stage 7 — LangChain / LlamaIndex Tool Integrations** (`v0.7.0`)
-  - Reusable agent tool adapters for LLM frameworks.
-- [ ] **Stage 8 — Gemini Tool Calling & Agentic Planner** (`v0.8.0`)
-  - Intent recognition and multi-step query decomposition.
-- [ ] **Stage 9 — LangGraph Stateful Workflows** (`v0.9.0`)
-  - Cyclic stateful workflows and multi-agent collaboration.
-- [ ] **Stage 10 — Interactive UI & Session Memory** (`v1.0.0`)
-  - Web dashboard with persistent session history.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these guidelines:
-1. Ensure all new logic is backed by comprehensive unit tests.
-2. Run `uv run ruff check .`, `uv run ruff format --check .`, `uv run mypy src`, and `uv run pytest` before submitting pull requests.
-3. Keep code strictly typed, immutable, and co-located in domain modules.
+- [x] **Stage 1 — Ingestion & Coercion** (`v0.1.0`): Auto-encoding detection, file validation, structural checks.
+- [x] **Stage 2 — Dataset Profiler** (`v0.2.0`): Column statistical DNA, missingness, duplicates, memory summary.
+- [x] **Stage 3 — Insights Engine** (`v0.3.0`): Empirical business rule evaluation, structured findings, evidence synthesis.
+- [x] **Stage 4 — Visualization Engine** (`v0.4.0`): Chart recommendation rules, spec generation, Matplotlib rendering.
+- [x] **Stage 5 — Execution Framework** (`v0.5.0`): `CapabilityRegistry`, `AnalyticsEngine`, `VisualizationEngine`, `PandasProvider`.
+- [x] **Stage 6 — Deterministic Planner** (`v0.6.0`): `RulePlanner`, `QueryParser`, confidence scoring, trace logs.
+- [x] **Stage 7.1–7.10 — Agentic System** (`v0.7.0`): `SqliteSaver`, FAISS Vector Memory, LangSmith Observability, LangGraph `AgentRuntime`, Streamlit UI.
+- [x] **Stage 8.1 — Python Engine Interface** (`v0.8.1`): Domain models (`PythonExecutionRequest`, `PythonExecutionResult`, `PythonArtifact`), exception hierarchy, `BasePythonExecutor`.
+- [x] **Stage 8.2 — Subprocess Sandbox** (`v0.8.2`): `PythonSandboxPolicy`, AST pre-validation, `SubprocessBackend`, isolated execution boundary.
+- [x] **Stage 8.3 — Production-Hardened Sandbox** (`v0.8.3`): `BaseSandboxBackend`, `DockerBackend`, unprivileged read-only Docker sandbox, resource caps, `create_python_executor` factory.
+- [ ] **Stage 8.4 — Agentic Code Generation Tool**: LangChain tool adapter connecting dynamic Python sandbox execution to LangGraph planner.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.

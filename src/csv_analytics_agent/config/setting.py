@@ -60,6 +60,45 @@ class Settings(BaseSettings):
         description="Google AI Studio API key (read from GOOGLE_API_KEY env var).",
     )
 
+    python_execution_backend: str = Field(
+        default="subprocess",
+        description="Python execution backend choice ('subprocess' or 'container').",
+    )
+
+    python_sandbox_image: str = Field(
+        default="csv-analytics-python:latest",
+        description="Docker image name for containerized Python execution.",
+    )
+
+    python_sandbox_memory_mb: int = Field(
+        default=512,
+        ge=1,
+        description="Memory limit in MB for Python sandbox.",
+    )
+
+    python_sandbox_cpu_limit: float = Field(
+        default=1.0,
+        gt=0.0,
+        description="CPU core count limit for Python sandbox.",
+    )
+
+    python_sandbox_pids_limit: int = Field(
+        default=64,
+        ge=1,
+        description="Maximum process PID count limit for Python sandbox.",
+    )
+
+    python_sandbox_timeout_seconds: float = Field(
+        default=30.0,
+        gt=0.0,
+        description="Timeout limit in seconds for Python execution.",
+    )
+
+    python_sandbox_network: bool = Field(
+        default=False,
+        description="Whether network access is permitted in Python sandbox.",
+    )
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
