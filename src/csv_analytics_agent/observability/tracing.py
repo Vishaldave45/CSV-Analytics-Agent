@@ -6,6 +6,7 @@ import logging
 import os
 from typing import Any
 
+from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
 from csv_analytics_agent.observability.callbacks import (
     AgentTracingCallbackHandler,
     register_callback,
@@ -101,7 +102,7 @@ def get_traced_metadata(
     thread_id: str,
     dataset_name: str = "dataset.csv",
     dataset_hash: str | None = None,
-    model_name: str = "gemini-2.0-flash",
+    model_name: str = DEFAULT_MODEL_NAME,
 ) -> dict[str, Any]:
     """Construct centralized run metadata payload for traced graph executions.
 

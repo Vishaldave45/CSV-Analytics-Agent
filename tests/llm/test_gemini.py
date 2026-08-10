@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
-from csv_analytics_agent.llm.gemini import _TRANSIENT_EXCEPTIONS, GeminiLLM
+from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME, _TRANSIENT_EXCEPTIONS, GeminiLLM
 
 
 def test_gemini_llm_mocked_invocation() -> None:
@@ -14,11 +14,11 @@ def test_gemini_llm_mocked_invocation() -> None:
     mock_runnable.invoke.return_value = AIMessage(content="Mocked Gemini response")
     mock_runnable.bind_tools.return_value = mock_runnable
 
-    gemini = GeminiLLM(model_name="gemini-2.0-flash", llm_instance=mock_runnable)
-    assert gemini.model_name == "gemini-2.0-flash"
+    gemini = GeminiLLM(model_name=DEFAULT_MODEL_NAME, llm_instance=mock_runnable)
+    assert gemini.model_name == DEFAULT_MODEL_NAME
 
     bound_gemini = gemini.bind_tools([])
-    assert bound_gemini.model_name == "gemini-2.0-flash"
+    assert bound_gemini.model_name == DEFAULT_MODEL_NAME
 
     res = bound_gemini.invoke([HumanMessage(content="Test prompt")])
     assert res.content == "Mocked Gemini response"
@@ -30,7 +30,7 @@ def test_gemini_no_retry_on_invalid_api_key() -> None:
     mock_runnable = MagicMock()
     mock_runnable.invoke.side_effect = Exception("API_KEY_INVALID: Invalid key provided")
 
-    gemini = GeminiLLM(model_name="gemini-2.0-flash", llm_instance=mock_runnable)
+    gemini = GeminiLLM(model_name=DEFAULT_MODEL_NAME, llm_instance=mock_runnable)
 
     with pytest.raises(ValueError, match="Invalid Google Gemini API Key"):
         gemini.invoke([HumanMessage(content="Test prompt")])
@@ -61,7 +61,7 @@ def test_gemini_retry_on_transient_error() -> None:
         AIMessage(content="Recovered after retries"),
     ]
 
-    gemini = GeminiLLM(model_name="gemini-2.0-flash", llm_instance=mock_runnable)
+    gemini = GeminiLLM(model_name=DEFAULT_MODEL_NAME, llm_instance=mock_runnable)
     res = gemini.invoke([HumanMessage(content="Test prompt")])
 
     assert res.content == "Recovered after retries"
@@ -71,7 +71,7 @@ def test_gemini_retry_on_transient_error() -> None:
 @pytest.mark.llm
 def test_gemini_real_api_smoke_test() -> None:
     """Smoke test against live Gemini API (marked with pytest.mark.llm)."""
-    gemini = GeminiLLM(model_name="gemini-2.0-flash")
+    gemini = GeminiLLM(model_name=DEFAULT_MODEL_NAME)
     response = gemini.invoke("Say 'hello' in one word.")
     assert isinstance(response, AIMessage)
     assert len(response.content) > 0

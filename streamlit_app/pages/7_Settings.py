@@ -6,6 +6,8 @@ import os
 
 import streamlit as st
 
+from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME, AVAILABLE_MODELS
+
 from streamlit_app.components.footer import render_footer
 from streamlit_app.components.header import render_header
 from streamlit_app.components.sidebar import render_sidebar
@@ -33,8 +35,8 @@ api_key_input = st.text_input(
     type="password",
     help="Enter your Google AI Studio Gemini API key from https://aistudio.google.com/app/apikey",
 )
-avail_models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-lite"]
-curr_model = get_state("model_name", "gemini-2.0-flash")
+avail_models = list(AVAILABLE_MODELS)
+curr_model = get_state("model_name", DEFAULT_MODEL_NAME)
 curr_index = avail_models.index(curr_model) if curr_model in avail_models else 0
 
 model_name = st.selectbox(

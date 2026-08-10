@@ -37,6 +37,11 @@ def test_agent_tracing_callback_handler_events() -> None:
     handler.on_tool_start({"name": "aggregate"}, "target_columns=['salary']")
     handler.on_tool_end(output="result_data")
 
+    handler.on_chain_start(None, None)
+    handler.on_chain_end({})
+    handler.on_tool_start(None, None)
+    handler.on_llm_start(None, None)
+
     assert mock_logger.info.call_count >= 3
 
 

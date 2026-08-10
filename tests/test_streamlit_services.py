@@ -13,6 +13,7 @@ from streamlit_app.services.backend import (
     recommend_visualizations_for_dataset,
     render_chart_image,
 )
+from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
 from streamlit_app.services.session import (
     clear_dataset_session,
     get_state,
@@ -29,7 +30,7 @@ def sample_csv_bytes() -> bytes:
 def test_session_service_operations() -> None:
     """Verify session state initialization and mutation helpers."""
     init_session_state()
-    assert get_state("model_name") == "gemini-2.0-flash"
+    assert get_state("model_name") == DEFAULT_MODEL_NAME
 
     set_state("custom_key", "custom_val")
     assert get_state("custom_key") == "custom_val"

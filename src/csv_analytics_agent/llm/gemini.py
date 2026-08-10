@@ -11,7 +11,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from tenacity import (
     RetryCallState,
     retry,
-    retry_if_exception_type,
+    retry_if_exception,
     stop_after_attempt,
     wait_exponential,
 )
@@ -20,7 +20,14 @@ from csv_analytics_agent.llm.base import BaseLLM
 from csv_analytics_agent.logging_config import get_logger
 
 logger = get_logger(__name__)
-_stdlib_log = logging.getLogger(__name__)
+
+DEFAULT_MODEL_NAME = "gemini-flash-lite-latest"
+AVAILABLE_MODELS = (
+    "gemini-flash-lite-latest",
+    "gemini-flash-latest",
+    "gemini-pro-latest",
+    "gemini-2.5-flash",
+)
 
 # Collect all available transient error types across SDKs (google-genai, google-api-core, httpx)
 _transient_list: list[type[Exception]] = []
@@ -67,11 +74,17 @@ def _log_retry(retry_state: RetryCallState) -> None:
     )
 
 
-_retry_predicate = (
-    retry_if_exception_type(_TRANSIENT_EXCEPTIONS)
-    if _TRANSIENT_EXCEPTIONS
-    else retry_if_exception_type(())
-)
+def _should_retry_exception(exception: BaseException) -> bool:
+    err_str = str(exception)
+
+    if "API_KEY_INVALID" in err_str or "INVALID_ARGUMENT" in err_str:
+        return False
+    if "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower():
+        return False
+
+    return isinstance(exception, _TRANSIENT_EXCEPTIONS)
+
+_retry_predicate = retry_if_exception(_should_retry_exception)
 
 
 class GeminiLLM(BaseLLM):
@@ -79,7 +92,7 @@ class GeminiLLM(BaseLLM):
 
     def __init__(
         self,
-        model_name: str = "gemini-2.0-flash",
+        model_name: str = DEFAULT_MODEL_NAME,
         temperature: float = 0.0,
         api_key: str | None = None,
         llm_instance: Any | None = None,
@@ -88,26 +101,27 @@ class GeminiLLM(BaseLLM):
         """Initialize GeminiLLM instance.
 
         Args:
-            model_name: Gemini model string identifier (default 'gemini-2.0-flash').
+            model_name: Gemini model string identifier (default DEFAULT_MODEL_NAME).
             temperature: Sampling temperature float (default 0.0).
             api_key: Optional Google API key string.
             llm_instance: Optional pre-configured Runnable/Chat model for injection/testing.
             limiter: Optional pyrate_limiter.Limiter instance for rate limiting.
         """
-        formatted_model = model_name.strip().replace(" ", "-") if model_name else "gemini-2.0-flash"
+        formatted_model = model_name.strip().replace(" ", "-") if model_name else DEFAULT_MODEL_NAME
         self._model_name = formatted_model
         self._temperature = temperature
         self._api_key = api_key or os.getenv("GOOGLE_API_KEY")
         self._limiter = limiter
+        self._owns_llm = llm_instance is None
 
-        if llm_instance is not None:
-            self._llm = llm_instance
-        else:
-            self._llm = ChatGoogleGenerativeAI(
-                model=self._model_name,
-                temperature=self._temperature,
-                google_api_key=self._api_key or "DUMMY_KEY_FOR_MOCKING",
-            )
+        self._llm = llm_instance if llm_instance is not None else self._build_llm_instance()
+
+    def _build_llm_instance(self) -> ChatGoogleGenerativeAI:
+        return ChatGoogleGenerativeAI(
+            model=self._model_name,
+            temperature=self._temperature,
+            google_api_key=self._api_key or "DUMMY_KEY_FOR_MOCKING",
+        )
 
     # ---------------------------------------------------------------------------
     # Private: retryable inner call — only wraps the transient-error cases
@@ -147,31 +161,27 @@ class GeminiLLM(BaseLLM):
             limiter=self._limiter,
         )
 
+    def _is_quota_error(self, error: Exception) -> bool:
+        err_str = str(error)
+        return (
+            "API_KEY_INVALID" not in err_str
+            and ("RESOURCE_EXHAUSTED" in err_str or "429" in err_str or "quota" in err_str.lower())
+        )
+
+    def _get_fallback_model_name(self) -> str | None:
+        return DEFAULT_MODEL_NAME if self._model_name != DEFAULT_MODEL_NAME else None
+
     def invoke(self, input_data: list[BaseMessage] | str | dict[str, Any]) -> BaseMessage:
         """Invoke Gemini LLM with messages or prompt input.
 
         Applies rate limiting (if a limiter is configured) before the call, then
         delegates to ``_invoke_inner`` which is wrapped with tenacity retry logic for
-        transient errors (rate limits / service unavailability).
-
-        Auth errors (``API_KEY_INVALID``, ``INVALID_ARGUMENT``) are caught here and
-        converted to a ``ValueError`` with an actionable message — they are NOT retried.
-
-        Args:
-            input_data: Conversation messages list or prompt string.
-
-        Returns:
-            BaseMessage response emitted by ChatGoogleGenerativeAI.
-
-        Raises:
-            ValueError: If the API key is invalid or the argument is malformed.
+        transient errors.
         """
-        # Rate limiting gate — blocks until a slot is available
         if self._limiter is not None:
             try:
                 self._limiter.try_acquire("gemini_invoke")
             except Exception:  # noqa: BLE001
-                # Limiter raised (raise_when_fail=True path) — treat as rate limit warning
                 logger.warning("gemini_rate_limit_wait", model=self._model_name)
 
         try:
@@ -184,10 +194,22 @@ class GeminiLLM(BaseLLM):
                     "Please check your key at https://aistudio.google.com/app/apikey "
                     "and enter it in Settings."
                 ) from err
-            if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str or "quota" in err_str.lower():
+            if self._is_quota_error(err):
+                fallback_model = self._get_fallback_model_name()
+                fallback_model = self._get_fallback_model_name()
+                if fallback_model and self._owns_llm:
+                    logger.warning(
+                        "gemini_quota_fallback",
+                        model=self._model_name,
+                        fallback_model=fallback_model,
+                    )
+                    self._model_name = fallback_model
+                    self._llm = self._build_llm_instance()
+                    return self._invoke_inner(input_data)
+
                 raise ValueError(
                     f"Gemini API Quota / Rate Limit Exceeded (429) for '{self._model_name}'. "
-                    "Please try selecting 'gemini-1.5-flash' on the Settings page, or wait a minute before retrying."
+                    f"Try switching to '{DEFAULT_MODEL_NAME}' in Settings or wait 30-60 seconds before retrying."
                 ) from err
             raise
 

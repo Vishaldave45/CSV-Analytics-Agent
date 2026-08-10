@@ -7,6 +7,8 @@ from typing import Any
 
 import streamlit as st
 
+from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
+
 DEFAULT_SESSION_KEYS: dict[str, Any] = {
     "thread_id": None,
     "dataset_name": "sample_sales.csv",
@@ -17,7 +19,7 @@ DEFAULT_SESSION_KEYS: dict[str, Any] = {
     "messages": [],
     "last_result": None,
     "active_filters": [],
-    "model_name": "gemini-2.0-flash",
+    "model_name": DEFAULT_MODEL_NAME,
     "temperature": 0.0,
     "max_iterations": 6,
     "tracing_enabled": False,

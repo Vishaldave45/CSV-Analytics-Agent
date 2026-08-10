@@ -17,7 +17,7 @@ from csv_analytics_agent.graph.runtime import AgentRuntime
 from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.insights.generator import InsightGenerator
 from csv_analytics_agent.insights.models import Insight
-from csv_analytics_agent.llm.gemini import GeminiLLM
+from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME, GeminiLLM
 from csv_analytics_agent.llm.rate_limiter import build_gemini_limiter
 from csv_analytics_agent.logging_config import get_logger
 from csv_analytics_agent.memory.service import MemoryService
@@ -147,7 +147,7 @@ def build_configured_registry() -> CapabilityRegistry:
 
 def create_agent_runtime(
     df: pd.DataFrame,
-    model_name: str = "gemini-2.0-flash",
+    model_name: str = DEFAULT_MODEL_NAME,
     temperature: float = 0.0,
     max_iterations: int = 6,
     api_key: str | None = None,
@@ -194,7 +194,7 @@ def create_agent_runtime(
 @st.cache_resource(show_spinner=False)
 def get_or_create_runtime(
     dataset_hash: str,
-    model_name: str = "gemini-2.0-flash",
+    model_name: str = DEFAULT_MODEL_NAME,
     temperature: float = 0.0,
     max_iterations: int = 6,
     api_key: str | None = None,

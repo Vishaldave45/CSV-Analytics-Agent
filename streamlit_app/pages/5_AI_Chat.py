@@ -8,6 +8,7 @@ import os
 import streamlit as st
 
 from csv_analytics_agent.exceptions.data_errors import CSVAnalyticsError
+from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
 from streamlit_app.components.chat_box import render_chat_messages
 from streamlit_app.components.followup_buttons import render_followup_buttons
 from streamlit_app.components.footer import render_footer
@@ -35,7 +36,7 @@ dataset_name = get_state("dataset_name", "Dataset")
 dataset_hash = get_state("dataset_hash") or "default_hash"
 thread_id = get_state("thread_id")
 messages = get_state("messages", [])
-model_name = get_state("model_name", "gemini-2.0-flash")
+model_name = get_state("model_name", DEFAULT_MODEL_NAME)
 max_iterations = get_state("max_iterations", 6)
 google_api_key = get_state("google_api_key") or os.getenv("GOOGLE_API_KEY", "")
 
@@ -227,7 +228,7 @@ def run_query_pipeline(prompt_text: str) -> None:
                     "⚠️ **Gemini Free Tier Rate Limit / Quota Exceeded (429)**\n\n"
                     f"The selected model (`{model_name}`) has temporarily reached its Google AI rate limit or quota.\n\n"
                     "💡 **Suggested solutions:**\n"
-                    "1. Go to **Settings** and switch model to **`gemini-1.5-flash`** or **`gemini-2.0-flash-lite`**.\n"
+                    f"1. Go to **Settings** and switch model to **`{DEFAULT_MODEL_NAME}`** or **`gemini-flash-latest`**.\n"
                     "2. Wait ~30–60 seconds for the free-tier rate limit bucket to refill, then retry."
                 )
             else:

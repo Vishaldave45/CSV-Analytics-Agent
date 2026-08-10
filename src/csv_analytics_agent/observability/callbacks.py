@@ -24,10 +24,11 @@ class AgentTracingCallbackHandler(BaseCallbackHandler):
         super().__init__()
         self.logger = logger_instance or logger
 
-    def on_llm_start(self, serialized: dict[str, Any], prompts: list[str], **kwargs: Any) -> None:
+    def on_llm_start(self, serialized: dict[str, Any] | None, prompts: list[str] | None, **kwargs: Any) -> None:
         """Triggered when LLM invocation begins."""
-        model_name = serialized.get("name", "LLM")
-        self.logger.info("LLM Invocation Started: %s (Prompts: %d)", model_name, len(prompts))
+        model_name = serialized.get("name", "LLM") if isinstance(serialized, dict) else "LLM"
+        prompt_count = len(prompts) if isinstance(prompts, list) else 0
+        self.logger.info("LLM Invocation Started: %s (Prompts: %d)", model_name, prompt_count)
 
     def on_llm_end(self, response: Any, **kwargs: Any) -> None:
         """Triggered when LLM invocation completes."""
@@ -37,24 +38,29 @@ class AgentTracingCallbackHandler(BaseCallbackHandler):
         """Triggered when LLM encounters an exception."""
         self.logger.error("LLM Invocation Failed: %s", error)
 
-    def on_tool_start(self, serialized: dict[str, Any], input_str: str, **kwargs: Any) -> None:
+    def on_tool_start(self, serialized: dict[str, Any] | None, input_str: str | None, **kwargs: Any) -> None:
         """Triggered when tool execution starts."""
-        tool_name = serialized.get("name", "unknown_tool")
+        tool_name = serialized.get("name", "unknown_tool") if isinstance(serialized, dict) else "unknown_tool"
         self.logger.info("Tool Execution Started: '%s' with input: %s", tool_name, input_str)
 
-    def on_tool_end(self, output: str, **kwargs: Any) -> None:
+    def on_tool_end(self, output: Any, **kwargs: Any) -> None:
         """Triggered when tool execution completes."""
-        self.logger.info("Tool Execution Completed: Payload size %d bytes", len(output))
+        output_size = 0
+        if isinstance(output, str):
+            output_size = len(output)
+        elif output is not None:
+            output_size = len(str(output))
+        self.logger.info("Tool Execution Completed: Payload size %d bytes", output_size)
 
     def on_tool_error(self, error: BaseException, **kwargs: Any) -> None:
         """Triggered when tool execution fails."""
         self.logger.error("Tool Execution Failed: %s", error)
 
     def on_chain_start(
-        self, serialized: dict[str, Any], inputs: dict[str, Any], **kwargs: Any
+        self, serialized: dict[str, Any] | None, inputs: dict[str, Any] | None, **kwargs: Any
     ) -> None:
         """Triggered when graph node or chain starts."""
-        name = serialized.get("name", "Node/Chain")
+        name = serialized.get("name", "Node/Chain") if isinstance(serialized, dict) else "Node/Chain"
         self.logger.debug("Graph Step Started: '%s'", name)
 
     def on_chain_end(self, outputs: dict[str, Any], **kwargs: Any) -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from unittest import mock
 
+from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
 from csv_analytics_agent.observability.config import ObservabilitySettings
 from csv_analytics_agent.observability.tracing import (
     configure_langsmith,
@@ -56,9 +57,9 @@ def test_get_traced_metadata() -> None:
     meta = get_traced_metadata(
         thread_id="t_meta_123",
         dataset_name="sales.csv",
-        model_name="gemini-2.0-flash",
+        model_name=DEFAULT_MODEL_NAME,
     )
     assert meta["thread_id"] == "t_meta_123"
     assert meta["dataset_name"] == "sales.csv"
-    assert meta["model_name"] == "gemini-2.0-flash"
+    assert meta["model_name"] == DEFAULT_MODEL_NAME
     assert "agent_version" in meta

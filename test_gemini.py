@@ -58,9 +58,7 @@ print("\nCreating Gemini LLM...")
 
 try:
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash",
-        google_api_key=api_key,
-        temperature=0,
+            model="gemini-flash-lite-latest",
     )
 
     print("✅ LLM created successfully")
