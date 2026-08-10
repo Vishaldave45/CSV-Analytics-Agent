@@ -7,6 +7,10 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
+from streamlit_app.components.artifact_renderer import (
+    render_analysis_result,
+    render_artifact,
+)
 from streamlit_app.components.execution_trace import render_execution_trace
 
 
@@ -23,6 +27,8 @@ def render_chat_messages(messages: list[dict[str, Any]], df: pd.DataFrame | None
         metadata = msg.get("metadata")
         data_preview = msg.get("data")
         img_bytes = msg.get("image")
+        analysis_result = msg.get("analysis_result")
+        artifacts = msg.get("artifacts")
 
         if role == "user":
             with st.chat_message("user"):
@@ -43,7 +49,7 @@ def render_chat_messages(messages: list[dict[str, Any]], df: pd.DataFrame | None
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <span style="color: #d0bcff; font-size: 1.1rem;">🧠</span>
                                 <span style="font-family: var(--font-mono); font-size: 0.75rem; color: #869397; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;">
-                                    LOGIC_OS DETERMINISTIC ENGINE
+                                    LOGIC_OS AGENT ENGINE
                                 </span>
                             </div>
                             <span class="badge badge-trend">AI VERIFIED</span>
@@ -56,23 +62,33 @@ def render_chat_messages(messages: list[dict[str, Any]], df: pd.DataFrame | None
                     unsafe_allow_html=True,
                 )
 
-                if img_bytes is not None and isinstance(img_bytes, bytes):
-                    st.image(img_bytes, use_container_width=True)
-                    st.download_button(
-                        label="🖼️ Export Chart PNG",
-                        data=img_bytes,
-                        file_name="chart.png",
-                        mime="image/png",
-                        key=f"btn_dl_chat_img_{idx}",
-                    )
+                # Render unified AnalysisResult if attached to message
+                if analysis_result is not None:
+                    render_analysis_result(analysis_result)
 
-                if (
-                    data_preview
-                    and data_preview != "None"
-                    and not str(data_preview).startswith("b'\\x89PNG")
-                ):
-                    with st.expander("📄 Expand Source Table Output", expanded=False):
-                        st.code(str(data_preview), language="text")
+                # Render artifacts list if attached directly
+                elif artifacts and isinstance(artifacts, list):
+                    for art in artifacts:
+                        render_artifact(art)
+
+                else:
+                    if img_bytes is not None and isinstance(img_bytes, bytes):
+                        st.image(img_bytes, use_container_width=True)
+                        st.download_button(
+                            label="🖼️ Export Chart PNG",
+                            data=img_bytes,
+                            file_name="chart.png",
+                            mime="image/png",
+                            key=f"btn_dl_chat_img_{idx}",
+                        )
+
+                    if (
+                        data_preview
+                        and data_preview != "None"
+                        and not str(data_preview).startswith("b'\\x89PNG")
+                    ):
+                        with st.expander("📄 Expand Source Table Output", expanded=False):
+                            st.code(str(data_preview), language="text")
 
                 render_execution_trace(metadata)
 

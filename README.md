@@ -373,6 +373,37 @@ uv run pytest -m docker
 
 ---
 
+## 🎨 Interactive Artifacts & Rendering Protocol
+
+The platform features a unified, type-driven result protocol (`AnalysisResult` and `AnalysisArtifact`) that represents analytical outputs as dynamic, interactive frontend artifacts rather than static text.
+
+```text
+                             AnalysisResult
+                                   │
+                                   ▼
+                           ArtifactRenderer
+                                   │
+       ┌───────────────┬───────────┴───────────┬───────────────┐
+       ▼               ▼                       ▼               ▼
+     Text            Table                Interactive        File
+  (Markdown)    (st.dataframe +        (st.plotly_chart    (st.download_button)
+                 CSV export)             Plotly Spec)
+```
+
+### Supported Artifact Types
+
+| Artifact Type | Renderer Component | Interactive Features |
+| :--- | :--- | :--- |
+| **`TEXT`** | `render_text()` | Formatted Markdown display |
+| **`SCALAR`** | `render_scalar()` | Numeric metric card (`st.metric`) with thousands separator |
+| **`TABLE` / `DATAFRAME`** | `render_table()` | Interactive sorting, column inspection, bounded preview (100 rows), and CSV export button |
+| **`INTERACTIVE`** | `render_interactive()` | Native Plotly chart (`st.plotly_chart`) with zoom, pan, hover tooltips, and legend toggles |
+| **`IMAGE`** | `render_image()` | Static image viewer (`st.image`) for PNG/JPEG/WebP & Matplotlib plots with image download button |
+| **`DIAGRAM`** | `render_diagram()` | Fenced Mermaid diagram markdown renderer |
+| **`FILE`** | `render_file()` | File details card with size metadata and safe download button |
+
+---
+
 ## 🗺️ Product Roadmap & Stage Progress
 
 - [x] **Stage 1 — Ingestion & Coercion** (`v0.1.0`): Auto-encoding detection, file validation, structural checks.
@@ -385,7 +416,11 @@ uv run pytest -m docker
 - [x] **Stage 8.1 — Python Engine Interface** (`v0.8.1`): Domain models (`PythonExecutionRequest`, `PythonExecutionResult`, `PythonArtifact`), exception hierarchy, `BasePythonExecutor`.
 - [x] **Stage 8.2 — Subprocess Sandbox** (`v0.8.2`): `PythonSandboxPolicy`, AST pre-validation, `SubprocessBackend`, isolated execution boundary.
 - [x] **Stage 8.3 — Production-Hardened Sandbox** (`v0.8.3`): `BaseSandboxBackend`, `DockerBackend`, unprivileged read-only Docker sandbox, resource caps, `create_python_executor` factory.
-- [ ] **Stage 8.4 — Agentic Code Generation Tool**: LangChain tool adapter connecting dynamic Python sandbox execution to LangGraph planner.
+- [x] **Stage 8.4 — LLM Python Code Generation** (`v0.8.4`): `BasePythonCodeGenerator`, `GeminiPythonCodeGenerator`, structured output validation.
+- [x] **Stage 8.5 — Python Analysis Tool** (`v0.8.5`): `PythonAnalysisTool` exposing python analysis as a LangChain `StructuredTool`.
+- [x] **Stage 8.6 — Unified Result Protocol** (`v0.8.6`): `AnalysisResult`, `AnalysisArtifact`, `SerializedArtifact`, bounded table preview, Plotly/Matplotlib serializers.
+- [x] **Stage 8.7 — Unified Agent Routing** (`v0.8.7`): Dual capability & python tool selection loop inside LangGraph planner & tool nodes.
+- [x] **Stage 8.8 — Streamlit Interactive Renderer** (`v0.8.8`): Dynamic, type-driven Streamlit artifact renderers (`render_artifact`, `render_analysis_result`).
 
 ---
 
