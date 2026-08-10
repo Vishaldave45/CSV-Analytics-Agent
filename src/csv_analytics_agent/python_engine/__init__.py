@@ -1,4 +1,4 @@
-"""Python Engine Package — Domain models, security policy, sandbox backends, and executors."""
+"""Python Engine Package — Domain models, security policy, sandbox backends, executors, and LangChain tool."""
 
 from csv_analytics_agent.python_engine.backends import (
     BaseSandboxBackend,
@@ -31,15 +31,26 @@ from csv_analytics_agent.python_engine.sandbox import (
     PythonSandboxExecutor,
     create_python_executor,
 )
+from csv_analytics_agent.python_engine.tool import (
+    TOOL_DESCRIPTION,
+    TOOL_NAME,
+    PythonAnalysisInput,
+    PythonAnalysisTool,
+    create_python_analysis_tool,
+)
 
 __all__ = [
     "DEFAULT_ALLOWED_IMPORTS",
     "DEFAULT_BLOCKED_IMPORTS",
+    "TOOL_DESCRIPTION",
+    "TOOL_NAME",
     "BasePythonExecutor",
     "BaseSandboxBackend",
     "ContainerPythonExecutor",
     "DockerBackend",
     "DockerPythonExecutor",
+    "PythonAnalysisInput",
+    "PythonAnalysisTool",
     "PythonArtifact",
     "PythonArtifactError",
     "PythonArtifactType",
@@ -52,6 +63,7 @@ __all__ = [
     "PythonTimeoutError",
     "PythonValidationError",
     "SubprocessBackend",
+    "create_python_analysis_tool",
     "create_python_executor",
     "validate_python_code",
 ]

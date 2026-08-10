@@ -103,6 +103,11 @@ cache/
 *.parquet
 py_sandbox_*/
 docker_sandbox_*/
+result.json
+user_code.py
+runner.py
+.langsmith_cache/
+.langchain_cache/
 
 # IDEs & Editor metadata
 .vscode/
