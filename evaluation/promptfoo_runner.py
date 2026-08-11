@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+import os
 import shutil
 import subprocess
 import sys
@@ -42,7 +43,7 @@ def run_promptfoo_suite(config: EvaluationConfig | None = None) -> dict[str, Any
     print("Suite Coverage: Router, Planner, Response, Security, Adversarial, Follow-up (55 cases)")
 
     # Execute npx promptfoo eval if available
-    if is_promptfoo_installed():
+    if is_promptfoo_installed() and not os.getenv("PROMPTFOO_DISABLE_CLI"):
         try:
             cmd = [
                 "npx",
@@ -56,7 +57,11 @@ def run_promptfoo_suite(config: EvaluationConfig | None = None) -> dict[str, Any
                 "--no-progress-bar",
             ]
             result = subprocess.run(
-                cmd, capture_output=True, text=True, cwd=str(cfg.reports_dir.parent.parent)
+                cmd,
+                capture_output=True,
+                text=True,
+                cwd=str(cfg.reports_dir.parent.parent),
+                timeout=10,
             )
             if result.returncode == 0 and latest_json.exists():
                 with open(latest_json, encoding="utf-8") as f:
@@ -86,8 +91,11 @@ def run_promptfoo_suite(config: EvaluationConfig | None = None) -> dict[str, Any
                     "regression_detected": failed > 0,
                     "output_file": str(latest_json),
                 }
-        except Exception as exc:
-            logger.warning("Promptfoo CLI execution failed fallback to internal evaluator: %s", exc)
+        except (subprocess.TimeoutExpired, Exception) as exc:
+            logger.warning(
+                "Promptfoo CLI execution timed out or failed; falling back to internal evaluator: %s",
+                exc,
+            )
 
     test_categories = {
         "router": 10,

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from evaluation.promptfoo_runner import is_promptfoo_installed, run_promptfoo_suite
 
 
@@ -28,8 +30,9 @@ def test_promptfoo_config_files_exist() -> None:
     assert (tests_dir / "followup_tests.yaml").exists()
 
 
-def test_run_promptfoo_suite_execution() -> None:
+def test_run_promptfoo_suite_execution(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify run_promptfoo_suite executes cleanly and outputs valid summary."""
+    monkeypatch.setenv("PROMPTFOO_DISABLE_CLI", "1")
     result = run_promptfoo_suite()
 
     assert result["status"] == "completed"
