@@ -1,4 +1,4 @@
-"""Streamlit renderer component for IMAGE artifacts."""
+"""Streamlit renderer component for IMAGE artifacts in Quiet Data Studio."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ def render_image(artifact: AnalysisArtifact | dict[str, Any]) -> None:
     """Render a static image (PNG/JPEG/WebP/Matplotlib) artifact inside Streamlit.
 
     Args:
-        artifact: AnalysisArtifact model or dictionary serialized representation.
+        artifact: AnalysisArtifact model or dictionary representation.
     """
     payload: Any = None
     title: str | None = None
@@ -37,7 +37,7 @@ def render_image(artifact: AnalysisArtifact | dict[str, Any]) -> None:
         mime_type = artifact.mime_type or "image/png"
 
     if title:
-        st.markdown(f"#### 🖼️ {title}")
+        st.markdown(f"##### {title}")
     if description:
         st.caption(description)
 
@@ -47,11 +47,8 @@ def render_image(artifact: AnalysisArtifact | dict[str, Any]) -> None:
 
     image_bytes: bytes | None = None
 
-    # 1. Raw Bytes
     if isinstance(payload, bytes):
         image_bytes = payload
-
-    # 2. Base64 Data URL or string
     elif isinstance(payload, str):
         if payload.startswith("data:image/"):
             try:
@@ -64,21 +61,19 @@ def render_image(artifact: AnalysisArtifact | dict[str, Any]) -> None:
                 image_bytes = base64.b64decode(payload)
             except Exception:
                 image_bytes = None
-
-    # 3. Matplotlib Figure Object
     elif hasattr(payload, "savefig") and callable(payload.savefig):
         try:
             buf = io.BytesIO()
             payload.savefig(buf, format="png", bbox_inches="tight")
             image_bytes = buf.getvalue()
         except Exception as err:
-            st.error(f"Failed to render Matplotlib figure: {err}")
+            st.error(f"Failed to render figure: {err}")
             return
 
     if image_bytes is not None:
         st.image(image_bytes, use_container_width=True)
         st.download_button(
-            label=f"🖼️ Download {name}.png",
+            label=f"Download {name}.png",
             data=image_bytes,
             file_name=f"{name}.png",
             mime=mime_type,

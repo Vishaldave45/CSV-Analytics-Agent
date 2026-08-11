@@ -1,4 +1,4 @@
-"""Streamlit renderer component for downloadable FILE artifacts."""
+"""Streamlit renderer component for downloadable FILE artifacts in Quiet Data Studio."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ def render_file(artifact: AnalysisArtifact | dict[str, Any]) -> None:
     """Render a downloadable FILE artifact inside Streamlit.
 
     Args:
-        artifact: AnalysisArtifact model or dictionary serialized representation.
+        artifact: AnalysisArtifact model or dictionary representation.
     """
     payload: Any = None
     title: str | None = None
@@ -37,7 +37,7 @@ def render_file(artifact: AnalysisArtifact | dict[str, Any]) -> None:
         mime_type = artifact.mime_type or "application/octet-stream"
 
     if title:
-        st.markdown(f"#### 📁 {title}")
+        st.markdown(f"##### {title}")
     if description:
         st.caption(description)
 
@@ -50,10 +50,18 @@ def render_file(artifact: AnalysisArtifact | dict[str, Any]) -> None:
         data_bytes = str(payload).encode("utf-8")
 
     size_kb = len(data_bytes) / 1024.0
-    st.info(f"File: `{name}` | Type: `{mime_type}` | Size: `{size_kb:.2f} KB`")
+
+    st.markdown(
+        f"""
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 0.65rem 0.85rem; margin-bottom: 0.5rem; font-size: 0.82rem; color: #cbd5e1;">
+            📄 <strong>{name}</strong> • {mime_type} • {size_kb:.1f} KB
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.download_button(
-        label=f"💾 Download {name}",
+        label=f"Download {name}",
         data=data_bytes,
         file_name=name,
         mime=mime_type,

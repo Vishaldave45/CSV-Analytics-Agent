@@ -1,4 +1,4 @@
-"""Chat message renderer component with Stage 8.11 Workspace AI-Card layout, evidence, and follow-ups."""
+"""Chat message renderer component for Quiet Data Studio."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ def render_chat_messages(
     df: pd.DataFrame | None = None,
     on_select_followup: Callable[[str], None] | None = None,
 ) -> None:
-    """Render chat conversation history message bubbles matching Stage 8.11 layout.
+    """Render chat conversation history for Quiet Data Studio.
 
     Args:
         messages: List of chat message dictionaries.
@@ -44,7 +44,7 @@ def render_chat_messages(
             with st.chat_message("user"):
                 st.markdown(
                     f"""
-                    <div style="font-size: 0.98rem; color: #f8fafc; font-weight: 500;">
+                    <div style="font-size: 0.95rem; color: #f8fafc; font-weight: 500;">
                         {content}
                     </div>
                     """,
@@ -54,19 +54,8 @@ def render_chat_messages(
             with st.chat_message("assistant"):
                 st.markdown(
                     f"""
-                    <div class="ai-card" style="margin-bottom: 0.5rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="color: #d0bcff; font-size: 1.1rem;">🧠</span>
-                                <span style="font-family: var(--font-mono); font-size: 0.74rem; color: #869397; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;">
-                                    AI ANALYTICS AGENT
-                                </span>
-                            </div>
-                            <span class="badge badge-trend">VERIFIED RESULT</span>
-                        </div>
-                        <div style="font-size: 0.96rem; color: #e5e1e4; line-height: 1.6;">
-                            {content}
-                        </div>
+                    <div style="font-size: 0.95rem; color: #e2e8f0; line-height: 1.6; margin-bottom: 0.75rem;">
+                        {content}
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -85,7 +74,7 @@ def render_chat_messages(
                     if img_bytes is not None and isinstance(img_bytes, bytes):
                         st.image(img_bytes, use_container_width=True)
                         st.download_button(
-                            label="🖼️ Export Chart PNG",
+                            label="Export Chart PNG",
                             data=img_bytes,
                             file_name="chart.png",
                             mime="image/png",
@@ -97,7 +86,7 @@ def render_chat_messages(
                         and data_preview != "None"
                         and not str(data_preview).startswith("b'\\x89PNG")
                     ):
-                        with st.expander("📄 View Data Preview", expanded=False):
+                        with st.expander("View Data Preview", expanded=False):
                             st.code(str(data_preview), language="text")
 
                 # Render Evidence & Trust Attribution Drawer

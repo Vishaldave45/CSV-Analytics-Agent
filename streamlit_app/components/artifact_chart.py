@@ -1,4 +1,4 @@
-"""Streamlit renderer component for INTERACTIVE Plotly chart artifacts."""
+"""Streamlit renderer component for INTERACTIVE Plotly chart artifacts in Quiet Data Studio."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ def render_interactive(artifact: AnalysisArtifact | dict[str, Any]) -> None:
     """Render an interactive Plotly visualization artifact inside Streamlit.
 
     Args:
-        artifact: AnalysisArtifact model or dictionary serialized representation.
+        artifact: AnalysisArtifact model or dictionary representation.
     """
     payload: Any = None
     title: str | None = None
@@ -26,11 +26,11 @@ def render_interactive(artifact: AnalysisArtifact | dict[str, Any]) -> None:
         description = artifact.get("description")
     else:
         payload = artifact.payload
-        title = artifact.title or "Interactive Visualization"
+        title = artifact.title or "Visualization"
         description = artifact.description
 
     if title:
-        st.markdown(f"#### 📈 {title}")
+        st.markdown(f"##### {title}")
     if description:
         st.caption(description)
 
