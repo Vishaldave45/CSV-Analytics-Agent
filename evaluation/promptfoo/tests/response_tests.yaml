@@ -1,0 +1,71 @@
+# Response Synthesis Prompt Test Cases (10 cases)
+
+- description: "Response case 1: exact revenue number presentation"
+  vars:
+    question: "What is total revenue?"
+  assert:
+    - type: contains
+      value: "revenue"
+
+- description: "Response case 2: top category rank answer"
+  vars:
+    question: "Which category generated the highest sales?"
+  assert:
+    - type: icontains
+      value: "highest"
+
+- description: "Response case 3: missing column graceful explanation"
+  vars:
+    question: "What is net profit?"
+  assert:
+    - type: icontains
+      value: "profit"
+
+- description: "Response case 4: category breakdown narrative"
+  vars:
+    question: "Break down revenue by Region."
+  assert:
+    - type: icontains
+      value: "region"
+
+- description: "Response case 5: scalar summary answer"
+  vars:
+    question: "What is total units sold?"
+  assert:
+    - type: icontains
+      value: "units"
+
+- description: "Response case 6: correlation analysis narrative"
+  vars:
+    question: "How correlated are Price and Units_Sold?"
+  assert:
+    - type: icontains
+      value: "correlated"
+
+- description: "Response case 7: chart narrative explanation"
+  vars:
+    question: "Visualize monthly sales trend."
+  assert:
+    - type: icontains
+      value: "trend"
+
+- description: "Response case 8: average order value"
+  vars:
+    question: "What is the average transaction amount?"
+  assert:
+    - type: icontains
+      value: "average"
+
+- description: "Response case 9: missing date column explanation"
+  vars:
+    question: "What is quarterly profit growth?"
+  assert:
+    - type: icontains
+      value: "cannot be determined"
+
+- description: "Response case 10: dataset schema summary narrative"
+  vars:
+    question: "Give me an overview of this CSV file."
+  assert:
+    - type: icontains
+      value: "overview"
