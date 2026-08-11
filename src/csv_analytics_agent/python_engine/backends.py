@@ -91,6 +91,22 @@ def run_script():
         except Exception:
             pass
 
+        # Check if df was mutated
+        if isinstance(user_globals.get("df"), pd.DataFrame):
+            try:
+                orig_df = pd.read_csv("dataset.csv")
+                mod_df = user_globals["df"]
+                if not mod_df.equals(orig_df):
+                    artifacts.append({
+                        "artifact_type": "dataframe",
+                        "name": "df",
+                        "mime_type": "application/json",
+                        "data_json": json.loads(mod_df.to_json(orient="split")),
+                        "metadata": {"mutated": True},
+                    })
+            except Exception:
+                pass
+
         ignored = {"df", "pd", "np", "__name__", "__doc__", "__package__", "__builtins__"}
         user_vars = [k for k in user_globals.keys() if k not in ignored and not k.startswith("_")]
 

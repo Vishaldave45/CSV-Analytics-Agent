@@ -78,6 +78,7 @@ class EvaluationResult:
     latency_ms: float = 0.0
     grounding_passed: bool = True
     security_passed: bool = True
+    actual_result: Any = None
 
 
 @dataclass

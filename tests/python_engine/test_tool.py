@@ -162,6 +162,22 @@ def test_tool_execution_flow(sample_df: pd.DataFrame) -> None:
     assert len(exec_.last_dataframe) == 3
 
 
+def test_single_generation_and_execution_count(sample_df: pd.DataFrame) -> None:
+    """Regression test: verify one tool request triggers exactly 1 generation and 1 execution."""
+    mock_gen = MagicMock(spec=BasePythonCodeGenerator)
+    mock_gen.generate.return_value = PythonExecutionRequest(
+        code="result = 42", question="Test", dataset_hash="hash"
+    )
+    mock_exec = MagicMock(spec=BasePythonExecutor)
+    mock_exec.execute.return_value = PythonExecutionResult(success=True, stdout="42", stderr="")
+
+    tool_wrapper = PythonAnalysisTool(generator=mock_gen, executor=mock_exec, dataframe=sample_df)
+    tool_wrapper.run("Calculate something")
+
+    assert mock_gen.generate.call_count == 1
+    assert mock_exec.execute.call_count == 1
+
+
 # 10 & 11. Scalar result preservation
 def test_scalar_result_representation(sample_df: pd.DataFrame) -> None:
     res = PythonExecutionResult(

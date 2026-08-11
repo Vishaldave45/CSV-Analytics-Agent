@@ -164,7 +164,8 @@ class FaissVectorStore(BaseVectorStore):
         for idx, dist in zip(indices[0], distances[0], strict=False):
             if 0 <= idx < len(self._records):
                 record = self._records[int(idx)]
-                results.append(MemorySearchResult(record=record, score=float(dist)))
+                similarity_score = 1.0 / (1.0 + float(dist))
+                results.append(MemorySearchResult(record=record, score=similarity_score))
 
         return results
 

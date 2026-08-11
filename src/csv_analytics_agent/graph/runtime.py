@@ -9,7 +9,11 @@ import pandas as pd
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
-from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.checkpoint.base import (
+    BaseCheckpointSaver,
+    Checkpoint,
+    CheckpointMetadata,
+)
 
 from csv_analytics_agent.config.setting import Settings, get_settings
 from csv_analytics_agent.execution.registry import CapabilityRegistry
@@ -154,7 +158,41 @@ class AgentRuntime:
         Returns:
             Reset AgentState dictionary.
         """
-        return self.run("reset", thread_id=thread_id)
+        from csv_analytics_agent.graph.build import reset_node
+
+        tid = thread_id or self._settings.default_thread_id
+        config_dict: dict[str, Any] = {"configurable": {"thread_id": tid}}
+        if self._callbacks:
+            config_dict["callbacks"] = self._callbacks
+        config: RunnableConfig = cast(RunnableConfig, config_dict)
+
+        clean_state = create_initial_state()
+        reset_output = reset_node(clean_state)
+        clean_state.update(cast(AgentState, reset_output))
+
+        if hasattr(self._checkpointer, "put"):
+            cp_payload: Checkpoint = {
+                "v": 1,
+                "id": f"reset_{tid}",
+                "ts": "",
+                "channel_values": dict(clean_state),
+                "channel_versions": {},
+                "versions_seen": {},
+                "updated_channels": [],
+            }
+            meta_payload: CheckpointMetadata = {
+                "source": "update",
+                "step": 0,
+                "parents": {},
+            }
+            self._checkpointer.put(
+                config,
+                checkpoint=cp_payload,
+                metadata=meta_payload,
+                new_versions={},
+            )
+
+        return clean_state
 
 
 __all__ = ["AgentRuntime"]
