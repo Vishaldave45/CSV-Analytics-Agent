@@ -1,4 +1,4 @@
-"""CSV Analytics Agent — Streamlit AI Analytics Workspace Application Entry Point."""
+"""CSV Analytics Agent — Quiet Data Studio Application Entry Point."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ configure_langsmith()
 
 # Configure Streamlit Page
 st.set_page_config(
-    page_title=f"{APP_TITLE} — AI Analytics Workspace",
+    page_title=f"{APP_TITLE} — Data Studio",
     page_icon=APP_ICON,
     layout="wide",
     initial_sidebar_state="expanded",
@@ -36,7 +36,7 @@ st.set_page_config(
 # Apply Custom Theme CSS
 apply_custom_theme()
 
-# Render Sidebar
+# Render Sidebar Navigation
 render_sidebar()
 
 # Main Workspace Content Router
@@ -47,7 +47,7 @@ if df is None or profile is None:
     render_uploader()
     render_initial_suggestions()
 else:
-    render_header("AI Analytics Workspace", icon="📊")
+    render_header("Data Studio", icon="📊")
     dataset_name = get_state("dataset_name", "dataset.csv")
     render_dataset_card(profile, dataset_name=dataset_name)
     render_profile_cards(profile)
@@ -55,12 +55,12 @@ else:
     st.write("")
     st.markdown(
         """
-        <div class="glass-panel" style="padding: 1.25rem 1.5rem; margin-top: 0.5rem; margin-bottom: 1.25rem;">
-            <h3 style="margin: 0 0 0.5rem 0; font-family: var(--font-display); color: #4cd7f6; font-size: 1.3rem;">
-                ⚡ Workspace Navigation
+        <div class="studio-card">
+            <h3 style="margin: 0 0 0.4rem 0; font-family: var(--font-title); color: #38bdf8; font-size: 1.25rem;">
+                Explore Data Studio
             </h3>
-            <p style="color: #cbd5e1; font-size: 0.92rem; margin: 0;">
-                Your dataset is parsed and indexed into deterministic memory. Use the workspace pages below:
+            <p style="color: #cbd5e1; font-size: 0.9rem; margin: 0;">
+                Your dataset has been profiled and indexed. Choose a workspace view below to begin your analysis:
             </p>
         </div>
         """,
@@ -69,25 +69,22 @@ else:
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        if st.button("🤖 AI Chat Agent", key="btn_workspace_chat", use_container_width=True):
+        if st.button("💬 Chat Workspace", key="btn_workspace_chat", use_container_width=True):
             st.switch_page("pages/5_AI_Chat.py")
     with c2:
-        if st.button("🧬 Dataset DNA", key="btn_workspace_dataset", use_container_width=True):
+        if st.button("📊 Dataset Overview", key="btn_workspace_dataset", use_container_width=True):
             st.switch_page("pages/2_Dataset.py")
     with c3:
-        if st.button(
-            "💡 Empirical Insights", key="btn_workspace_insights", use_container_width=True
-        ):
+        if st.button("💡 Insights", key="btn_workspace_insights", use_container_width=True):
             st.switch_page("pages/3_Insights.py")
     with c4:
         if st.button("🎨 Visualizations", key="btn_workspace_visuals", use_container_width=True):
             st.switch_page("pages/4_Visualizations.py")
 
-    render_initial_suggestions(
-        on_select=lambda q: (
-            st.session_state.update({"pending_prompt": q}),
-            st.switch_page("pages/5_AI_Chat.py"),
-        )
-    )
+    def _select_prompt(q: str) -> None:
+        st.session_state["pending_prompt"] = q
+        st.switch_page("pages/5_AI_Chat.py")
+
+    render_initial_suggestions(on_select=_select_prompt)
 
 render_footer()

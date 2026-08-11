@@ -1,4 +1,4 @@
-"""Page 3: Proactive Insights Engine Results matching StitchMCP layout."""
+"""Page 3: Data Studio Proactive Insights Workspace."""
 
 from __future__ import annotations
 
@@ -25,10 +25,10 @@ render_sidebar()
 df = get_state("raw_df")
 insights = get_state("insights", [])
 
-render_header("Proactive Empirical Insights", icon="💡")
+render_header("Dataset Insights", icon="💡")
 
 if df is None:
-    st.warning("⚠️ No dataset loaded yet. Please upload a CSV file on the Upload page.")
+    st.warning("⚠️ No dataset loaded yet. Please upload a CSV file on the home page.")
     st.stop()
 
 # Insights Overview Stats Ribbon
@@ -38,18 +38,18 @@ info_count = sum(1 for ins in insights if ins.severity in (Severity.LOW, Severit
 
 st.markdown(
     f"""
-    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-        <div style="background: rgba(14, 14, 18, 0.8); border: 1px solid #1e293b; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-mono); font-size: 0.85rem;">
-            Total Findings: <strong style="color: #4cd7f6;">{len(insights)}</strong>
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem;">
+            Total Findings: <strong style="color: #38bdf8;">{len(insights)}</strong>
         </div>
-        <div style="background: rgba(14, 14, 18, 0.8); border: 1px solid #1e293b; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-mono); font-size: 0.85rem;">
-            Critical / High: <strong style="color: {"#f43f5e" if crit_count > 0 else "#10b981"};">{crit_count}</strong>
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem;">
+            Critical / High: <strong style="color: {"#ef4444" if crit_count > 0 else "#10b981"};">{crit_count}</strong>
         </div>
-        <div style="background: rgba(14, 14, 18, 0.8); border: 1px solid #1e293b; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-mono); font-size: 0.85rem;">
-            Medium / Warnings: <strong style="color: {"#fbbf24" if warn_count > 0 else "#e5e1e4"};">{warn_count}</strong>
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem;">
+            Medium / Warnings: <strong style="color: {"#f59e0b" if warn_count > 0 else "#f8fafc"};">{warn_count}</strong>
         </div>
-        <div style="background: rgba(14, 14, 18, 0.8); border: 1px solid #1e293b; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-mono); font-size: 0.85rem;">
-            Informational: <strong style="color: #d0bcff;">{info_count}</strong>
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem;">
+            Informational: <strong style="color: #94a3b8;">{info_count}</strong>
         </div>
     </div>
     """,
@@ -59,10 +59,10 @@ st.markdown(
 # Search & Severity Filtering
 col1, col2 = st.columns([3, 1])
 with col1:
-    search_query = st.text_input("🔍 Search Insights by title or category...", value="")
+    search_query = st.text_input("🔍 Search Insights...", value="")
 with col2:
     selected_severity = st.selectbox(
-        "Filter by Severity",
+        "Severity Filter",
         options=["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
         index=0,
     )

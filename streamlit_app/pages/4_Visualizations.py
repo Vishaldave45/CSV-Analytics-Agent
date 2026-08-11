@@ -1,4 +1,4 @@
-"""Page 4: Visualizations & Interactive Chart Explorer for Stage 8.11 Workspace."""
+"""Page 4: Visualizations & Interactive Chart Explorer."""
 
 from __future__ import annotations
 
@@ -31,23 +31,21 @@ render_sidebar()
 df = get_state("raw_df")
 charts = get_state("charts", [])
 
-render_header("Visualization Explorer Workspace", icon="🎨")
+render_header("Visualizations", icon="🎨")
 
 if df is None:
     st.warning("⚠️ No dataset loaded yet. Please upload a CSV file on the home page.")
     st.stop()
 
-tab_auto, tab_explorer = st.tabs(["⚡ Auto Recommended Charts", "🛠️ Custom Chart Explorer"])
+tab_auto, tab_explorer = st.tabs(["📊 Recommended Charts", "🛠️ Custom Explorer"])
 
 with tab_auto:
-    st.markdown("### ⚡ Deterministically Recommended Visualizations")
-    st.caption(
-        "Engineered chart specifications based on column statistical distributions and cardinality."
-    )
+    st.markdown("### Recommended Visualizations")
+    st.caption("Automatically selected based on column data types and distribution patterns.")
     render_chart_views(charts, df)
 
 with tab_explorer:
-    st.markdown("### 🛠️ Interactive Chart Explorer")
+    st.markdown("### Interactive Chart Builder")
 
     c1, c2, c3 = st.columns(3)
     cols_all = list(df.columns)
@@ -74,9 +72,8 @@ with tab_explorer:
             fig.update_layout(template="plotly_dark", height=500)
             st.plotly_chart(fig, use_container_width=True)
         except Exception as exc:
-            st.error(f"Could not render Plotly chart with selected dimensions: {exc}")
+            st.error(f"Could not render Plotly chart: {exc}")
     else:
-        # Streamlit Native Chart Fallback if Plotly package is not installed
         try:
             chart_df = df[[x_col, y_col]].dropna().set_index(x_col)
             if chart_type == "Bar":
@@ -86,6 +83,6 @@ with tab_explorer:
             else:
                 st.scatter_chart(chart_df)
         except Exception as exc:
-            st.error(f"Could not render native chart: {exc}")
+            st.error(f"Could not render chart: {exc}")
 
 render_footer()

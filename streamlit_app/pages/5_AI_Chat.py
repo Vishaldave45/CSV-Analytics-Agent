@@ -1,4 +1,4 @@
-"""Page 5: Conversational AI Agent Chat & Analysis Canvas for Stage 8.11 Workspace."""
+"""Page 5: Data Studio Chat Workspace."""
 
 from __future__ import annotations
 
@@ -22,8 +22,8 @@ from streamlit_app.theme import apply_custom_theme
 logger = logging.getLogger(__name__)
 
 st.set_page_config(
-    page_title=f"AI Chat — {APP_TITLE}",
-    page_icon="🤖",
+    page_title=f"Chat — {APP_TITLE}",
+    page_icon="💬",
     layout="wide",
 )
 
@@ -40,7 +40,7 @@ model_name = get_state("model_name", DEFAULT_MODEL_NAME)
 max_iterations = get_state("max_iterations", 6)
 google_api_key = get_state("google_api_key") or os.getenv("GOOGLE_API_KEY", "")
 
-render_header("Conversational Analytics Workspace", icon="🤖")
+render_header("Chat Workspace", icon="💬")
 
 if not google_api_key:
     st.warning(
@@ -63,14 +63,14 @@ runtime = get_or_create_runtime(
 # Active Dataset Bar
 st.markdown(
     f"""
-    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(14, 14, 18, 0.8); border: 1px solid #1e293b; border-radius: 10px; padding: 0.6rem 1rem; margin-bottom: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; font-family: var(--font-mono); font-size: 0.82rem;">
-            <span style="color: #869397;">ACTIVE DATASET:</span>
-            <span style="color: #4cd7f6; font-weight: 600;">{dataset_name}</span>
-            <span style="color: #869397;">({len(df):,} rows × {len(df.columns)} cols)</span>
+    <div style="display: flex; align-items: center; justify-content: space-between; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 0.6rem 1rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem;">
+            <span style="color: #64748b; font-weight: 500;">DATASET:</span>
+            <span style="color: #38bdf8; font-weight: 600;">{dataset_name}</span>
+            <span style="color: #94a3b8;">({len(df):,} rows × {len(df.columns)} cols)</span>
         </div>
         <div>
-            <span class="badge badge-optimal">● Ready</span>
+            <span class="studio-badge studio-badge-success">● Active</span>
         </div>
     </div>
     """,
@@ -83,7 +83,7 @@ def run_query_pipeline(prompt_text: str) -> None:
     messages.append({"role": "user", "content": prompt_text})
     set_state("messages", messages)
 
-    with st.spinner("Analyzing your data..."):
+    with st.spinner("Analyzing dataset..."):
         try:
             result_state = ask_agent(
                 runtime,
@@ -219,7 +219,9 @@ def run_query_pipeline(prompt_text: str) -> None:
 render_chat_messages(messages, df, on_select_followup=run_query_pipeline)
 
 # Chat Input Composer
-user_query = st.chat_input("Ask anything about your data... e.g. 'top 5 products by revenue'")
+user_query = st.chat_input(
+    "Ask anything about your dataset... e.g. 'top 5 categories by total revenue'"
+)
 
 # Check if there is a pending prompt from quick suggestion chip
 pending_prompt = get_state("pending_prompt")
