@@ -20,8 +20,6 @@ dependencies = [
     "streamlit>=1.61.1",
     "structlog",
     "pyrate-limiter",
-    "sqlalchemy>=2.0",
-    "alembic",
     "plotly",
 ]
 

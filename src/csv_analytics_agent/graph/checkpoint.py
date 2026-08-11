@@ -1,136 +1,124 @@
-"""SQLite Checkpoint Saver implementation for thread-based graph persistence."""
+"""Bounded, checkpoint-safe representations for graph domain results.
+
+Runtime artifacts deliberately live in :class:`RuntimeArtifactStore`; only their
+small descriptive records cross the LangGraph checkpoint boundary.
+"""
 
 from __future__ import annotations
 
-import pickle
-import sqlite3
-from collections.abc import Iterator, Sequence
-from pathlib import Path
-from typing import Any
+import math
+from collections.abc import Mapping
+from typing import TypeAlias, TypedDict
 
-from langchain_core.runnables import RunnableConfig
-from langgraph.checkpoint.base import (
-    BaseCheckpointSaver,
-    ChannelVersions,
-    Checkpoint,
-    CheckpointMetadata,
-    CheckpointTuple,
-)
+from csv_analytics_agent.results.models import AnalysisArtifact, AnalysisResult
+
+JSONScalar: TypeAlias = str | int | float | bool | None
+JSONValue: TypeAlias = JSONScalar | list["JSONValue"] | dict[str, "JSONValue"]
 
 
-class SqliteSaver(BaseCheckpointSaver[Any]):
-    """Thread-safe SQLite checkpointer saving graph state to local SQLite database files."""
+class CheckpointArtifact(TypedDict):
+    artifact_id: str
+    artifact_type: str
+    name: str
+    mime_type: str | None
+    title: str | None
+    description: str | None
+    metadata: dict[str, JSONValue]
+    downloadable: bool
 
-    def __init__(self, conn: sqlite3.Connection) -> None:
-        """Initialize SqliteSaver with an open sqlite3 connection.
 
-        Args:
-            conn: SQLite database connection instance.
-        """
-        super().__init__()
-        self.conn = conn
-        self._setup()
+class AnalysisResultCheckpoint(TypedDict):
+    status: str
+    narrative: str
+    artifacts: list[CheckpointArtifact]
+    execution_time_ms: float | None
+    source: str
+    question: str | None
+    dataset_hash: str | None
+    metadata: dict[str, JSONValue]
+    error_type: str | None
+    error_message: str | None
 
-    def _setup(self) -> None:
-        """Initialize database schema if table does not exist."""
-        with self.conn:
-            self.conn.execute("""
-                CREATE TABLE IF NOT EXISTS checkpoints (
-                    thread_id TEXT PRIMARY KEY,
-                    checkpoint BLOB NOT NULL,
-                    metadata BLOB NOT NULL
-                )
-            """)
 
-    @classmethod
-    def from_conn_info(cls, database_path: str | Path) -> SqliteSaver:
-        """Create SqliteSaver instance from database file path.
+class RuntimeArtifactStore:
+    """Per-runtime store for payloads which must never enter checkpoint state."""
 
-        Args:
-            database_path: Path string or Path object for SQLite database.
+    def __init__(self) -> None:
+        self._payloads: dict[str, object] = {}
 
-        Returns:
-            Configured SqliteSaver instance.
-        """
-        conn = sqlite3.connect(str(database_path), check_same_thread=False)
-        return cls(conn)
+    def put(self, artifact: AnalysisArtifact) -> None:
+        self._payloads[artifact.artifact_id] = artifact.payload
 
-    def get_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:
-        """Retrieve checkpoint tuple for specified thread_id.
+    def get(self, artifact_id: str) -> object | None:
+        return self._payloads.get(artifact_id)
 
-        Args:
-            config: RunnableConfig containing configurable.thread_id.
+    def clear(self) -> None:
+        self._payloads.clear()
 
-        Returns:
-            CheckpointTuple if found, otherwise None.
-        """
-        thread_id = config.get("configurable", {}).get("thread_id")
-        if not thread_id:
+
+def json_safe(value: object, *, max_depth: int = 6) -> JSONValue:
+    """Return a bounded JSON-compatible value without retaining arbitrary objects."""
+    if value is None:
+        return None
+    if isinstance(value, float):
+        if math.isnan(value) or math.isinf(value):
             return None
+        return value
+    if isinstance(value, (str, int, bool)):
+        return value
+    if max_depth <= 0:
+        return "<omitted: nested value>"
+    if isinstance(value, Mapping):
+        return {str(key): json_safe(item, max_depth=max_depth - 1) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [json_safe(item, max_depth=max_depth - 1) for item in list(value)[:100]]
+    return f"<omitted: {type(value).__name__}>"
 
-        cursor = self.conn.cursor()
-        cursor.execute(
-            "SELECT checkpoint, metadata FROM checkpoints WHERE thread_id = ?",
-            (str(thread_id),),
+
+def json_object(value: object) -> dict[str, JSONValue]:
+    """Convert mapping-like metadata to a checkpoint-safe JSON object."""
+    safe = json_safe(value)
+    return safe if isinstance(safe, dict) else {"value": safe}
+
+
+def analysis_result_to_checkpoint(
+    result: AnalysisResult, artifact_store: RuntimeArtifactStore
+) -> AnalysisResultCheckpoint:
+    """Split an application result into checkpoint metadata and runtime payloads."""
+    artifacts: list[CheckpointArtifact] = []
+    for artifact in result.artifacts:
+        artifact_store.put(artifact)
+        artifacts.append(
+            {
+                "artifact_id": artifact.artifact_id,
+                "artifact_type": artifact.artifact_type.value,
+                "name": artifact.name,
+                "mime_type": artifact.mime_type,
+                "title": artifact.title,
+                "description": artifact.description,
+                "metadata": json_object(artifact.metadata),
+                "downloadable": artifact.downloadable,
+            }
         )
-        row = cursor.fetchone()
-        if not row:
-            return None
-
-        cp: Checkpoint = pickle.loads(row[0])
-        meta: CheckpointMetadata = pickle.loads(row[1])
-        return CheckpointTuple(config, cp, meta)
-
-    def put(
-        self,
-        config: RunnableConfig,
-        checkpoint: Checkpoint,
-        metadata: CheckpointMetadata,
-        new_versions: ChannelVersions,
-    ) -> RunnableConfig:
-        """Persist checkpoint and metadata for specified thread_id.
-
-        Args:
-            config: RunnableConfig containing thread_id.
-            checkpoint: Graph checkpoint state dictionary.
-            metadata: Checkpoint metadata payload.
-            new_versions: Channel version mappings.
-
-        Returns:
-            Updated RunnableConfig instance.
-        """
-        thread_id = config.get("configurable", {}).get("thread_id")
-        if thread_id:
-            cp_blob = pickle.dumps(checkpoint)
-            meta_blob = pickle.dumps(metadata)
-            with self.conn:
-                self.conn.execute(
-                    "INSERT OR REPLACE INTO checkpoints (thread_id, checkpoint, metadata) "
-                    "VALUES (?, ?, ?)",
-                    (str(thread_id), cp_blob, meta_blob),
-                )
-        return config
-
-    def put_writes(
-        self,
-        config: RunnableConfig,
-        writes: Sequence[tuple[str, Any]],
-        task_id: str,
-        task_path: str = "",
-    ) -> None:
-        """No-op stub for pending channel writes."""
-        pass
-
-    def list(
-        self,
-        config: RunnableConfig | None,
-        *,
-        filter: dict[str, Any] | None = None,
-        before: RunnableConfig | None = None,
-        limit: int | None = None,
-    ) -> Iterator[CheckpointTuple]:
-        """List checkpoint tuples matching filter options."""
-        return iter([])
+    return {
+        "status": result.status.value,
+        "narrative": result.narrative,
+        "artifacts": artifacts,
+        "execution_time_ms": result.execution_time_ms,
+        "source": result.source,
+        "question": result.question,
+        "dataset_hash": result.dataset_hash,
+        "metadata": json_object(result.metadata),
+        "error_type": result.error_type,
+        "error_message": result.error_message,
+    }
 
 
-__all__ = ["SqliteSaver"]
+__all__ = [
+    "AnalysisResultCheckpoint",
+    "JSONValue",
+    "RuntimeArtifactStore",
+    "analysis_result_to_checkpoint",
+    "json_object",
+    "json_safe",
+]

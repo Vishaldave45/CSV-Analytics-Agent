@@ -1,5 +1,7 @@
 """LangGraph state, adapter, router, retrieval, planner, tool, explainer, build, & runtime."""
 
+from typing import Any
+
 from csv_analytics_agent.graph.adapter import (
     CapabilityToolInput,
     as_langchain_tool,
@@ -11,7 +13,6 @@ from csv_analytics_agent.graph.build import (
     route_after_planner,
     route_after_router,
 )
-from csv_analytics_agent.graph.checkpoint import SqliteSaver
 from csv_analytics_agent.graph.explainer import (
     explainer_node,
     format_execution_explanation,
@@ -43,6 +44,22 @@ from csv_analytics_agent.graph.state import (
 )
 from csv_analytics_agent.graph.tool_node import tool_node
 
+# Optional imports that may be unavailable in lightweight test environments.
+_GeminiLLM: type[Any] | None
+try:
+    from csv_analytics_agent.llm.gemini import GeminiLLM as _GeminiLLM
+except ImportError:  # pragma: no cover
+    _GeminiLLM = None
+
+_MemoryService: type[Any] | None
+try:
+    from csv_analytics_agent.memory.service import MemoryService as _MemoryService
+except ImportError:  # pragma: no cover
+    _MemoryService = None
+
+GeminiLLM: type[Any] | None = _GeminiLLM
+MemoryService: type[Any] | None = _MemoryService
+
 __all__ = [
     "DEFAULT_MAX_ITERATIONS",
     "AgentRuntime",
@@ -56,7 +73,6 @@ __all__ = [
     "RetrievalError",
     "RouterDecision",
     "RouterIntent",
-    "SqliteSaver",
     "as_langchain_tool",
     "as_langchain_tools",
     "build_graph",

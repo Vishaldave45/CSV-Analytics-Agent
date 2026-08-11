@@ -1,0 +1,36 @@
+# Follow-up Pronoun & Context Resolution Test Cases (5 cases)
+
+- description: "Followup 1: pronoun resolution 'Which one is highest?'"
+  vars:
+    question: "Which one is highest?"
+  assert:
+    - type: icontains
+      value: "highest"
+
+- description: "Followup 2: top product follow-up 'Show its top 5 products'"
+  vars:
+    question: "Show its top 5 products."
+  assert:
+    - type: icontains
+      value: "top 5"
+
+- description: "Followup 3: filtering pronoun 'What is its average price?'"
+  vars:
+    question: "What is its average price?"
+  assert:
+    - type: icontains
+      value: "price"
+
+- description: "Followup 4: trend follow-up 'Show that over time'"
+  vars:
+    question: "Show that over time."
+  assert:
+    - type: icontains
+      value: "processed"
+
+- description: "Followup 5: distribution follow-up 'Visualize its distribution'"
+  vars:
+    question: "Visualize its distribution."
+  assert:
+    - type: icontains
+      value: "distribution"

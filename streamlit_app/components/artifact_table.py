@@ -1,4 +1,4 @@
-"""Streamlit renderer component for TABLE and DATAFRAME artifacts."""
+"""Streamlit renderer component for TABLE and DATAFRAME artifacts in Quiet Data Studio."""
 
 from __future__ import annotations
 
@@ -14,12 +14,12 @@ def render_table(artifact: AnalysisArtifact | dict[str, Any]) -> None:
     """Render a tabular or DataFrame artifact inside Streamlit.
 
     Args:
-        artifact: AnalysisArtifact model or dictionary serialized representation.
+        artifact: AnalysisArtifact model or dictionary representation.
     """
     payload: Any = None
     title: str | None = None
     description: str | None = None
-    name: str = "table"
+    name: str = "data_table"
     row_count: int | None = None
     column_count: int | None = None
 
@@ -27,7 +27,7 @@ def render_table(artifact: AnalysisArtifact | dict[str, Any]) -> None:
         payload = artifact.get("payload")
         title = artifact.get("title")
         description = artifact.get("description")
-        name = artifact.get("name", "table")
+        name = artifact.get("name", "data_table")
         meta = artifact.get("metadata", {})
         row_count = meta.get("row_count")
         column_count = meta.get("column_count")
@@ -40,7 +40,7 @@ def render_table(artifact: AnalysisArtifact | dict[str, Any]) -> None:
         column_count = artifact.metadata.get("column_count")
 
     if title:
-        st.markdown(f"#### 📊 {title}")
+        st.markdown(f"##### {title}")
     if description:
         st.caption(description)
 
@@ -57,24 +57,45 @@ def render_table(artifact: AnalysisArtifact | dict[str, Any]) -> None:
             cols = p_dict.get("columns", [])
             idx = p_dict.get("index", [])
             data = p_dict.get("data", [])
-            df = pd.DataFrame(data, index=idx if idx else None, columns=cols if cols else None)
+            try:
+                df = pd.DataFrame(data, index=idx if idx else None, columns=cols if cols else None)
+            except Exception:
+                df = None
         elif "columns" in payload and "data" in payload:
-            df = pd.DataFrame(payload["data"], columns=payload["columns"])
+            try:
+                df = pd.DataFrame(payload["data"], columns=payload["columns"])
+            except Exception:
+                df = None
         else:
-            df = pd.DataFrame(payload)
+            try:
+                df = pd.DataFrame(payload)
+            except Exception:
+                try:
+                    df = pd.DataFrame([payload])
+                except Exception:
+                    try:
+                        df = pd.DataFrame(list(payload.items()), columns=["Key", "Value"])
+                    except Exception:
+                        df = None
     elif isinstance(payload, list):
-        df = pd.DataFrame(payload)
+        try:
+            df = pd.DataFrame(payload)
+        except Exception:
+            try:
+                df = pd.json_normalize(payload)
+            except Exception:
+                df = None
 
     if df is not None and not df.empty:
         r_cnt = row_count or len(df)
         c_cnt = column_count or len(df.columns)
-        st.caption(f"Showing dataset slice ({r_cnt} total rows, {c_cnt} total columns)")
+        st.caption(f"{r_cnt} rows × {c_cnt} columns")
 
         st.dataframe(df, use_container_width=True)
 
         csv_bytes = df.to_csv(index=False).encode("utf-8")
         st.download_button(
-            label=f"📥 Download {name}.csv",
+            label=f"Download {name}.csv",
             data=csv_bytes,
             file_name=f"{name}.csv",
             mime="text/csv",

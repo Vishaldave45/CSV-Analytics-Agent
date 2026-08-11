@@ -33,11 +33,6 @@ class Settings(BaseSettings):
         description="Maximum allowed CSV size in MB.",
     )
 
-    checkpoint_path: Path = Field(
-        default=Path("sessions.db"),
-        description="SQLite database path for conversation state checkpointing.",
-    )
-
     max_iterations: int = Field(
         default=6,
         ge=1,

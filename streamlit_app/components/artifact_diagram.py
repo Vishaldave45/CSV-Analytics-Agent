@@ -1,4 +1,4 @@
-"""Streamlit renderer component for DIAGRAM artifacts."""
+"""Streamlit renderer component for DIAGRAM artifacts in Quiet Data Studio."""
 
 from __future__ import annotations
 
@@ -10,10 +10,10 @@ from csv_analytics_agent.results.models import AnalysisArtifact
 
 
 def render_diagram(artifact: AnalysisArtifact | dict[str, Any]) -> None:
-    """Render a DIAGRAM (Mermaid/SVG/Graphviz) artifact inside Streamlit.
+    """Render a DIAGRAM (Mermaid/SVG/Graphviz) artifact inside Streamlit safely.
 
     Args:
-        artifact: AnalysisArtifact model or dictionary serialized representation.
+        artifact: AnalysisArtifact model or dictionary representation.
     """
     payload: Any = None
     title: str | None = None
@@ -29,7 +29,7 @@ def render_diagram(artifact: AnalysisArtifact | dict[str, Any]) -> None:
         description = artifact.description
 
     if title:
-        st.markdown(f"#### 🔷 {title}")
+        st.markdown(f"##### {title}")
     if description:
         st.caption(description)
 
@@ -37,16 +37,18 @@ def render_diagram(artifact: AnalysisArtifact | dict[str, Any]) -> None:
         st.info("No diagram payload available.")
         return
 
-    # Mermaid diagram string representation
+    # Mermaid diagram string representation - sanitized via code block markdown
     if isinstance(payload, str):
+        p_strip = payload.strip()
         if (
-            payload.strip().startswith("graph")
-            or payload.strip().startswith("sequenceDiagram")
-            or payload.strip().startswith("flowchart")
+            p_strip.startswith("graph")
+            or p_strip.startswith("sequenceDiagram")
+            or p_strip.startswith("flowchart")
+            or p_strip.startswith("erDiagram")
         ):
-            st.markdown(f"```mermaid\n{payload.strip()}\n```")
+            st.markdown(f"```mermaid\n{p_strip}\n```")
         else:
-            st.code(payload, language="text")
+            st.code(p_strip, language="text")
     elif isinstance(payload, dict):
         st.json(payload)
     else:

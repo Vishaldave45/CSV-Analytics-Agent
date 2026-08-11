@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 import streamlit as st
 
@@ -38,39 +39,39 @@ def render_initial_suggestions(on_select: Callable[[str], None] | None = None) -
                     st.rerun()
 
 
-def generate_contextual_followups(last_answer_text: str) -> list[str]:
-    """Generate dynamic contextual follow-up prompt shortcuts based on assistant response."""
+def generate_contextual_followups(
+    last_answer_text: str,
+    columns: list[str] | None = None,
+    active_filters: list[dict[str, Any]] | None = None,
+) -> list[str]:
+    """Generate dynamic contextual follow-up prompt shortcuts using generic intent rules and conversation state."""
     text_lower = str(last_answer_text).lower()
+    followups: list[str] = []
 
-    if "electronics" in text_lower or "furniture" in text_lower or "category" in text_lower:
-        return [
-            "Why is Electronics the highest category?",
-            "Show top products inside Electronics",
-            "Plot monthly trend by category",
-        ]
-    elif "revenue" in text_lower or "units_sold" in text_lower:
-        return [
-            "Show distribution of Units Sold",
-            "Calculate Pearson correlation between Units Sold and Revenue",
-            "Filter sales in Europe",
-        ]
-    elif "europe" in text_lower or "region" in text_lower:
-        return [
-            "Compare North America vs Europe",
-            "Which category is highest in Europe?",
-            "Show top 5 products by region",
-        ]
+    if any(kw in text_lower for kw in ("grouped by", "category", "categories", "highest", "group")):
+        followups.append("Show top 5 items for the highest group")
+        followups.append("Compare distribution across groups")
+        followups.append("Plot an interactive chart breakdown")
+    elif any(kw in text_lower for kw in ("sum", "total", "average", "mean", "revenue", "count")):
+        followups.append("Break this down by category")
+        followups.append("Calculate correlation with other metrics")
+        followups.append("Filter top 10 rows")
+    elif any(kw in text_lower for kw in ("filter", "filtered", "where")):
+        followups.append("Clear active filters and show overall total")
+        followups.append("Show top products under current filter")
+        followups.append("Compare current filter with remaining dataset")
     else:
-        return [
-            "Show revenue by category",
-            "Plot interactive sales trend",
-            "Identify outlier orders",
-        ]
+        followups.append("Compare top categories")
+        followups.append("Show trend over time")
+        followups.append("Identify anomalous values")
+
+    return followups[:3]
 
 
 def render_contextual_suggestions(
     last_answer_text: str,
     on_select: Callable[[str], None] | None = None,
+    key_prefix: str = "default",
 ) -> None:
     """Render dynamic contextual follow-up prompt chips below assistant responses."""
     suggestions = generate_contextual_followups(last_answer_text)
@@ -91,7 +92,7 @@ def render_contextual_suggestions(
         with cols[idx]:
             if st.button(
                 f"🔍 {prompt_text}",
-                key=f"btn_ctx_suggest_{idx}_{hash(prompt_text) % 10000}",
+                key=f"btn_ctx_suggest_{key_prefix}_{idx}_{hash(prompt_text) % 10000}",
                 use_container_width=True,
             ):
                 if on_select is not None:

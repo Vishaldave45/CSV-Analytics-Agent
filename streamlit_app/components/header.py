@@ -1,4 +1,4 @@
-"""Header component displaying top bar status, active dataset, and title for Stage 8.11."""
+"""Header component displaying top workspace bar for Quiet Data Studio."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import streamlit as st
 from streamlit_app.services.session import get_state
 
 
-def render_header(title: str, icon: str = "⚡") -> None:
+def render_header(title: str, icon: str = "📊") -> None:
     """Render workspace header bar with title, active dataset name, and status pill."""
     dataset_name = get_state("dataset_name", "No dataset loaded")
     df = get_state("raw_df")
@@ -18,7 +18,7 @@ def render_header(title: str, icon: str = "⚡") -> None:
         st.markdown(
             f"""
             <div style="margin-bottom: 1rem;">
-                <h1 style="font-family: var(--font-display); font-size: 1.85rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem; color: #e5e1e4;">
+                <h1 class="studio-title" style="display: flex; align-items: center; gap: 0.5rem;">
                     <span>{icon}</span> <span>{title}</span>
                 </h1>
             </div>
@@ -30,14 +30,14 @@ def render_header(title: str, icon: str = "⚡") -> None:
         status_html = (
             f"""
             <div style="text-align: right; padding-top: 0.3rem;">
-                <span style="font-family: var(--font-mono); font-size: 0.8rem; color: #4cd7f6; font-weight: 600;">{dataset_name}</span>
-                <span class="badge badge-optimal" style="margin-left: 0.4rem;">● Ready</span>
+                <span style="font-size: 0.85rem; color: #38bdf8; font-weight: 500;">{dataset_name}</span>
+                <span class="studio-badge studio-badge-success" style="margin-left: 0.4rem;">● Active</span>
             </div>
             """
             if is_ready
             else """
             <div style="text-align: right; padding-top: 0.3rem;">
-                <span class="badge badge-anomaly">● No Dataset</span>
+                <span class="studio-badge studio-badge-warning">● No Dataset</span>
             </div>
             """
         )

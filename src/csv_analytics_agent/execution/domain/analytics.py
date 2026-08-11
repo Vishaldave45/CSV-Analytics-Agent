@@ -41,11 +41,30 @@ class AnalyticsEngine(BaseEngine):
         return EngineMetadata(
             name="analytics",
             version="1.0.0",
-            supported_capabilities=["aggregate", "filter", "group", "sort", "top_n"],
+            supported_capabilities=[
+                "describe",
+                "aggregate",
+                "filter",
+                "group",
+                "sort",
+                "top_n",
+            ],
         )
 
     def list_capabilities(self) -> list[CapabilityDescriptor]:
         return [
+            CapabilityDescriptor(
+                name="describe",
+                description="Provides dataset inspection metadata such as schema, data types, missing values, duplicates, and sample cardinality.",
+                parameters_schema={
+                    "type": "object",
+                    "properties": {},
+                },
+                provider_name="pandas",
+                preferred_execution_engine="deterministic_engine",
+                fallback_execution_engine="python_engine",
+                output_contract={"type": "dictionary", "structure": "dataset_profile"},
+            ),
             CapabilityDescriptor(
                 name="aggregate",
                 description="Computes numeric summary aggregations on a target column.",
@@ -71,6 +90,9 @@ class AnalyticsEngine(BaseEngine):
                     "required": ["operation"],
                 },
                 provider_name="pandas",
+                preferred_execution_engine="deterministic_engine",
+                fallback_execution_engine="python_engine",
+                output_contract={"type": "scalar", "data_type": "numeric"},
             ),
             CapabilityDescriptor(
                 name="filter",
@@ -88,6 +110,9 @@ class AnalyticsEngine(BaseEngine):
                     "required": ["operator", "value"],
                 },
                 provider_name="pandas",
+                preferred_execution_engine="deterministic_engine",
+                fallback_execution_engine="python_engine",
+                output_contract={"type": "table", "format": "dataframe"},
             ),
             CapabilityDescriptor(
                 name="group",
@@ -108,6 +133,9 @@ class AnalyticsEngine(BaseEngine):
                     "required": ["by", "target"],
                 },
                 provider_name="pandas",
+                preferred_execution_engine="deterministic_engine",
+                fallback_execution_engine="python_engine",
+                output_contract={"type": "dictionary", "structure": "grouped_metric"},
             ),
             CapabilityDescriptor(
                 name="sort",
@@ -119,6 +147,9 @@ class AnalyticsEngine(BaseEngine):
                     },
                 },
                 provider_name="pandas",
+                preferred_execution_engine="deterministic_engine",
+                fallback_execution_engine="python_engine",
+                output_contract={"type": "table", "format": "dataframe"},
             ),
             CapabilityDescriptor(
                 name="top_n",
@@ -131,6 +162,9 @@ class AnalyticsEngine(BaseEngine):
                     },
                 },
                 provider_name="pandas",
+                preferred_execution_engine="deterministic_engine",
+                fallback_execution_engine="python_engine",
+                output_contract={"type": "table", "format": "dataframe"},
             ),
         ]
 

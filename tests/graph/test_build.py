@@ -93,6 +93,15 @@ def test_route_after_router_conditional_decisions() -> None:
     )
     assert route_after_router(dec_new) == "retrieval"
 
+    dec_chitchat = RouterDecision(
+        intent=RouterIntent.CHITCHAT,
+        confidence=0.8,
+        reason="Chitchat query",
+        next_node="explainer",
+        metadata={"category": "chitchat"},
+    )
+    assert route_after_router(dec_chitchat) == "explainer"
+
 
 def test_route_after_planner_conditional_decisions() -> None:
     """Verify conditional edge routing after planner node based on tool calls."""

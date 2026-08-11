@@ -1,0 +1,81 @@
+# Router Prompt Regression Test Cases (10 cases)
+
+- description: "Router case 1: chitchat greeting"
+  vars:
+    question: "hello"
+    category: "chitchat"
+  assert:
+    - type: icontains
+      value: "Processed question"
+
+- description: "Router case 2: dataset row count metadata"
+  vars:
+    question: "How many rows?"
+    category: "metadata"
+  assert:
+    - type: icontains
+      value: "Processed question"
+
+- description: "Router case 3: dataset column list metadata"
+  vars:
+    question: "What columns exist?"
+    category: "metadata"
+  assert:
+    - type: icontains
+      value: "Processed question"
+
+- description: "Router case 4: analytical total revenue"
+  vars:
+    question: "What is total revenue?"
+    category: "analytical"
+  assert:
+    - type: contains
+      value: "revenue"
+
+- description: "Router case 5: analytical category breakdown"
+  vars:
+    question: "Show revenue by category."
+    category: "analytical"
+  assert:
+    - type: contains
+      value: "category"
+
+- description: "Router case 6: visualization request"
+  vars:
+    question: "Show revenue as a chart."
+    category: "visualization"
+  assert:
+    - type: icontains
+      value: "revenue"
+
+- description: "Router case 7: Python statistics outliers request"
+  vars:
+    question: "Find revenue outliers."
+    category: "statistics"
+  assert:
+    - type: icontains
+      value: "revenue"
+
+- description: "Router case 8: ranking follow-up question"
+  vars:
+    question: "Which one is highest?"
+    category: "ranking"
+  assert:
+    - type: icontains
+      value: "highest"
+
+- description: "Router case 9: unsupported column request"
+  vars:
+    question: "What is employee salary?"
+    category: "unsupported"
+  assert:
+    - type: icontains
+      value: "missing"
+
+- description: "Router case 10: dataset contents metadata"
+  vars:
+    question: "What does this dataset contain?"
+    category: "metadata"
+  assert:
+    - type: icontains
+      value: "dataset"

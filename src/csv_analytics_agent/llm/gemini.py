@@ -87,6 +87,12 @@ def _should_retry_exception(exception: BaseException) -> bool:
 _retry_predicate = retry_if_exception(_should_retry_exception)
 
 
+class GeminiAPIKeyError(ValueError):
+    """Exception raised when Google Gemini API key is missing or unconfigured."""
+
+    pass
+
+
 class GeminiLLM(BaseLLM):
     """Google Gemini LLM wrapper implementing BaseLLM interface."""
 
@@ -117,10 +123,15 @@ class GeminiLLM(BaseLLM):
         self._llm = llm_instance if llm_instance is not None else self._build_llm_instance()
 
     def _build_llm_instance(self) -> ChatGoogleGenerativeAI:
+        if not self._api_key:
+            raise GeminiAPIKeyError(
+                "Google Gemini API Key is missing. "
+                "Please set GOOGLE_API_KEY environment variable or pass api_key parameter."
+            )
         return ChatGoogleGenerativeAI(
             model=self._model_name,
             temperature=self._temperature,
-            google_api_key=self._api_key or "DUMMY_KEY_FOR_MOCKING",
+            google_api_key=self._api_key,
         )
 
     # ---------------------------------------------------------------------------

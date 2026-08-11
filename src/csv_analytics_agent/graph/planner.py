@@ -10,11 +10,13 @@ from langchain_core.messages import AIMessage, BaseMessage
 from csv_analytics_agent.execution.models import ExecutionRequest
 from csv_analytics_agent.execution.registry import CapabilityRegistry
 from csv_analytics_agent.graph.adapter import as_langchain_tools
+from csv_analytics_agent.graph.checkpoint import json_safe
 from csv_analytics_agent.graph.models import PlannerResult
 from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.llm.base import BaseLLM
 from csv_analytics_agent.llm.python_generator import BasePythonCodeGenerator
 from csv_analytics_agent.logging_config import get_logger
+from csv_analytics_agent.profiler.models import DatasetProfile
 from csv_analytics_agent.python_engine.base import BasePythonExecutor
 from csv_analytics_agent.python_engine.tool import create_python_analysis_tool
 
@@ -63,7 +65,7 @@ def planner_node(
         return {
             "messages": [loop_msg],
             "iteration_count": iteration_count + 1,
-            "planner_result": planner_res,
+            "planner_result": json_safe(planner_res.model_dump(mode="json")),
             "metadata": {
                 **(state.get("metadata", {})),
                 "next_node": "explainer",
@@ -81,23 +83,38 @@ def planner_node(
             generator=python_generator,
             executor=python_executor,
             dataframe=dataframe,
-            schema=state.get("profile"),
+            schema=(
+                DatasetProfile.model_validate(state["profile"])
+                if state.get("profile") is not None
+                else None
+            ),
             retrieved_columns=state.get("retrieved_columns"),
             dataset_hash=state.get("dataset_hash"),
         )
         tools.append(py_tool)
 
     # 4. Bind Tools to LLM & Invoke
-    system_prompt = (
-        "You are an expert tabular analytics and visualization assistant.\n"
-        f"Available dataset columns: {list(dataframe.columns)}\n\n"
-        "TOOL SELECTION GUIDELINES:\n"
-        "1. For standard structured analytical queries (grouping, filtering, aggregate stats, top_n, sort, standard charts):\n"
-        "   Call the matching deterministic capability tool (e.g. 'aggregate', 'group', 'filter', 'top_n', 'sort', 'render_visualization').\n"
-        "2. For open-ended Python analysis, complex statistical tests, custom mathematical formulas, multi-step data transformations, or custom Plotly/Matplotlib charts:\n"
-        "   Call the 'python_analysis' tool with a clear, detailed analytical question string.\n"
-        "3. When a tool has ALREADY been executed and returned data in a ToolMessage:\n"
-        "   Do NOT call the tool again. Synthesize a clear, concise narrative answer based on the tool output."
+    from csv_analytics_agent.prompts import get_planner_prompt
+
+    col_descriptions: list[str] = []
+    for col in dataframe.columns:
+        dtype_str = str(dataframe[col].dtype)
+        if pd.api.types.is_numeric_dtype(dataframe[col]):
+            col_descriptions.append(f"  - `{col}` (numeric, {dtype_str})")
+        elif pd.api.types.is_datetime64_any_dtype(dataframe[col]):
+            col_descriptions.append(f"  - `{col}` (datetime)")
+        else:
+            n_unique = dataframe[col].nunique()
+            col_descriptions.append(f"  - `{col}` (categorical, {n_unique} unique values)")
+
+    col_desc_text = "\n".join(col_descriptions)
+    active_filters = state.get("active_filters", [])
+    filters_text = str(active_filters) if active_filters else "None"
+
+    system_prompt = get_planner_prompt().format(
+        row_count=len(dataframe),
+        column_descriptions=col_desc_text,
+        active_filters_summary=filters_text,
     )
 
     from langchain_core.messages import SystemMessage
@@ -130,6 +147,22 @@ def planner_node(
         args = dict(first_call.get("args", {}))
         target_columns = list(args.get("target_columns", []))
         parameters = dict(args.get("parameters", {}))
+        # Allow top-level parameter passthrough when not nested under 'parameters'
+        for k, v in args.items():
+            if k not in ("target_columns", "parameters"):
+                parameters.setdefault(k, v)
+
+        descriptor = next(
+            (desc for desc in descriptors if desc.name == call_name),
+            None,
+        )
+        preferred_engine = (
+            descriptor.preferred_execution_engine
+            if descriptor and descriptor.preferred_execution_engine
+            else "deterministic_engine"
+        )
+        output_contract = descriptor.output_contract if descriptor else None
+
         exec_request = ExecutionRequest(
             capability_name=call_name,
             target_columns=target_columns,
@@ -139,6 +172,13 @@ def planner_node(
             execution_request=exec_request,
             confidence=1.0,
             matched_rule=call_name,
+            analysis_plan={
+                "operation": call_name,
+                "target_columns": target_columns,
+                "parameters": parameters,
+                "preferred_execution_engine": preferred_engine,
+                "output_contract": output_contract,
+            },
             reasoning_trace=[f"Selected capability '{call_name}' for execution."],
             success=True,
         )
@@ -147,6 +187,11 @@ def planner_node(
             execution_request=None,
             confidence=0.5,
             matched_rule="direct_explanation",
+            analysis_plan={
+                "operation": "direct_explanation",
+                "preferred_execution_engine": "deterministic_engine",
+                "output_contract": {"type": "text"},
+            },
             reasoning_trace=["No capability tool calls; direct explanation generated."],
             success=True,
         )
@@ -155,7 +200,7 @@ def planner_node(
     return {
         "messages": [response_msg],
         "iteration_count": iteration_count + 1,
-        "planner_result": planner_result,
+        "planner_result": json_safe(planner_result.model_dump(mode="json")),
     }
 
 

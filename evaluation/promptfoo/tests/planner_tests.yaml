@@ -1,0 +1,81 @@
+# Planner Prompt Regression Test Cases (10 cases)
+
+- description: "Planner case 1: total revenue sum minimal plan"
+  vars:
+    question: "What is total revenue?"
+    expected_tool: "deterministic"
+  assert:
+    - type: contains
+      value: "revenue"
+
+- description: "Planner case 2: top category rank limit 1"
+  vars:
+    question: "Which category has the highest revenue?"
+    expected_tool: "deterministic"
+  assert:
+    - type: icontains
+      value: "highest"
+
+- description: "Planner case 3: category group sum breakdown"
+  vars:
+    question: "Show revenue by category."
+    expected_tool: "deterministic"
+  assert:
+    - type: icontains
+      value: "category"
+
+- description: "Planner case 4: Statistical Python analysis for correlation"
+  vars:
+    question: "Calculate Pearson correlation between Units_Sold and Revenue."
+    expected_tool: "python"
+  assert:
+    - type: icontains
+      value: "correlation"
+
+- description: "Planner case 5: Statistical IQR calculation"
+  vars:
+    question: "What is the IQR of revenue?"
+    expected_tool: "python"
+  assert:
+    - type: icontains
+      value: "iqr"
+
+- description: "Planner case 6: Trend analysis over time"
+  vars:
+    question: "Show revenue over time."
+    expected_tool: "deterministic"
+  assert:
+    - type: icontains
+      value: "revenue"
+
+- description: "Planner case 7: Top 5 products by sales"
+  vars:
+    question: "Show top 5 products by revenue."
+    expected_tool: "deterministic"
+  assert:
+    - type: icontains
+      value: "top 5"
+
+- description: "Planner case 8: Filtered query for Electronics category"
+  vars:
+    question: "What is revenue for Electronics?"
+    expected_tool: "deterministic"
+  assert:
+    - type: icontains
+      value: "electronics"
+
+- description: "Planner case 9: Distribution summary statistics"
+  vars:
+    question: "Describe the distribution of Units_Sold."
+    expected_tool: "python"
+  assert:
+    - type: icontains
+      value: "units_sold"
+
+- description: "Planner case 10: Multi-column comparison query"
+  vars:
+    question: "Compare average price across categories."
+    expected_tool: "deterministic"
+  assert:
+    - type: icontains
+      value: "price"

@@ -85,7 +85,6 @@ def test_regression_hii_query_with_list_content() -> None:
 
     initial_state = {
         "messages": [HumanMessage(content=[{"type": "text", "text": "hii"}])],
-        "working_df": df,
     }
 
     # Graph invocation must complete cleanly without raising AttributeError: 'list' object has no attribute 'strip'

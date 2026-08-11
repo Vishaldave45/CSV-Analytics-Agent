@@ -38,7 +38,7 @@ Built upon **Domain-Driven Design (DDD)** and **Clean Architecture** principles,
 | ⚡ **Capability Execution Framework** | `execution/` | Decouples domain capabilities (`AnalyticsEngine`, `VisualizationEngine`) from underlying providers (`PandasProvider`) registered inside a centralized `CapabilityRegistry`. |
 | 🧠 **Semantic Vector Memory** | `memory/` | Index dataset column schemas and metadata into a local FAISS vector store (`SentenceTransformers`) for semantic column retrieval during agentic planning. |
 | 🛡️ **Multi-Layer Python Sandbox** | `python_engine/` | Executes dynamic, LLM-generated Python analysis code within an isolated subprocess (`SubprocessBackend`) or hardened unprivileged Docker container (`DockerBackend`) guarded by AST static analysis. |
-| 🔄 **LangGraph Stateful Runtime** | `graph/` | StateGraph workflow featuring `SqliteSaver` thread checkpointing, plan-execute loops, memory retrieval nodes, and conversational state persistence. |
+| 🔄 **LangGraph Stateful Runtime** | `graph/` | StateGraph workflow featuring in-memory state checkpointing, plan-execute loops, memory retrieval nodes, and conversational state persistence. |
 | 📡 **LangSmith Telemetry & Tracing** | `observability/` | Native callback instrumentation (`AgentTracingCallbackHandler`) for tracking latency, token metrics, tool invocations, and thread metadata. |
 | 🖥️ **Streamlit Web Dashboard** | `streamlit_app/` | Multi-page Streamlit application providing interactive dataset exploration, Bento-style statistical cards, insights tables, chart rendering, settings, and AI chat interface. |
 
@@ -300,7 +300,7 @@ csv-analytics-agent/
 │   ├── persistence/        # Stage 7.1: SQLite metadata storage & SHA256 hashing
 │   ├── memory/             # Stage 7.5: FAISS vector store & column semantic search
 │   ├── observability/      # Stage 7.8: LangSmith callback handlers & tracing setup
-│   ├── graph/              # Stage 7.9: LangGraph StateGraph, SqliteSaver, AgentRuntime
+│   ├── graph/              # Stage 7.9: LangGraph StateGraph, in-memory AgentRuntime
 │   └── python_engine/      # Stage 8.1–8.3: Secure Python execution sandbox domain
 │       ├── models.py       # Immutable Pydantic v2 request/result/artifact domain models
 │       ├── base.py         # BasePythonExecutor abstract base class
@@ -468,7 +468,7 @@ Stage 8.11 redesigns the Streamlit application into a modern, production-grade *
 - [x] **Stage 4 — Visualization Engine** (`v0.4.0`): Chart recommendation rules, spec generation, Matplotlib rendering.
 - [x] **Stage 5 — Execution Framework** (`v0.5.0`): `CapabilityRegistry`, `AnalyticsEngine`, `VisualizationEngine`, `PandasProvider`.
 - [x] **Stage 6 — Deterministic Planner** (`v0.6.0`): `RulePlanner`, `QueryParser`, confidence scoring, trace logs.
-- [x] **Stage 7.1–7.10 — Agentic System** (`v0.7.0`): `SqliteSaver`, FAISS Vector Memory, LangSmith Observability, LangGraph `AgentRuntime`, Streamlit UI.
+- [x] **Stage 7.1–7.10 — Agentic System** (`v0.7.0`): FAISS Vector Memory, LangSmith Observability, LangGraph `AgentRuntime`, Streamlit UI.
 - [x] **Stage 8.1 — Python Engine Interface** (`v0.8.1`): Domain models (`PythonExecutionRequest`, `PythonExecutionResult`, `PythonArtifact`), exception hierarchy, `BasePythonExecutor`.
 - [x] **Stage 8.2 — Subprocess Sandbox** (`v0.8.2`): `PythonSandboxPolicy`, AST pre-validation, `SubprocessBackend`, isolated execution boundary.
 - [x] **Stage 8.3 — Production-Hardened Sandbox** (`v0.8.3`): `BaseSandboxBackend`, `DockerBackend`, unprivileged read-only Docker sandbox, resource caps, `create_python_executor` factory.

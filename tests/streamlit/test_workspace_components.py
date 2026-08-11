@@ -21,7 +21,7 @@ def test_generate_contextual_followups_category() -> None:
     text = "Electronics generated the highest revenue in the dataset."
     followups = generate_contextual_followups(text)
     assert len(followups) >= 3
-    assert any("electronics" in f.lower() or "category" in f.lower() for f in followups)
+    assert any("group" in f.lower() or "breakdown" in f.lower() for f in followups)
 
 
 def test_generate_contextual_followups_revenue() -> None:
@@ -29,7 +29,7 @@ def test_generate_contextual_followups_revenue() -> None:
     text = "Total revenue equals $756,000.0 across all orders."
     followups = generate_contextual_followups(text)
     assert len(followups) >= 3
-    assert any("units sold" in f.lower() or "correlation" in f.lower() for f in followups)
+    assert any("category" in f.lower() or "correlation" in f.lower() for f in followups)
 
 
 def test_generate_contextual_followups_fallback() -> None:

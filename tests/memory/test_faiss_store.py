@@ -31,7 +31,7 @@ def test_faiss_store_search_ordering() -> None:
     results = store.search([1.0, 0.1], top_k=2)
     assert len(results) == 2
     assert results[0].record.id == "r1"
-    assert results[0].score < results[1].score
+    assert results[0].score > results[1].score
 
 
 def test_faiss_store_delete_and_clear() -> None:

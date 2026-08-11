@@ -1,4 +1,4 @@
-"""Uploader component matching StitchMCP Onboarding & Ingestion layout."""
+"""Uploader component for Quiet Data Studio."""
 
 from __future__ import annotations
 
@@ -15,9 +15,6 @@ from csv_analytics_agent.exceptions import (
 )
 from csv_analytics_agent.profiler.models import DatasetProfile
 from streamlit_app.config import (
-    APP_SUBTITLE,
-    APP_TITLE,
-    EXAMPLE_QUESTIONS,
     SAMPLE_DATA_DIR,
     SAMPLE_DATASETS,
 )
@@ -62,20 +59,14 @@ def process_loaded_dataframe(
 
 
 def render_uploader() -> None:
-    """Render hero CSV dropzone, sample dataset quick loaders, and example question chips."""
+    """Render quiet CSV uploader and sample dataset loaders."""
     st.markdown(
-        f"""
+        """
         <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 2rem;">
-            <h1 class="brand-title" style="font-size: 3.4rem; letter-spacing: -0.04em;">{APP_TITLE}</h1>
-            <p style="font-size: 1.15rem; color: #94a3b8; margin-top: 0.4rem; font-family: var(--font-sans);">
-                {APP_SUBTITLE} • Ask your data anything with mathematical precision.
+            <h1 class="studio-title" style="font-size: 2.8rem;">Data Studio</h1>
+            <p style="font-size: 1.05rem; color: #94a3b8; margin-top: 0.4rem;">
+                CSV Analytics & Exploration Workspace
             </p>
-            <div style="margin-top: 0.8rem;">
-                <span class="brand-status-badge">
-                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4cd7f6;"></span>
-                    CORE_V2 OPERATIONAL
-                </span>
-            </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -84,13 +75,12 @@ def render_uploader() -> None:
     # Dropzone Container
     st.markdown(
         """
-        <div class="dropzone-container" style="margin-bottom: 1.5rem;">
-            <div style="font-size: 2.2rem; color: #4cd7f6; margin-bottom: 0.5rem;">☁️</div>
-            <div style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; color: #e5e1e4;">
-                Drop your CSV file here
+        <div class="studio-card" style="text-align: center; padding: 2.5rem 1.5rem; margin-bottom: 1.5rem;">
+            <div style="font-size: 1.25rem; font-weight: 600; color: #f8fafc;">
+                Upload a CSV file to start exploring
             </div>
-            <div style="font-family: var(--font-mono); font-size: 0.85rem; color: #869397; margin-top: 0.3rem;">
-                or click below to browse — up to 500MB
+            <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.3rem;">
+                Drag and drop your file below
             </div>
         </div>
         """,
@@ -108,101 +98,73 @@ def render_uploader() -> None:
         content = uploaded_file.getvalue()
         filename = uploaded_file.name
         try:
-            with st.status(f"⚡ Ingesting '{filename}' into LOGIC_OS...", expanded=True) as status:
-                st.write("🔍 Parsing bytes and inspecting CSV encoding...")
+            with st.status(f"Analyzing '{filename}'...", expanded=True) as status:
+                st.write("Reading dataset structure...")
                 df, profile, content_hash = upload_dataset(content, filename=filename)
 
-                st.write("📊 Computing column statistical DNA & data distributions...")
+                st.write("Profiling column statistics...")
                 time.sleep(0.1)
 
-                st.write("💡 Synthesizing proactive empirical data insights...")
+                st.write("Generating dataset insights...")
                 process_loaded_dataframe(
                     df, filename=filename, dataset_hash=content_hash, profile=profile
                 )
 
-                st.write("🎨 Recommending deterministic visualization specifications...")
-                status.update(label=f"✅ '{filename}' successfully analyzed!", state="complete")
+                st.write("Recommending visualizations...")
+                status.update(label=f"'{filename}' ready for analysis", state="complete")
 
-            st.success(
-                f"🚀 Loaded **`{filename}`** ({len(df):,} rows × {len(df.columns)} columns)!"
-            )
+            st.success(f"Loaded **`{filename}`** ({len(df):,} rows × {len(df.columns)} columns)")
             st.rerun()
         except EmptyCSVError:
             st.error(
-                f"⚠️ **Empty file**: '{filename}' contains no data rows. "
-                "Please upload a non-empty CSV."
+                f"Empty file: '{filename}' contains no data rows. Please upload a non-empty CSV."
             )
         except CSVEncodingError:
             st.error(
-                f"⚠️ **Encoding error**: Could not read '{filename}'. "
-                "Try re-saving the file as UTF-8 (e.g. in Excel: Save As → CSV UTF-8)."
+                f"Encoding error: Could not read '{filename}'. Try re-saving the file as UTF-8."
             )
         except CSVParsingError as exc:
-            st.error(f"⚠️ **Parse error**: '{filename}' could not be parsed as a CSV. {exc}")
+            st.error(f"Parse error: '{filename}' could not be parsed as a CSV. {exc}")
         except Exception as exc:
-            st.error(f"⚠️ **Unexpected error** loading '{filename}': {exc}")
+            st.error(f"Unexpected error loading '{filename}': {exc}")
 
     st.write("")
-    sample_hdr_html = (
-        '<div style="text-align: center; margin-top: 1.8rem; margin-bottom: 0.9rem; '
-        'font-family: var(--font-mono); font-size: 0.8rem; color: #869397; font-weight: 600; letter-spacing: 0.08em;">'
-        "OR EXPLORE A PRE-INDEXED SAMPLE DATASET</div>"
+    st.markdown(
+        '<div style="text-align: center; margin-top: 1.5rem; margin-bottom: 0.8rem; '
+        'font-size: 0.78rem; color: #64748b; font-weight: 600; letter-spacing: 0.05em;">'
+        "OR EXPLORE A SAMPLE DATASET</div>",
+        unsafe_allow_html=True,
     )
-    st.markdown(sample_hdr_html, unsafe_allow_html=True)
 
     cols = st.columns(len(SAMPLE_DATASETS))
     for idx, sample_info in enumerate(SAMPLE_DATASETS):
         with cols[idx]:
-            btn_label = f"{sample_info['icon']} {sample_info['name']}"
+            btn_label = f"📄 {sample_info['name']}"
             if st.button(btn_label, key=f"btn_sample_{idx}", use_container_width=True):
                 file_path = SAMPLE_DATA_DIR / sample_info["name"]
                 if file_path.exists():
                     try:
                         with st.status(
-                            f"⚡ Loading sample '{sample_info['name']}'...", expanded=True
+                            f"Loading sample '{sample_info['name']}'...", expanded=True
                         ) as status:
-                            st.write("Reading pre-indexed dataset bytes...")
+                            st.write("Reading dataset...")
                             raw_bytes = file_path.read_bytes()
                             df, profile, content_hash = upload_dataset(
                                 raw_bytes, filename=sample_info["name"]
                             )
-                            st.write("Evaluating column profiles & generating insights...")
+                            st.write("Generating profile & insights...")
                             process_loaded_dataframe(
                                 df,
                                 filename=sample_info["name"],
                                 dataset_hash=content_hash,
                                 profile=profile,
                             )
-                            status.update(label="✅ Sample dataset ready!", state="complete")
+                            status.update(label="Sample dataset ready", state="complete")
                         st.rerun()
                     except Exception as exc:
-                        st.error(f"⚠️ Could not load sample dataset: {exc}")
+                        st.error(f"Could not load sample dataset: {exc}")
                 else:
                     st.warning(f"Sample file not found: {file_path.name}")
-
-    st.write("")
-    st.markdown(
-        '<div style="text-align: center; margin-top: 2rem; margin-bottom: 0.9rem; '
-        'font-family: var(--font-mono); font-size: 0.8rem; color: #869397; font-weight: 600; letter-spacing: 0.08em;">'
-        "EXAMPLE QUESTIONS YOU CAN ASK</div>",
-        unsafe_allow_html=True,
-    )
-
-    ex_cols = st.columns(len(EXAMPLE_QUESTIONS))
-    for idx, q_text in enumerate(EXAMPLE_QUESTIONS):
-        with ex_cols[idx]:
-            if st.button(f"💡 {q_text}", key=f"btn_ex_home_{idx}", use_container_width=True):
-                set_state("pending_prompt", q_text)
-                st.switch_page("pages/5_AI_Chat.py")
-
-    st.markdown(
-        """
-        <div style="text-align: center; margin-top: 3rem; color: #869397; font-family: var(--font-mono); font-size: 0.78rem;">
-            🔒 <strong>100% Deterministic & Local</strong> — Data never leaves your machine. Only schema definitions are sent to LLM planners.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 __all__ = ["render_uploader"]

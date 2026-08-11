@@ -21,7 +21,6 @@ from csv_analytics_agent.python_engine.models import (
     PythonExecutionRequest,
     PythonExecutionResult,
 )
-from csv_analytics_agent.results.models import AnalysisResult, AnalysisStatus
 
 
 class FakeLLM(BaseLLM):
@@ -102,7 +101,7 @@ def test_planner_binds_deterministic_and_python_tools() -> None:
     gen = FakeCodeGenerator()
     exec_ = FakeExecutor()
 
-    state = create_initial_state(working_df=df)
+    state = create_initial_state()
     res_state = planner_node(
         state=state,
         llm=fake_llm,
@@ -139,7 +138,7 @@ def test_tool_node_executes_python_analysis_tool() -> None:
         ],
     )
 
-    state = create_initial_state(working_df=df)
+    state = create_initial_state()
     state["messages"] = [ai_msg]
 
     update = tool_node(
@@ -154,11 +153,12 @@ def test_tool_node_executes_python_analysis_tool() -> None:
     assert update["messages"][0].tool_call_id == "call_py_123"
 
     analysis_res = update.get("last_analysis_result")
-    assert isinstance(analysis_res, AnalysisResult)
-    assert analysis_res.status == AnalysisStatus.SUCCESS
-    assert analysis_res.source == "python_engine"
-    assert len(analysis_res.artifacts) == 1
-    assert analysis_res.artifacts[0].payload == 600
+    assert analysis_res is not None
+    assert analysis_res["status"] == "success"
+    assert analysis_res["source"] == "python_engine"
+    assert len(analysis_res["artifacts"]) == 1
+    assert analysis_res["artifacts"][0]["name"] == "total_sales"
+    assert "payload" not in analysis_res["artifacts"][0]
 
 
 def test_tool_node_executes_deterministic_tool() -> None:
@@ -180,7 +180,7 @@ def test_tool_node_executes_deterministic_tool() -> None:
         ],
     )
 
-    state = create_initial_state(working_df=df)
+    state = create_initial_state()
     state["messages"] = [ai_msg]
 
     update = tool_node(
@@ -193,10 +193,10 @@ def test_tool_node_executes_deterministic_tool() -> None:
     assert update["messages"][0].tool_call_id == "call_det_456"
 
     analysis_res = update.get("last_analysis_result")
-    assert isinstance(analysis_res, AnalysisResult)
-    assert analysis_res.status == AnalysisStatus.SUCCESS
-    assert analysis_res.source == "deterministic_engine"
-    assert len(analysis_res.artifacts) == 1
+    assert analysis_res is not None
+    assert analysis_res["status"] == "success"
+    assert analysis_res["source"] == "deterministic_engine"
+    assert len(analysis_res["artifacts"]) == 1
 
 
 def test_build_graph_with_python_dependencies() -> None:
