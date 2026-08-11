@@ -6,6 +6,8 @@ without depending on the (now-removed) planner/ subsystem.
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from csv_analytics_agent.execution.models import ExecutionRequest
@@ -40,6 +42,10 @@ class PlannerResult(BaseModel):
     matched_rule: str | None = Field(
         default=None,
         description="Description of matched rule or pattern.",
+    )
+    analysis_plan: dict[str, Any] | None = Field(
+        default=None,
+        description="Structured analysis plan output from the planner.",
     )
     reasoning_trace: list[str] = Field(
         default_factory=list,

@@ -16,7 +16,7 @@ from streamlit_app.components.header import render_header
 from streamlit_app.components.sidebar import render_sidebar
 from streamlit_app.config import APP_TITLE
 from streamlit_app.services.backend import ask_agent, get_or_create_runtime
-from streamlit_app.services.session import get_state, set_state
+from streamlit_app.services.session import consume_pending_prompt, get_state, set_state
 from streamlit_app.theme import apply_custom_theme
 
 logger = logging.getLogger(__name__)
@@ -223,13 +223,10 @@ user_query = st.chat_input(
     "Ask anything about your dataset... e.g. 'top 5 categories by total revenue'"
 )
 
-# Check if there is a pending prompt from quick suggestion chip
-pending_prompt = get_state("pending_prompt")
-if pending_prompt:
-    set_state("pending_prompt", None)
-    run_query_pipeline(pending_prompt)
+# Check if there is a pending prompt from quick suggestion chip or a direct chat input submission
+submitted_prompt = consume_pending_prompt(user_query)
 
-if user_query:
-    run_query_pipeline(user_query)
+if submitted_prompt:
+    run_query_pipeline(submitted_prompt)
 
 render_footer()

@@ -85,16 +85,6 @@ def tool_node(
 
         if cap_name == "python_analysis" and python_generator and python_executor:
             question = str(args.get("question", ""))
-            tool_wrapper = PythonAnalysisTool(
-                generator=python_generator,
-                executor=python_executor,
-                dataframe=dataframe,
-                schema=state.get("profile"),
-                retrieved_columns=state.get("retrieved_columns"),
-                dataset_hash=state.get("dataset_hash"),
-            )
-
-            # Generate request and execute via sandbox executor directly
             try:
                 py_req = python_generator.generate(
                     question=question,
@@ -106,7 +96,9 @@ def tool_node(
                 last_analysis_result = python_result_to_analysis_result(
                     py_res, question=question, dataset_hash=state.get("dataset_hash")
                 )
-                tool_content = tool_wrapper.run(question)
+                from csv_analytics_agent.python_engine.tool import serialize_execution_result
+
+                tool_content = serialize_execution_result(py_res)
             except Exception as err:
                 last_analysis_result = AnalysisResult.failure(
                     error_type=type(err).__name__,

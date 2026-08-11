@@ -63,6 +63,9 @@ class CapabilityDescriptor(BaseModel):
         description: Human and LLM-readable purpose description.
         parameters_schema: OpenAPI/JSON schema dictionary defining valid arguments.
         provider_name: Default bound provider name.
+        preferred_execution_engine: Engine preference for deterministic planning.
+        fallback_execution_engine: Engine fallback when preferred execution is insufficient.
+        output_contract: Optional output contract describing the expected payload type.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -74,6 +77,18 @@ class CapabilityDescriptor(BaseModel):
         description="JSON schema defining parameters.",
     )
     provider_name: str = Field(..., min_length=1, description="Bound provider name.")
+    preferred_execution_engine: str | None = Field(
+        default=None,
+        description="Preferred execution engine for this capability.",
+    )
+    fallback_execution_engine: str | None = Field(
+        default=None,
+        description="Fallback execution engine if preferred engine is insufficient.",
+    )
+    output_contract: dict[str, Any] | None = Field(
+        default=None,
+        description="Optional expected output contract describing payload structure.",
+    )
 
 
 class ExecutionRequest(BaseModel):

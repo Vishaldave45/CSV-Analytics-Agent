@@ -21,6 +21,7 @@ from csv_analytics_agent.execution.models import (
 )
 
 SUPPORTED_CAPABILITIES: set[str] = {
+    "describe",
     "aggregate",
     "filter",
     "group",
@@ -63,7 +64,9 @@ class PandasProvider(BaseProvider):
 
         start_time = time.perf_counter()
         try:
-            if request.capability_name == "aggregate":
+            if request.capability_name == "describe":
+                data, msg = self._execute_describe(df, request)
+            elif request.capability_name == "aggregate":
                 data, msg = self._execute_aggregate(df, request)
             elif request.capability_name == "filter":
                 data, msg = self._execute_filter(df, request)
@@ -278,3 +281,36 @@ class PandasProvider(BaseProvider):
         top_df = df.sort_values(by=column, ascending=ascending).head(n)
 
         return top_df, f"Retrieved top {n} rows sorted by '{column}'."
+
+    def _execute_describe(self, df: pd.DataFrame, request: ExecutionRequest) -> tuple[dict[str, Any], str]:
+        profile = request.context_metadata.get("profile") if request.context_metadata else None
+        if profile is None:
+            from csv_analytics_agent.profiler.profiler import DatasetProfiler
+
+            profile = DatasetProfiler().profile(df)
+
+        column_summaries: list[dict[str, Any]] = []
+        for column in profile.columns:
+            column_summaries.append(
+                {
+                    "name": column.name,
+                    "dtype": column.dtype,
+                    "missing_percentage": column.missing_percentage,
+                    "unique_count": column.unique_count,
+                    "numeric_stats": column.numeric.dict() if column.numeric else None,
+                    "categorical_stats": column.categorical.dict() if column.categorical else None,
+                    "datetime_stats": column.datetime.dict() if column.datetime else None,
+                }
+            )
+
+        result = {
+            "summary": {
+                "row_count": profile.summary.row_count,
+                "column_count": profile.summary.column_count,
+                "memory_usage_bytes": profile.summary.memory_usage_bytes,
+                "total_missing_values": profile.missing.total_missing_values,
+                "duplicate_rows": profile.duplicates.duplicate_rows,
+            },
+            "columns": column_summaries,
+        }
+        return result, "Described dataset schema, types, missing values, and duplicates."

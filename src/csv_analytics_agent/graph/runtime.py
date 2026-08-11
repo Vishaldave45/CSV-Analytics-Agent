@@ -14,11 +14,11 @@ from langgraph.checkpoint.base import (
     Checkpoint,
     CheckpointMetadata,
 )
+from langgraph.checkpoint.memory import InMemorySaver
 
 from csv_analytics_agent.config.setting import Settings, get_settings
 from csv_analytics_agent.execution.registry import CapabilityRegistry
 from csv_analytics_agent.graph.build import build_graph
-from csv_analytics_agent.graph.checkpoint import SqliteSaver
 from csv_analytics_agent.graph.state import AgentState, create_initial_state
 from csv_analytics_agent.llm.base import BaseLLM
 from csv_analytics_agent.llm.python_generator import (
@@ -73,8 +73,7 @@ class AgentRuntime:
         if checkpointer is not None:
             self._checkpointer: BaseCheckpointSaver[Any] = checkpointer
         else:
-            db_path: Path = self._settings.checkpoint_path
-            self._checkpointer = SqliteSaver.from_conn_info(db_path)
+            self._checkpointer = InMemorySaver()
 
         self._graph = build_graph(
             llm=self._llm,
@@ -161,36 +160,12 @@ class AgentRuntime:
         from csv_analytics_agent.graph.build import reset_node
 
         tid = thread_id or self._settings.default_thread_id
-        config_dict: dict[str, Any] = {"configurable": {"thread_id": tid}}
-        if self._callbacks:
-            config_dict["callbacks"] = self._callbacks
-        config: RunnableConfig = cast(RunnableConfig, config_dict)
-
         clean_state = create_initial_state()
         reset_output = reset_node(clean_state)
         clean_state.update(cast(AgentState, reset_output))
 
-        if hasattr(self._checkpointer, "put"):
-            cp_payload: Checkpoint = {
-                "v": 1,
-                "id": f"reset_{tid}",
-                "ts": "",
-                "channel_values": dict(clean_state),
-                "channel_versions": {},
-                "versions_seen": {},
-                "updated_channels": [],
-            }
-            meta_payload: CheckpointMetadata = {
-                "source": "update",
-                "step": 0,
-                "parents": {},
-            }
-            self._checkpointer.put(
-                config,
-                checkpoint=cp_payload,
-                metadata=meta_payload,
-                new_versions={},
-            )
+        if hasattr(self._checkpointer, "delete_thread"):
+            self._checkpointer.delete_thread(str(tid))
 
         return clean_state
 

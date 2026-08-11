@@ -61,6 +61,27 @@ def set_state(key: str, value: Any) -> None:
     st.session_state[key] = value
 
 
+def consume_pending_prompt(user_query: str | None) -> str | None:
+    """Resolve a submission source between chat input and pending prompt.
+
+    The direct chat input always wins. If a pending prompt is consumed,
+    it is cleared from session state so it cannot be processed twice.
+    """
+    init_session_state()
+    pending_prompt = st.session_state.get("pending_prompt")
+
+    if user_query:
+        if pending_prompt is not None:
+            st.session_state["pending_prompt"] = None
+        return user_query
+
+    if pending_prompt:
+        st.session_state["pending_prompt"] = None
+        return pending_prompt
+
+    return None
+
+
 def clear_dataset_session() -> None:
     """Reset dataset profile, insights, charts, message history, and cached runtimes."""
     st.session_state["raw_df"] = None
@@ -81,6 +102,7 @@ def clear_dataset_session() -> None:
 
 __all__ = [
     "clear_dataset_session",
+    "consume_pending_prompt",
     "get_state",
     "init_session_state",
     "set_state",

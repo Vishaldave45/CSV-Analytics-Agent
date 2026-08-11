@@ -14,7 +14,6 @@ from abc import ABC, abstractmethod
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from csv_analytics_agent.llm.base import BaseLLM
-from csv_analytics_agent.llm.gemini import GeminiLLM
 from csv_analytics_agent.llm.python_models import (
     GeneratedPythonProgram,
     PythonCodeGenerationError,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 import threading
 from collections.abc import Iterator, Sequence
@@ -17,6 +18,8 @@ from langgraph.checkpoint.base import (
     CheckpointTuple,
 )
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class SqliteSaver(BaseCheckpointSaver[Any]):
@@ -62,12 +65,32 @@ class SqliteSaver(BaseCheckpointSaver[Any]):
                     PRIMARY KEY (thread_id, checkpoint_ns, checkpoint_id, task_id, idx)
                 )
             """)
+            self._detect_and_migrate()
 
     @classmethod
     def from_conn_info(cls, database_path: str | Path) -> SqliteSaver:
         """Create SqliteSaver instance from database file path."""
         conn = sqlite3.connect(str(database_path), check_same_thread=False)
         return cls(conn)
+
+    def _detect_and_migrate(self) -> None:
+        """Attempt to repair or migrate old checkpoint schemas automatically."""
+        with self._lock:
+            cursor = self.conn.cursor()
+            try:
+                columns = [row[1] for row in cursor.execute("PRAGMA table_info(checkpoints)").fetchall()]
+            except sqlite3.DatabaseError:
+                return
+
+            expected = {"thread_id", "checkpoint_ns", "checkpoint_id", "parent_checkpoint_id", "type", "checkpoint", "metadata"}
+            if set(columns) != expected:
+                logger.warning(
+                    "Detected incompatible checkpoints schema, recreating tables.",
+                    existing_columns=columns,
+                )
+                self.conn.execute("DROP TABLE IF EXISTS checkpoints")
+                self.conn.execute("DROP TABLE IF EXISTS writes")
+                self._setup()
 
     def get_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:
         """Retrieve checkpoint tuple for specified thread_id and checkpoint_id."""

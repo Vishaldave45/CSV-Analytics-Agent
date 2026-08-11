@@ -130,6 +130,22 @@ def planner_node(
         args = dict(first_call.get("args", {}))
         target_columns = list(args.get("target_columns", []))
         parameters = dict(args.get("parameters", {}))
+        # Allow top-level parameter passthrough when not nested under 'parameters'
+        for k, v in args.items():
+            if k not in ("target_columns", "parameters"):
+                parameters.setdefault(k, v)
+
+        descriptor = next(
+            (desc for desc in descriptors if desc.name == call_name),
+            None,
+        )
+        preferred_engine = (
+            descriptor.preferred_execution_engine
+            if descriptor and descriptor.preferred_execution_engine
+            else "deterministic_engine"
+        )
+        output_contract = descriptor.output_contract if descriptor else None
+
         exec_request = ExecutionRequest(
             capability_name=call_name,
             target_columns=target_columns,
@@ -139,6 +155,13 @@ def planner_node(
             execution_request=exec_request,
             confidence=1.0,
             matched_rule=call_name,
+            analysis_plan={
+                "operation": call_name,
+                "target_columns": target_columns,
+                "parameters": parameters,
+                "preferred_execution_engine": preferred_engine,
+                "output_contract": output_contract,
+            },
             reasoning_trace=[f"Selected capability '{call_name}' for execution."],
             success=True,
         )
@@ -147,6 +170,11 @@ def planner_node(
             execution_request=None,
             confidence=0.5,
             matched_rule="direct_explanation",
+            analysis_plan={
+                "operation": "direct_explanation",
+                "preferred_execution_engine": "deterministic_engine",
+                "output_contract": {"type": "text"},
+            },
             reasoning_trace=["No capability tool calls; direct explanation generated."],
             success=True,
         )

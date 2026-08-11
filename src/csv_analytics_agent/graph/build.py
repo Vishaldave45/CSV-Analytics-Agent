@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import pandas as pd
 from langchain_core.messages import AIMessage
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+
+if TYPE_CHECKING:
+    from csv_analytics_agent.memory.service import MemoryService
 
 from csv_analytics_agent.execution.registry import CapabilityRegistry
 from csv_analytics_agent.graph.explainer import explainer_node
@@ -20,7 +23,6 @@ from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.graph.tool_node import tool_node
 from csv_analytics_agent.llm.base import BaseLLM
 from csv_analytics_agent.llm.python_generator import BasePythonCodeGenerator
-from csv_analytics_agent.memory.service import MemoryService
 from csv_analytics_agent.python_engine.base import BasePythonExecutor
 
 
@@ -63,9 +65,12 @@ def route_after_router(decision: RouterDecision | dict[str, Any]) -> str:
 
     if next_node_name == "reset" or intent == RouterIntent.RESET:
         return "reset"
-    if next_node_name in ("meta", "unknown") or intent in (
+    if next_node_name in ("meta", "unknown", "explainer") or intent in (
         RouterIntent.META,
         RouterIntent.UNKNOWN,
+        RouterIntent.CHITCHAT,
+        RouterIntent.UNSUPPORTED,
+        RouterIntent.CLARIFICATION,
     ):
         return "explainer"
     if intent == RouterIntent.NEW_QUERY or next_node_name == "retrieval":

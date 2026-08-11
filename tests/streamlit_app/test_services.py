@@ -16,6 +16,7 @@ from streamlit_app.services.backend import (
 )
 from streamlit_app.services.session import (
     clear_dataset_session,
+    consume_pending_prompt,
     get_state,
     init_session_state,
     set_state,
@@ -38,6 +39,26 @@ def test_session_service_operations() -> None:
     clear_dataset_session()
     assert get_state("raw_df") is None
     assert get_state("insights") == []
+
+
+def test_consume_pending_prompt_prefers_direct_input() -> None:
+    """Verify chat input overrides pending prompt and clears the pending value."""
+    init_session_state()
+    set_state("pending_prompt", "suggested query")
+
+    result = consume_pending_prompt("my explicit query")
+    assert result == "my explicit query"
+    assert get_state("pending_prompt") is None
+
+
+def test_consume_pending_prompt_uses_pending_prompt_when_no_input() -> None:
+    """Verify pending prompt is consumed only when no direct chat input exists."""
+    init_session_state()
+    set_state("pending_prompt", "suggested query")
+
+    result = consume_pending_prompt(None)
+    assert result == "suggested query"
+    assert get_state("pending_prompt") is None
 
 
 def test_backend_loader_and_profiler(sample_csv_bytes: bytes) -> None:

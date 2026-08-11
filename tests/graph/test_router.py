@@ -88,6 +88,43 @@ def test_router_unknown_query() -> None:
     assert decision.confidence == 0.0
 
 
+def test_router_chitchat_query() -> None:
+    """Verify chitchat queries route to the explainer rather than analytics."""
+    state = create_initial_state()
+    msg: BaseMessage = HumanMessage(content="hiii")
+    state["messages"] = [msg]
+
+    decision = router_node(state)
+    assert decision.intent == RouterIntent.CHITCHAT
+    assert decision.next_node == "explainer"
+    assert decision.confidence == 0.8
+    assert decision.metadata["category"] == "chitchat"
+
+
+def test_router_unsupported_query() -> None:
+    """Verify outside-domain queries route to the explainer."""
+    state = create_initial_state()
+    msg: BaseMessage = HumanMessage(content="What is the capital of France?")
+    state["messages"] = [msg]
+
+    decision = router_node(state)
+    assert decision.intent == RouterIntent.UNSUPPORTED
+    assert decision.next_node == "explainer"
+    assert decision.metadata["category"] == "unsupported"
+
+
+def test_router_ambiguous_query_without_context() -> None:
+    """Verify ambiguous dataset questions request clarification when no prior context exists."""
+    state = create_initial_state()
+    msg: BaseMessage = HumanMessage(content="What is the best product?")
+    state["messages"] = [msg]
+
+    decision = router_node(state)
+    assert decision.intent == RouterIntent.CLARIFICATION
+    assert decision.next_node == "explainer"
+    assert decision.metadata["category"] == "clarification"
+
+
 def test_router_partial_state() -> None:
     """Verify router stability when given a minimal partial AgentState dict."""
     msg: BaseMessage = HumanMessage(content="Help")

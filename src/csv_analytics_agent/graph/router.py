@@ -6,6 +6,7 @@ models used to route incoming user queries to graph destinations without LLM inv
 
 from __future__ import annotations
 
+import re
 from enum import Enum
 
 from langchain_core.messages import BaseMessage, HumanMessage
@@ -44,6 +45,44 @@ FOLLOW_UP_PREFIXES = (
     "instead of",
 )
 
+CHITCHAT_PATTERNS = (
+    r"^h(i)+$",
+    r"^hi$",
+    r"^hello$",
+    r"^hey$",
+    r"^good morning$",
+    r"^good afternoon$",
+    r"^good evening$",
+    r"^thanks$",
+    r"^thank you$",
+    r"^thank you so much$",
+    r"^thanks a lot$",
+    r"^thank you very much$",
+)
+
+UNSUPPORTED_PATTERNS = (
+    "capital of",
+    "what is the capital",
+    "population",
+    "country",
+    "state",
+    "language",
+    "president",
+    "movie",
+    "book",
+    "author",
+    "history",
+    "geography",
+    "define ",
+)
+
+AMBIGUOUS_PATTERNS = (
+    r"\bbest\b.*\b(category|product|department|group|segment|option)\b",
+    r"\btop\b.*\b(category|product|department|group|segment|option)\b",
+    r"\bhighest\b.*\b(category|product|department|group|segment|option)\b",
+    r"\blowest\b.*\b(category|product|department|group|segment|option)\b",
+)
+
 
 class RouterIntent(str, Enum):
     """High-level query routing intent category."""
@@ -52,6 +91,9 @@ class RouterIntent(str, Enum):
     FOLLOW_UP = "follow_up"
     RESET = "reset"
     META = "meta"
+    CHITCHAT = "chitchat"
+    UNSUPPORTED = "unsupported"
+    CLARIFICATION = "clarification"
     UNKNOWN = "unknown"
 
 
@@ -104,6 +146,19 @@ def _extract_last_user_text(messages: list[BaseMessage] | None) -> str:
     return normalize_message_content(last_content).lower()
 
 
+def _matches_patterns(text: str, patterns: tuple[str, ...]) -> bool:
+    """Check whether normalized text matches any provided substring or regex pattern."""
+    import re
+
+    for pattern in patterns:
+        if pattern.startswith("^") or pattern.endswith("$") or "\\b" in pattern:
+            if re.search(pattern, text, flags=re.IGNORECASE):
+                return True
+        elif pattern in text:
+            return True
+    return False
+
+
 def router_node(state: AgentState) -> RouterDecision:
     """Deterministic router node evaluating AgentState to select next graph destination.
 
@@ -146,7 +201,27 @@ def router_node(state: AgentState) -> RouterDecision:
             metadata={"matched_text": text},
         )
 
-    # 3. Check FOLLOW_UP Intent
+    # 3. Check CHITCHAT Intent
+    if _matches_patterns(text, CHITCHAT_PATTERNS):
+        return RouterDecision(
+            intent=RouterIntent.CHITCHAT,
+            confidence=0.8,
+            reason=f"Classified chitchat query, skipping analytical execution: '{text}'.",
+            next_node="explainer",
+            metadata={"matched_text": text, "category": "chitchat"},
+        )
+
+    # 4. Check UNSUPPORTED / OUT-OF-DOMAIN Intent
+    if _matches_patterns(text, UNSUPPORTED_PATTERNS):
+        return RouterDecision(
+            intent=RouterIntent.UNSUPPORTED,
+            confidence=0.6,
+            reason=f"Classified unsupported outside-dataset query: '{text}'.",
+            next_node="explainer",
+            metadata={"matched_text": text, "category": "unsupported"},
+        )
+
+    # 5. Check FOLLOW_UP Intent
     human_msg_count = sum(
         1 for m in messages if isinstance(m, HumanMessage) or getattr(m, "type", "") == "human"
     )
@@ -166,23 +241,33 @@ def router_node(state: AgentState) -> RouterDecision:
             },
         )
 
-    # 4. Check NEW_QUERY Intent
-    if len(text) > 2:
+    # 6. Check AMBIGUOUS CATEGORY
+    if _matches_patterns(text, AMBIGUOUS_PATTERNS) and not has_prior_context:
         return RouterDecision(
-            intent=RouterIntent.NEW_QUERY,
-            confidence=0.9 if not has_prior_context else 0.8,
-            reason="Classified as standard analytical query for query planner.",
-            next_node="planner",
-            metadata={"has_prior_context": has_prior_context},
+            intent=RouterIntent.CLARIFICATION,
+            confidence=0.5,
+            reason=f"Classified ambiguous dataset question requiring clarification: '{text}'.",
+            next_node="explainer",
+            metadata={"matched_text": text, "category": "clarification"},
         )
 
-    # 5. Fallback UNKNOWN Intent
+    # 7. Minimum query length check before routing to analytical planner
+    if len(text.strip()) <= 2 or all(char in "?!" for char in text):
+        return RouterDecision(
+            intent=RouterIntent.UNKNOWN,
+            confidence=0.0,
+            reason=f"Query too short or non-substantive for deterministic routing: '{text}'.",
+            next_node="unknown",
+            metadata={"text": text},
+        )
+
+    # 8. Check NEW_QUERY Intent
     return RouterDecision(
-        intent=RouterIntent.UNKNOWN,
-        confidence=0.0,
-        reason=f"Unable to resolve intent deterministically for query: '{text}'.",
-        next_node="unknown",
-        metadata={"text": text},
+        intent=RouterIntent.NEW_QUERY,
+        confidence=0.9 if not has_prior_context else 0.8,
+        reason="Classified as standard analytical query for query planner.",
+        next_node="planner",
+        metadata={"has_prior_context": has_prior_context},
     )
 
 

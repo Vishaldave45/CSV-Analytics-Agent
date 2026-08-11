@@ -43,6 +43,17 @@ from csv_analytics_agent.graph.state import (
 )
 from csv_analytics_agent.graph.tool_node import tool_node
 
+# Optional imports that may be unavailable in lightweight test environments.
+try:
+    from csv_analytics_agent.llm.gemini import GeminiLLM
+except ImportError:  # pragma: no cover
+    GeminiLLM = None
+
+try:
+    from csv_analytics_agent.memory.service import MemoryService
+except ImportError:  # pragma: no cover
+    MemoryService = None
+
 __all__ = [
     "DEFAULT_MAX_ITERATIONS",
     "AgentRuntime",
