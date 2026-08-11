@@ -1,4 +1,4 @@
-"""Central dynamic Streamlit artifact renderer dispatcher."""
+"""Central dynamic Streamlit artifact renderer dispatcher & Analysis Canvas layout for Stage 8.11."""
 
 from __future__ import annotations
 
@@ -71,7 +71,6 @@ def render_artifact(artifact: AnalysisArtifact | dict[str, Any]) -> None:
         description = artifact.description
         payload = artifact.payload
 
-    # Normalize type to string or PythonArtifactType
     art_type_str = str(
         art_type_raw.value if hasattr(art_type_raw, "value") else art_type_raw
     ).lower()
@@ -100,7 +99,7 @@ def render_artifact(artifact: AnalysisArtifact | dict[str, Any]) -> None:
 
 
 def render_analysis_result(result: AnalysisResult | dict[str, Any]) -> None:
-    """Render a complete unified AnalysisResult inside Streamlit.
+    """Render a complete unified AnalysisResult as an Analysis Canvas inside Streamlit.
 
     Args:
         result: AnalysisResult instance or dict serialized representation.
@@ -128,23 +127,46 @@ def render_analysis_result(result: AnalysisResult | dict[str, Any]) -> None:
     if narrative:
         st.markdown(narrative)
 
-    # 2. Render Status Notifications & Error Details
+    # 2. Render Status Notifications & Sanitized Error Details
     if status_str == AnalysisStatus.FAILED.value.lower():
-        st.error("I couldn't complete that analysis.")
+        st.error("Something went wrong while analyzing your data.")
         if error_message or error_type:
             with st.expander("Technical details", expanded=False):
-                st.code(
-                    f"Error Type: {error_type or 'Unknown'}\nDetails: {error_message or 'None'}"
+                st.caption(
+                    f"{error_type or 'Error'}: {error_message or 'No additional details available'}"
                 )
 
     elif status_str == AnalysisStatus.PARTIAL.value.lower():
         st.warning("Analysis completed partially. Some requested outputs could not be generated.")
         if error_message:
-            with st.expander("Partial execution details", expanded=False):
+            with st.expander("Technical details", expanded=False):
                 st.caption(f"{error_type}: {error_message}")
 
-    # 3. Render Artifacts sequentially in order
+    # Separate Scalar KPI artifacts for top-row alignment
+    scalar_arts = []
+    other_arts = []
+
     for art in artifacts:
+        art_type_raw = art.get("artifact_type") if isinstance(art, dict) else art.artifact_type
+        art_str = str(
+            art_type_raw.value if hasattr(art_type_raw, "value") else art_type_raw
+        ).lower()
+        if art_str in ("scalar", PythonArtifactType.SCALAR.value):
+            scalar_arts.append(art)
+        else:
+            other_arts.append(art)
+
+    # 3. Render Top KPI Row if scalar artifacts present
+    if scalar_arts:
+        st.write("")
+        kpi_cols = st.columns(min(len(scalar_arts), 4))
+        for idx, s_art in enumerate(scalar_arts):
+            with kpi_cols[idx % 4]:
+                render_artifact(s_art)
+
+    # 4. Render Main Artifact Canvas
+    for art in other_arts:
+        st.write("")
         render_artifact(art)
 
 

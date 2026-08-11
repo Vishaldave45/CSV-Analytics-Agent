@@ -143,4 +143,4 @@ def test_render_analysis_result_failure(
         error_message="division by zero",
     )
     render_analysis_result(res)
-    mock_error.assert_called_once_with("I couldn't complete that analysis.")
+    mock_error.assert_called_once_with("Something went wrong while analyzing your data.")

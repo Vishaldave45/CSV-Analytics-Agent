@@ -1,7 +1,8 @@
-"""Page 2: Dataset DNA & Statistical Summary matching StitchMCP layout."""
+"""Page 2: Dataset DNA & Exploration Workspace for Stage 8.11."""
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from streamlit_app.components.dataframe_view import render_dataframe_view
@@ -27,88 +28,77 @@ df = get_state("raw_df")
 profile = get_state("profile")
 dataset_name = get_state("dataset_name", "Dataset")
 
-render_header("Dataset DNA & Statistical Profile", icon="🧬")
+render_header("Dataset Workspace & DNA", icon="🧬")
 
 if df is None or profile is None:
-    st.warning("⚠️ No dataset loaded yet. Please upload a CSV file on the Upload page.")
+    st.warning("⚠️ No dataset loaded yet. Please upload a CSV file on the home page.")
     st.stop()
 
-# 1. Render Dataset Health Score Header Card
-render_dataset_card(profile, dataset_name=dataset_name)
+# Tabbed Dataset Exploration Interface
+tab_overview, tab_data, tab_schema, tab_quality = st.tabs(
+    ["📊 Overview", "📄 Data Preview", "🧬 Schema DNA", "🛡️ Data Quality"]
+)
 
-# 2. Render 4-Card Bento Grid
-render_profile_cards(profile)
+with tab_overview:
+    render_dataset_card(profile, dataset_name=dataset_name)
+    render_profile_cards(profile)
 
-# 3. Two-Column Bento Layout: Column DNA (Left) & Statistical Profile (Right)
-col_dna, col_stats = st.columns([3, 2], gap="medium")
-
-with col_dna:
-    st.markdown("### 🧬 Column DNA & Semantic Types")
-    st.caption("Inspected column data types, completeness, and inferred semantic roles")
-
-    for col in profile.columns:
-        # Determine badge type and color
-        dtype_str = col.dtype.upper()
-        if "INT" in dtype_str or "FLOAT" in dtype_str:
-            type_badge = "badge-trend"
-        elif "DATE" in dtype_str or "TIME" in dtype_str:
-            type_badge = "badge-quality"
-        elif col.unique_count == profile.summary.row_count:
-            type_badge = "badge-optimal"
-            dtype_str = "IDENTIFIER"
+    col_stats_num, col_stats_cat = st.columns(2, gap="medium")
+    with col_stats_num:
+        st.markdown("### 📈 Continuous Dimensions (Numeric)")
+        num_df = df.select_dtypes(include=["number"])
+        if not num_df.empty:
+            st.dataframe(
+                num_df.describe().T[["mean", "std", "min", "50%", "max"]], use_container_width=True
+            )
         else:
-            type_badge = "badge-trend"
+            st.info("No continuous numeric dimensions detected.")
 
-        missing_text = (
-            f"{col.missing_percentage:.1f}% Missing" if col.missing_percentage > 0 else "0% Null"
+    with col_stats_cat:
+        st.markdown("### 🏷️ Categorical Dimensions")
+        cat_df = df.select_dtypes(exclude=["number"])
+        if not cat_df.empty:
+            st.dataframe(cat_df.describe().T, use_container_width=True)
+        else:
+            st.info("No categorical dimensions detected.")
+
+with tab_data:
+    st.markdown(f"### 📄 Raw Data Explorer (`{len(df):,}` total rows)")
+    render_dataframe_view(df, title="Interactive Data Preview", max_rows=100)
+
+with tab_schema:
+    st.markdown("### 🧬 Column Schema & Types")
+
+    schema_records = []
+    for col in profile.columns:
+        schema_records.append(
+            {
+                "Column": col.name,
+                "Data Type": col.dtype,
+                "Unique Values": col.unique_count,
+                "Null Count": col.missing_count,
+                "Null %": f"{col.missing_percentage:.1f}%",
+            }
         )
-        missing_color = "#fbbf24" if col.missing_percentage > 0 else "#10b981"
+    schema_df = pd.DataFrame(schema_records)
+    st.dataframe(schema_df, use_container_width=True, hide_index=True)
 
-        card_html = f"""
-        <div class="dna-card">
-            <div class="dna-header">
-                <div style="display: flex; align-items: center; gap: 0.6rem;">
-                    <span style="color: #4cd7f6; font-size: 1rem;">◈</span>
-                    <span class="dna-col-name">{col.name}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span class="badge {type_badge}">{dtype_str}</span>
-                    <span style="font-family: var(--font-mono); font-size: 0.75rem; color: {missing_color};">
-                        {missing_text}
-                    </span>
-                </div>
-            </div>
-            <div class="dna-stats-row">
-                <div>Distinct: <strong style="color: #e5e1e4;">{col.unique_count:,}</strong></div>
-                <div>Nulls: <strong style="color: #e5e1e4;">{col.missing_count:,}</strong></div>
-                <div>Semantic: <strong style="color: #d0bcff;">{col.dtype}</strong></div>
-            </div>
-        </div>
-        """
-        st.markdown(card_html, unsafe_allow_html=True)
+with tab_quality:
+    st.markdown("### 🛡️ Empirical Quality Audit")
 
-with col_stats:
-    st.markdown("### 📈 Numeric Distribution & Summary")
-    st.caption("Descriptive statistics computed deterministically across numeric dimensions")
+    c_q1, c_q2, c_q3 = st.columns(3)
+    with c_q1:
+        st.metric("Health Score", f"{profile.health_score.overall_score}/100")
+    with c_q2:
+        st.metric("Duplicate Rows", f"{profile.summary.duplicate_rows:,}")
+    with c_q3:
+        st.metric("Total Cells Missing", f"{profile.summary.total_missing_cells:,}")
 
-    numeric_df = df.select_dtypes(include=["number"])
-    if not numeric_df.empty:
-        st.dataframe(
-            numeric_df.describe().T[["mean", "std", "min", "50%", "max"]],
-            use_container_width=True,
+    if profile.summary.duplicate_rows > 0:
+        st.warning(
+            f"⚠️ Dataset contains **{profile.summary.duplicate_rows:,}** duplicate row entries."
         )
     else:
-        st.info("No continuous numeric dimensions detected in active dataset.")
-
-    # Categorical summary
-    cat_df = df.select_dtypes(exclude=["number"])
-    if not cat_df.empty:
-        st.markdown("### 🏷️ Categorical Summary")
-        st.dataframe(cat_df.describe().T, use_container_width=True)
-
-st.write("---")
-
-# 4. Render Interactive Data Preview Table
-render_dataframe_view(df, title="Raw Data Explorer", max_rows=50)
+        st.success("✅ Zero duplicate rows detected across dataset.")
 
 render_footer()

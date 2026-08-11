@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from tests.evaluation.schemas import ExpectedBehavior
-
 from csv_analytics_agent.python_engine.models import PythonArtifactType
 from csv_analytics_agent.results.models import AnalysisArtifact, AnalysisResult, AnalysisStatus
 from evaluation.evaluators import (
@@ -13,6 +11,7 @@ from evaluation.evaluators import (
     ToolSelectionQualityEvaluator,
 )
 from evaluation.judge import StructuredLLMJudge, sanitize_payload
+from tests.evaluation.schemas import ExpectedBehavior
 
 
 def test_sanitize_payload() -> None:
