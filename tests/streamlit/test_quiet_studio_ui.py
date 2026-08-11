@@ -29,7 +29,8 @@ def test_generate_contextual_followups() -> None:
 
 def test_render_analysis_result_handles_artifacts() -> None:
     """Verify render_analysis_result executes without crashing across various artifact types."""
-    from csv_analytics_agent.results.models import AnalysisArtifactType, AnalysisStatus
+    from csv_analytics_agent.python_engine.models import PythonArtifactType
+    from csv_analytics_agent.results.models import AnalysisStatus
 
     df = pd.DataFrame({"category": ["A", "B"], "orders": [10, 20]})
     res = AnalysisResult(
@@ -37,12 +38,12 @@ def test_render_analysis_result_handles_artifacts() -> None:
         narrative="Analysis complete.",
         artifacts=[
             AnalysisArtifact(
-                artifact_type=AnalysisArtifactType.SCALAR,
+                artifact_type=PythonArtifactType.SCALAR,
                 name="total_orders",
                 payload=30,
             ),
             AnalysisArtifact(
-                artifact_type=AnalysisArtifactType.TABLE,
+                artifact_type=PythonArtifactType.TABLE,
                 name="orders_table",
                 payload=df,
             ),
