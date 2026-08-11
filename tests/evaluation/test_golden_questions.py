@@ -96,3 +96,16 @@ def test_golden_case_live_gemini_smoke(tmp_path: Path) -> None:
 
     res = runner.run_case(basic_case, runtime)
     assert res.passed or res.actual_tools, f"Live Gemini evaluation failed: {res.failures}"
+
+
+def test_evaluator_consumes_real_agent_result(tmp_path: Path) -> None:
+    """End-to-end regression test: prove evaluation runner consumes real AnalysisResult from AgentRuntime."""
+    from csv_analytics_agent.results.models import AnalysisResult
+
+    runner = EvaluationRunner(use_mock_llm=True)
+    runtime = runner.create_runtime(tmp_path / "e2e_eval.db")
+    case = runner.load_cases()[0]
+
+    res = runner.run_case(case, runtime)
+    assert res.actual_result is not None
+    assert isinstance(res.actual_result, AnalysisResult)

@@ -134,3 +134,29 @@ def test_sqlite_saver_operations(tmp_path: Path) -> None:
     saver.delete_thread("thread_1")
     assert saver.get_tuple(cfg_t1) is None
     assert saver.get_tuple(cfg_t2) is not None
+
+
+def test_runtime_configuration_passthrough(tmp_path: Path, sample_df: pd.DataFrame) -> None:
+    """Verify Settings configuration (model_name, max_iterations) reaches AgentRuntime."""
+    db_file = tmp_path / "cfg_test.db"
+    settings = Settings(
+        checkpoint_path=db_file,
+        default_thread_id="t_cfg",
+        max_iterations=12,
+    )
+    saver = SqliteSaver.from_conn_info(db_file)
+    mock_llm = MockLLM()
+    mock_registry = MagicMock(spec=CapabilityRegistry)
+    mock_memory = MagicMock(spec=MemoryService)
+
+    runtime = AgentRuntime(
+        llm=mock_llm,
+        registry=mock_registry,
+        memory_service=mock_memory,
+        dataframe=sample_df,
+        settings=settings,
+        checkpointer=saver,
+    )
+
+    assert runtime._settings.max_iterations == 12
+    assert runtime._llm.model_name == "mock_runtime_llm"

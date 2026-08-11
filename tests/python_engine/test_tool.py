@@ -225,6 +225,35 @@ def test_large_table_result_summarization(sample_df: pd.DataFrame) -> None:
     assert len(art["preview"]["data"]) == 10  # truncated preview to 10 rows
 
 
+def test_large_dataframe_tool_output_bounding(sample_df: pd.DataFrame) -> None:
+    """Verify tool execution result serialization stays strictly bounded for large DataFrames."""
+    large_df = pd.DataFrame({f"col_{i}": range(10000) for i in range(50)})
+    res = PythonExecutionResult(
+        success=True,
+        artifacts=[
+            PythonArtifact(
+                artifact_type=PythonArtifactType.DATAFRAME,
+                name="large_dataset",
+                data=large_df,
+            )
+        ],
+    )
+    gen = FakeCodeGenerator()
+    exec_ = FakePythonExecutor(return_res=res)
+    tool_wrapper = PythonAnalysisTool(gen, exec_, sample_df)
+
+    serialized_output = tool_wrapper.run("Summarize large dataset")
+    output_bytes = len(serialized_output.encode("utf-8"))
+
+    # Serialized tool output should be well below 50 KB (typically 2-5 KB)
+    assert output_bytes < 50_000
+    res_dict = json.loads(serialized_output)
+    art = res_dict["artifacts"][0]
+    assert art["row_count"] == 10000
+    assert art["column_count"] == 50
+    assert len(art["preview"]["data"]) == 10
+
+
 # 13 & 14. Interactive & Image artifact preservation
 def test_interactive_and_image_artifact_preservation(sample_df: pd.DataFrame) -> None:
     res = PythonExecutionResult(
