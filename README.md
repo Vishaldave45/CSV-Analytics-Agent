@@ -404,6 +404,48 @@ The platform features a unified, type-driven result protocol (`AnalysisResult` a
 
 ---
 
+## 🔬 Golden Dataset & Agent Evaluation (Stage 8.9)
+
+The platform features a multi-layered evaluation architecture that separates deterministic software testing from probabilistic AI behavior evaluation.
+
+```text
+                    CSV AI AGENT
+                         │
+              ┌──────────┴──────────┐
+              │                     │
+          SOFTWARE TESTS       AI EVALUATION
+              │                     │
+           pytest              Golden Dataset
+              │                     │
+       ┌──────┼──────┐        ┌─────┼─────┐
+       ▼      ▼      ▼        ▼     ▼     ▼
+      Unit   Integration   Tool   Answer  Artifact
+                           choice quality correctness
+                              │
+                    ┌─────────┼─────────┐
+                    ▼         ▼         ▼
+                LangSmith  DeepEval  Promptfoo
+```
+
+### Evaluation Layers & Responsibilities
+
+1. **Deterministic Software Testing (`pytest`)**:
+   - `pytest` remains the primary deterministic test framework.
+   - Evaluates software contracts, numerical tolerances (`math.isclose`), serialization formats, AST security policy enforcement, and regression behavior.
+   - Offline, fast execution utilizing `EvaluationMockLLM` so CI does not depend on `GEMINI_API_KEY`.
+2. **Golden Dataset Evaluation (`tests/evaluation/`)**:
+   - Repeatable evaluation suite consisting of **50+ Golden Test Cases** across 26 categories (aggregation, grouping, statistics, pivot, time-series, security, follow-up, multi-artifact, etc.).
+   - Measures `overall_pass_rate`, `tool_selection_accuracy`, `artifact_type_accuracy`, `deterministic_case_pass_rate`, `python_case_pass_rate`, `security_pass_rate`, and `follow_up_pass_rate`.
+3. **LangSmith Observability Datasets (`tests/evaluation/adapters/langsmith_adapter.py`)**:
+   - Decoupled adapter layer for exporting golden dataset cases to remote LangSmith Datasets for live online trace evaluation when `LANGCHAIN_API_KEY` is present.
+4. **DeepEval & Promptfoo Regression (`evaluation/promptfoo/promptfoo.yaml`)**:
+   - Dedicated configuration layer for evaluating answer relevancy, faithfulness, prompt drift, and adversarial prompt regression.
+
+> [!NOTE]
+> `pytest` verifies deterministic software code contracts, while `LangSmith`, `DeepEval`, and `Promptfoo` evaluate AI behavior, tool choice, and prompt quality.
+
+---
+
 ## 🗺️ Product Roadmap & Stage Progress
 
 - [x] **Stage 1 — Ingestion & Coercion** (`v0.1.0`): Auto-encoding detection, file validation, structural checks.
@@ -421,6 +463,7 @@ The platform features a unified, type-driven result protocol (`AnalysisResult` a
 - [x] **Stage 8.6 — Unified Result Protocol** (`v0.8.6`): `AnalysisResult`, `AnalysisArtifact`, `SerializedArtifact`, bounded table preview, Plotly/Matplotlib serializers.
 - [x] **Stage 8.7 — Unified Agent Routing** (`v0.8.7`): Dual capability & python tool selection loop inside LangGraph planner & tool nodes.
 - [x] **Stage 8.8 — Streamlit Interactive Renderer** (`v0.8.8`): Dynamic, type-driven Streamlit artifact renderers (`render_artifact`, `render_analysis_result`).
+- [x] **Stage 8.9 — Golden Dataset + Agent Evaluation** (`v0.8.9`): Repeatable Golden Dataset evaluation architecture, 52 test cases across 25 categories, metric computation, pytest suite & AI evaluation adapters.
 
 ---
 
