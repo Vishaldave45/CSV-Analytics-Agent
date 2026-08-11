@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import time
 from typing import Any, cast
 
 from langchain_core.messages import BaseMessage
@@ -216,11 +217,16 @@ class GeminiLLM(BaseLLM):
                     self._llm = self._build_llm_instance()
                     return self._invoke_inner(input_data)
 
-                raise ValueError(
-                    f"Gemini API Quota / Rate Limit Exceeded (429) for "
-                    f"'{self._model_name}'. Try switching to "
-                    f"'{DEFAULT_MODEL_NAME}' in Settings or wait 30-60s."
-                ) from err
+                logger.warning("gemini_429_quota_waiting", model=self._model_name, wait_seconds=30)
+                time.sleep(30.0)
+                try:
+                    return self._invoke_inner(input_data)
+                except Exception as retry_err:
+                    raise ValueError(
+                        f"Gemini API Quota / Rate Limit Exceeded (429) for "
+                        f"'{self._model_name}'. Try switching to "
+                        f"'{DEFAULT_MODEL_NAME}' in Settings or wait 30-60s."
+                    ) from retry_err
             raise
 
     def stream(self, input_data: list[BaseMessage] | str | dict[str, Any]) -> Any:

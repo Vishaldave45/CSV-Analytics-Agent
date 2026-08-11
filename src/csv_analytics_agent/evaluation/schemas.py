@@ -76,6 +76,8 @@ class EvaluationResult:
     actual_artifacts: list[str] = field(default_factory=list)
     expected_artifacts: list[str] = field(default_factory=list)
     latency_ms: float = 0.0
+    artifact_passed: bool = True
+    tool_passed: bool = True
     grounding_passed: bool = True
     security_passed: bool = True
     actual_result: Any = None
