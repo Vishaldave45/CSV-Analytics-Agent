@@ -22,7 +22,7 @@ try:  # pragma: no cover - optional dependency
     )
 except Exception:  # pragma: no cover - optional dependency
 
-    class SentenceTransformerEmbeddings(BaseEmbeddingProvider):
+    class SentenceTransformerEmbeddings(BaseEmbeddingProvider):  # type: ignore[no-redef]
         """Minimal in-memory embedding provider used when sentence-transformers is unavailable."""
 
         def __init__(self, model_name: str = "inmemory", dimension: int = 16) -> None:
@@ -45,7 +45,7 @@ except Exception:  # pragma: no cover - optional dependency
         def model_name(self) -> str:
             return self._model_name
 
-    class FaissVectorStore(BaseVectorStore):
+    class FaissVectorStore(BaseVectorStore):  # type: ignore[no-redef]
         """Lightweight in-memory vector store fallback for tests."""
 
         def __init__(

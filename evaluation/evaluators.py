@@ -6,8 +6,8 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
+from csv_analytics_agent.evaluation.schemas import ExpectedBehavior
 from csv_analytics_agent.results.models import AnalysisResult
-from tests.evaluation.schemas import ExpectedBehavior
 
 
 @dataclass
