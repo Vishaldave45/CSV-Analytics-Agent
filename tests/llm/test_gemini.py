@@ -5,7 +5,19 @@ from unittest.mock import MagicMock
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
-from csv_analytics_agent.llm.gemini import _TRANSIENT_EXCEPTIONS, DEFAULT_MODEL_NAME, GeminiLLM
+from csv_analytics_agent.llm.gemini import (
+    _TRANSIENT_EXCEPTIONS,
+    DEFAULT_MODEL_NAME,
+    GeminiAPIKeyError,
+    GeminiLLM,
+)
+
+
+def test_gemini_missing_api_key_raises_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify GeminiLLM raises GeminiAPIKeyError when GOOGLE_API_KEY is not set."""
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    with pytest.raises(GeminiAPIKeyError, match="Google Gemini API Key is missing"):
+        GeminiLLM(model_name=DEFAULT_MODEL_NAME, api_key=None)
 
 
 def test_gemini_llm_mocked_invocation() -> None:

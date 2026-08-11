@@ -85,3 +85,20 @@ def test_docker_backend_run_code_mocked(mock_subproc_run: MagicMock) -> None:
     assert result.success is True
     assert result.metadata["backend"] == "container"
     assert mock_subproc_run.called
+
+
+def test_subprocess_backend_mutated_dataframe_artifact() -> None:
+    """Verify SubprocessBackend captures mutated DataFrame as an artifact when user code modifies df."""
+    backend = SubprocessBackend()
+    policy = PythonSandboxPolicy(timeout_seconds=5.0)
+    req = PythonExecutionRequest(
+        code="df = df[df['sales'] > 15]",
+        question="Filter sales > 15",
+    )
+    df = pd.DataFrame({"sales": [10, 20, 30]})
+
+    result = backend.run_code(req, df, policy)
+    assert result.success is True
+    df_artifacts = [a for a in result.artifacts if a.artifact_type.value == "dataframe"]
+    assert len(df_artifacts) >= 1
+    assert df_artifacts[0].name == "df"

@@ -77,3 +77,60 @@ def test_agent_runtime_reset(runtime_instance: AgentRuntime) -> None:
     assert reset_state["active_filters"] == []
     assert reset_state["retrieved_columns"] == []
     assert "reset" in reset_state["messages"][0].content.lower()
+
+
+def test_sqlite_saver_operations(tmp_path: Path) -> None:
+    """Verify SqliteSaver put, get_tuple, put_writes, list, multi-thread isolation, and delete_thread."""
+    db_file = tmp_path / "checkpoints_test.db"
+    saver = SqliteSaver.from_conn_info(db_file)
+
+    cfg_t1 = {"configurable": {"thread_id": "thread_1", "checkpoint_id": "cp_1"}}
+    cfg_t2 = {"configurable": {"thread_id": "thread_2", "checkpoint_id": "cp_2"}}
+
+    cp1 = {
+        "v": 1,
+        "id": "cp_1",
+        "ts": "",
+        "channel_values": {"val": 100},
+        "channel_versions": {},
+        "versions_seen": {},
+        "updated_channels": [],
+    }
+    cp2 = {
+        "v": 1,
+        "id": "cp_2",
+        "ts": "",
+        "channel_values": {"val": 200},
+        "channel_versions": {},
+        "versions_seen": {},
+        "updated_channels": [],
+    }
+
+    saver.put(cfg_t1, cp1, {"source": "update", "step": 1, "parents": {}}, {})
+    saver.put(cfg_t2, cp2, {"source": "update", "step": 1, "parents": {}}, {})
+
+    # get_tuple for thread_1
+    t1_tuple = saver.get_tuple(cfg_t1)
+    assert t1_tuple is not None
+    assert t1_tuple.checkpoint["channel_values"]["val"] == 100
+
+    # get_tuple for thread_2
+    t2_tuple = saver.get_tuple(cfg_t2)
+    assert t2_tuple is not None
+    assert t2_tuple.checkpoint["channel_values"]["val"] == 200
+
+    # list checkpoints
+    t1_list = list(saver.list(cfg_t1))
+    assert len(t1_list) == 1
+    assert t1_list[0].checkpoint["id"] == "cp_1"
+
+    # put_writes
+    saver.put_writes(cfg_t1, [("channel_a", "payload_a")], task_id="task_1")
+    t1_tuple_with_writes = saver.get_tuple(cfg_t1)
+    assert t1_tuple_with_writes is not None
+    assert len(t1_tuple_with_writes.pending_writes) == 1
+
+    # delete_thread
+    saver.delete_thread("thread_1")
+    assert saver.get_tuple(cfg_t1) is None
+    assert saver.get_tuple(cfg_t2) is not None

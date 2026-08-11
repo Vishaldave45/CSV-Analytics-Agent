@@ -285,5 +285,11 @@ class SqliteSaver(BaseCheckpointSaver[Any]):
 
         return iter(tuples)
 
+    def delete_thread(self, thread_id: str) -> None:
+        """Delete all checkpoints and channel writes associated with a thread_id."""
+        with self._lock, self.conn:
+            self.conn.execute("DELETE FROM checkpoints WHERE thread_id = ?", (str(thread_id),))
+            self.conn.execute("DELETE FROM writes WHERE thread_id = ?", (str(thread_id),))
+
 
 __all__ = ["SqliteSaver"]
