@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import plotly.express as px
 import streamlit as st
 
 from streamlit_app.components.chart_view import render_chart_views
@@ -12,6 +11,13 @@ from streamlit_app.components.sidebar import render_sidebar
 from streamlit_app.config import APP_TITLE
 from streamlit_app.services.session import get_state
 from streamlit_app.theme import apply_custom_theme
+
+try:
+    import plotly.express as px
+
+    HAS_PLOTLY = True
+except ImportError:
+    HAS_PLOTLY = False
 
 st.set_page_config(
     page_title=f"Visualizations — {APP_TITLE}",
@@ -41,45 +47,45 @@ with tab_auto:
     render_chart_views(charts, df)
 
 with tab_explorer:
-    st.markdown("### 🛠️ Interactive Plotly Chart Explorer")
+    st.markdown("### 🛠️ Interactive Chart Explorer")
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3 = st.columns(3)
     cols_all = list(df.columns)
     num_cols = list(df.select_dtypes(include=["number"]).columns)
     cat_cols = list(df.select_dtypes(exclude=["number"]).columns)
 
     with c1:
-        chart_type = st.selectbox(
-            "Chart Type", options=["Bar", "Line", "Scatter", "Histogram", "Box"], index=0
-        )
+        chart_type = st.selectbox("Chart Type", options=["Bar", "Line", "Scatter"], index=0)
     with c2:
         x_col = st.selectbox("X Axis Dimension", options=cols_all, index=0)
     with c3:
-        y_col = st.selectbox(
-            "Y Axis Measure", options=[None] + num_cols, index=1 if num_cols else 0
-        )
-    with c4:
-        color_col = st.selectbox("Group By (Color)", options=[None] + cat_cols, index=0)
+        y_col = st.selectbox("Y Axis Measure", options=num_cols if num_cols else cols_all, index=0)
 
-    try:
-        if chart_type == "Bar":
-            fig = px.bar(
-                df, x=x_col, y=y_col, color=color_col, title=f"{x_col} vs {y_col or 'Count'}"
-            )
-        elif chart_type == "Line":
-            fig = px.line(df, x=x_col, y=y_col, color=color_col, title=f"{x_col} vs {y_col}")
-        elif chart_type == "Scatter":
-            fig = px.scatter(df, x=x_col, y=y_col, color=color_col, title=f"{x_col} vs {y_col}")
-        elif chart_type == "Histogram":
-            fig = px.histogram(df, x=x_col, color=color_col, title=f"Distribution of {x_col}")
-        else:
-            fig = px.box(
-                df, x=x_col, y=y_col, color=color_col, title=f"Box Plot of {y_col} by {x_col}"
-            )
+    if HAS_PLOTLY:
+        try:
+            color_col = st.selectbox("Group By (Color)", options=[None] + cat_cols, index=0)
+            if chart_type == "Bar":
+                fig = px.bar(df, x=x_col, y=y_col, color=color_col, title=f"{x_col} vs {y_col}")
+            elif chart_type == "Line":
+                fig = px.line(df, x=x_col, y=y_col, color=color_col, title=f"{x_col} vs {y_col}")
+            else:
+                fig = px.scatter(df, x=x_col, y=y_col, color=color_col, title=f"{x_col} vs {y_col}")
 
-        fig.update_layout(template="plotly_dark", height=500)
-        st.plotly_chart(fig, use_container_width=True)
-    except Exception as exc:
-        st.error(f"Could not render chart with selected dimensions: {exc}")
+            fig.update_layout(template="plotly_dark", height=500)
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception as exc:
+            st.error(f"Could not render Plotly chart with selected dimensions: {exc}")
+    else:
+        # Streamlit Native Chart Fallback if Plotly package is not installed
+        try:
+            chart_df = df[[x_col, y_col]].dropna().set_index(x_col)
+            if chart_type == "Bar":
+                st.bar_chart(chart_df)
+            elif chart_type == "Line":
+                st.line_chart(chart_df)
+            else:
+                st.scatter_chart(chart_df)
+        except Exception as exc:
+            st.error(f"Could not render native chart: {exc}")
 
 render_footer()

@@ -49,7 +49,8 @@ with tab_overview:
         num_df = df.select_dtypes(include=["number"])
         if not num_df.empty:
             st.dataframe(
-                num_df.describe().T[["mean", "std", "min", "50%", "max"]], use_container_width=True
+                num_df.describe().T[["mean", "std", "min", "50%", "max"]],
+                use_container_width=True,
             )
         else:
             st.info("No continuous numeric dimensions detected.")
@@ -86,18 +87,28 @@ with tab_schema:
 with tab_quality:
     st.markdown("### 🛡️ Empirical Quality Audit")
 
+    total_cells = profile.summary.row_count * profile.summary.column_count
+    missing_pct = (
+        (profile.missing.total_missing_values / total_cells) * 100.0 if total_cells > 0 else 0.0
+    )
+    duplicate_rows = profile.duplicates.duplicate_rows
+    health_score = 100
+    if missing_pct > 0:
+        health_score -= min(30, int(missing_pct * 3))
+    if duplicate_rows > 0:
+        health_score -= min(20, int((duplicate_rows / max(1, profile.summary.row_count)) * 50))
+    health_score = max(10, min(100, health_score))
+
     c_q1, c_q2, c_q3 = st.columns(3)
     with c_q1:
-        st.metric("Health Score", f"{profile.health_score.overall_score}/100")
+        st.metric("Health Score", f"{health_score}/100")
     with c_q2:
-        st.metric("Duplicate Rows", f"{profile.summary.duplicate_rows:,}")
+        st.metric("Duplicate Rows", f"{duplicate_rows:,}")
     with c_q3:
-        st.metric("Total Cells Missing", f"{profile.summary.total_missing_cells:,}")
+        st.metric("Total Cells Missing", f"{profile.missing.total_missing_values:,}")
 
-    if profile.summary.duplicate_rows > 0:
-        st.warning(
-            f"⚠️ Dataset contains **{profile.summary.duplicate_rows:,}** duplicate row entries."
-        )
+    if duplicate_rows > 0:
+        st.warning(f"⚠️ Dataset contains **{duplicate_rows:,}** duplicate row entries.")
     else:
         st.success("✅ Zero duplicate rows detected across dataset.")
 

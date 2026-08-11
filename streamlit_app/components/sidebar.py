@@ -14,7 +14,7 @@ def render_sidebar() -> None:
         # Header Brand
         header_html = f"""
         <div style="padding-bottom: 0.85rem; border-bottom: 1px solid #1e293b; margin-bottom: 1rem;">
-            <div class="brand-title" style="font-size: 1.6rem;">{APP_TITLE}</div>
+            <div class="brand-title" style="font-size: 1.5rem; font-family: var(--font-display);">{APP_TITLE}</div>
             <div class="brand-subtitle">{APP_SUBTITLE}</div>
             <div style="margin-top: 0.4rem;">
                 <span class="brand-status-badge">
@@ -56,7 +56,7 @@ def render_sidebar() -> None:
 
         st.markdown(
             f"""
-            <div style="background: rgba(20, 20, 26, 0.85); border: 1px solid #1e293b; border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.75rem;">
+            <div style="background: rgba(20, 20, 26, 0.85); border: 1px solid #1e293b; border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 0.85rem;">
                 <div style="font-family: var(--font-mono); font-weight: 700; color: #4cd7f6; font-size: 0.85rem; word-break: break-all;">
                     📄 {dataset_name}
                 </div>
@@ -76,21 +76,16 @@ def render_sidebar() -> None:
             unsafe_allow_html=True,
         )
 
-        c_nav1, c_nav2 = st.columns(2)
-        with c_nav1:
-            if st.button("🤖 Chat", key="nav_chat", use_container_width=True):
-                st.switch_page("pages/5_AI_Chat.py")
-        with c_nav2:
-            if st.button("🧬 Dataset", key="nav_dataset", use_container_width=True):
-                st.switch_page("pages/2_Dataset.py")
-
-        c_nav3, c_nav4 = st.columns(2)
-        with c_nav3:
-            if st.button("💡 Insights", key="nav_insights", use_container_width=True):
-                st.switch_page("pages/3_Insights.py")
-        with c_nav4:
-            if st.button("🎨 Visuals", key="nav_visuals", use_container_width=True):
-                st.switch_page("pages/4_Visualizations.py")
+        if st.button("🤖  AI Chat Workspace", key="nav_chat", use_container_width=True):
+            st.switch_page("pages/5_AI_Chat.py")
+        if st.button("🧬  Dataset DNA & Schema", key="nav_dataset", use_container_width=True):
+            st.switch_page("pages/2_Dataset.py")
+        if st.button("💡  Empirical Insights", key="nav_insights", use_container_width=True):
+            st.switch_page("pages/3_Insights.py")
+        if st.button("🎨  Visualization Explorer", key="nav_visuals", use_container_width=True):
+            st.switch_page("pages/4_Visualizations.py")
+        if st.button("⚙️  Settings", key="nav_settings", use_container_width=True):
+            st.switch_page("pages/7_Settings.py")
 
         # Proactive Findings Preview
         if insights:
@@ -113,15 +108,10 @@ def render_sidebar() -> None:
 
         st.write("---")
 
-        # Section 4: Settings & Reset
-        c_set1, c_set2 = st.columns(2)
-        with c_set1:
-            if st.button("⚙️ Settings", key="nav_settings", use_container_width=True):
-                st.switch_page("pages/7_Settings.py")
-        with c_set2:
-            if st.button("🧹 Clear", key="nav_clear", use_container_width=True):
-                clear_dataset_session()
-                st.rerun()
+        # Clear Dataset Action
+        if st.button("🧹 Clear Dataset Session", key="nav_clear", use_container_width=True):
+            clear_dataset_session()
+            st.rerun()
 
 
 __all__ = ["render_sidebar"]
