@@ -1,318 +1,124 @@
-"""SQLite Checkpoint Saver implementation for thread-based graph persistence."""
+"""Bounded, checkpoint-safe representations for graph domain results.
+
+Runtime artifacts deliberately live in :class:`RuntimeArtifactStore`; only their
+small descriptive records cross the LangGraph checkpoint boundary.
+"""
 
 from __future__ import annotations
 
-import logging
-import sqlite3
-import threading
-from collections.abc import Iterator, Sequence
-from pathlib import Path
-from typing import Any
+import math
+from collections.abc import Mapping
+from typing import TypeAlias, TypedDict
 
-from langchain_core.runnables import RunnableConfig
-from langgraph.checkpoint.base import (
-    BaseCheckpointSaver,
-    ChannelVersions,
-    Checkpoint,
-    CheckpointMetadata,
-    CheckpointTuple,
-)
-from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+from csv_analytics_agent.results.models import AnalysisArtifact, AnalysisResult
 
-logger = logging.getLogger(__name__)
+JSONScalar: TypeAlias = str | int | float | bool | None
+JSONValue: TypeAlias = JSONScalar | list["JSONValue"] | dict[str, "JSONValue"]
 
 
-class SqliteSaver(BaseCheckpointSaver[Any]):
-    """Thread-safe SQLite checkpointer saving graph state to local SQLite database files."""
+class CheckpointArtifact(TypedDict):
+    artifact_id: str
+    artifact_type: str
+    name: str
+    mime_type: str | None
+    title: str | None
+    description: str | None
+    metadata: dict[str, JSONValue]
+    downloadable: bool
 
-    def __init__(self, conn: sqlite3.Connection) -> None:
-        """Initialize SqliteSaver with an open sqlite3 connection.
 
-        Args:
-            conn: SQLite database connection instance.
-        """
-        super().__init__()
-        self.conn = conn
-        self._lock = threading.Lock()
-        self._serde = JsonPlusSerializer()
-        self._setup()
+class AnalysisResultCheckpoint(TypedDict):
+    status: str
+    narrative: str
+    artifacts: list[CheckpointArtifact]
+    execution_time_ms: float | None
+    source: str
+    question: str | None
+    dataset_hash: str | None
+    metadata: dict[str, JSONValue]
+    error_type: str | None
+    error_message: str | None
 
-    def _setup(self) -> None:
-        """Initialize database schema if tables do not exist."""
-        with self._lock, self.conn:
-            self.conn.execute("""
-                CREATE TABLE IF NOT EXISTS checkpoints (
-                    thread_id TEXT NOT NULL,
-                    checkpoint_ns TEXT NOT NULL DEFAULT '',
-                    checkpoint_id TEXT NOT NULL,
-                    parent_checkpoint_id TEXT,
-                    type TEXT NOT NULL,
-                    checkpoint BLOB NOT NULL,
-                    metadata BLOB NOT NULL,
-                    PRIMARY KEY (thread_id, checkpoint_ns, checkpoint_id)
-                )
-            """)
-            self.conn.execute("""
-                CREATE TABLE IF NOT EXISTS writes (
-                    thread_id TEXT NOT NULL,
-                    checkpoint_ns TEXT NOT NULL DEFAULT '',
-                    checkpoint_id TEXT NOT NULL,
-                    task_id TEXT NOT NULL,
-                    idx INTEGER NOT NULL,
-                    channel TEXT NOT NULL,
-                    type TEXT NOT NULL,
-                    value BLOB NOT NULL,
-                    PRIMARY KEY (thread_id, checkpoint_ns, checkpoint_id, task_id, idx)
-                )
-            """)
-            self._detect_and_migrate()
 
-    @classmethod
-    def from_conn_info(cls, database_path: str | Path) -> SqliteSaver:
-        """Create SqliteSaver instance from database file path."""
-        conn = sqlite3.connect(str(database_path), check_same_thread=False)
-        return cls(conn)
+class RuntimeArtifactStore:
+    """Per-runtime store for payloads which must never enter checkpoint state."""
 
-    def _detect_and_migrate(self) -> None:
-        """Attempt to repair or migrate old checkpoint schemas automatically."""
-        with self._lock:
-            cursor = self.conn.cursor()
-            try:
-                columns = [row[1] for row in cursor.execute("PRAGMA table_info(checkpoints)").fetchall()]
-            except sqlite3.DatabaseError:
-                return
+    def __init__(self) -> None:
+        self._payloads: dict[str, object] = {}
 
-            expected = {"thread_id", "checkpoint_ns", "checkpoint_id", "parent_checkpoint_id", "type", "checkpoint", "metadata"}
-            if set(columns) != expected:
-                logger.warning(
-                    "Detected incompatible checkpoints schema, recreating tables.",
-                    existing_columns=columns,
-                )
-                self.conn.execute("DROP TABLE IF EXISTS checkpoints")
-                self.conn.execute("DROP TABLE IF EXISTS writes")
-                self._setup()
+    def put(self, artifact: AnalysisArtifact) -> None:
+        self._payloads[artifact.artifact_id] = artifact.payload
 
-    def get_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:
-        """Retrieve checkpoint tuple for specified thread_id and checkpoint_id."""
-        thread_id = config.get("configurable", {}).get("thread_id")
-        if not thread_id:
+    def get(self, artifact_id: str) -> object | None:
+        return self._payloads.get(artifact_id)
+
+    def clear(self) -> None:
+        self._payloads.clear()
+
+
+def json_safe(value: object, *, max_depth: int = 6) -> JSONValue:
+    """Return a bounded JSON-compatible value without retaining arbitrary objects."""
+    if value is None:
+        return None
+    if isinstance(value, float):
+        if math.isnan(value) or math.isinf(value):
             return None
+        return value
+    if isinstance(value, (str, int, bool)):
+        return value
+    if max_depth <= 0:
+        return "<omitted: nested value>"
+    if isinstance(value, Mapping):
+        return {str(key): json_safe(item, max_depth=max_depth - 1) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [json_safe(item, max_depth=max_depth - 1) for item in list(value)[:100]]
+    return f"<omitted: {type(value).__name__}>"
 
-        checkpoint_ns = config.get("configurable", {}).get("checkpoint_ns", "")
-        checkpoint_id = config.get("configurable", {}).get("checkpoint_id")
 
-        with self._lock:
-            cursor = self.conn.cursor()
-            if checkpoint_id:
-                cursor.execute(
-                    "SELECT checkpoint_id, parent_checkpoint_id, type, checkpoint, metadata "
-                    "FROM checkpoints WHERE thread_id = ? AND checkpoint_ns = ? AND checkpoint_id = ?",
-                    (str(thread_id), str(checkpoint_ns), str(checkpoint_id)),
-                )
-            else:
-                cursor.execute(
-                    "SELECT checkpoint_id, parent_checkpoint_id, type, checkpoint, metadata "
-                    "FROM checkpoints WHERE thread_id = ? AND checkpoint_ns = ? "
-                    "ORDER BY checkpoint_id DESC LIMIT 1",
-                    (str(thread_id), str(checkpoint_ns)),
-                )
-            row = cursor.fetchone()
-            if not row:
-                return None
+def json_object(value: object) -> dict[str, JSONValue]:
+    """Convert mapping-like metadata to a checkpoint-safe JSON object."""
+    safe = json_safe(value)
+    return safe if isinstance(safe, dict) else {"value": safe}
 
-            cid, parent_cid, type_str, cp_blob, meta_blob = row
 
-            cp: Checkpoint = self._serde.loads_typed((type_str, cp_blob))
-            meta: CheckpointMetadata = self._serde.loads_typed((type_str, meta_blob))
-
-            cursor.execute(
-                "SELECT task_id, channel, type, value FROM writes "
-                "WHERE thread_id = ? AND checkpoint_ns = ? AND checkpoint_id = ? "
-                "ORDER BY task_id, idx",
-                (str(thread_id), str(checkpoint_ns), str(cid)),
-            )
-            write_rows = cursor.fetchall()
-            pending_writes: list[tuple[str, str, Any]] = []
-            for w_task, w_chan, w_type, w_val in write_rows:
-                val = self._serde.loads_typed((w_type, w_val))
-                pending_writes.append((w_task, w_chan, val))
-
-            cfg: RunnableConfig = {
-                "configurable": {
-                    "thread_id": str(thread_id),
-                    "checkpoint_ns": str(checkpoint_ns),
-                    "checkpoint_id": str(cid),
-                }
+def analysis_result_to_checkpoint(
+    result: AnalysisResult, artifact_store: RuntimeArtifactStore
+) -> AnalysisResultCheckpoint:
+    """Split an application result into checkpoint metadata and runtime payloads."""
+    artifacts: list[CheckpointArtifact] = []
+    for artifact in result.artifacts:
+        artifact_store.put(artifact)
+        artifacts.append(
+            {
+                "artifact_id": artifact.artifact_id,
+                "artifact_type": artifact.artifact_type.value,
+                "name": artifact.name,
+                "mime_type": artifact.mime_type,
+                "title": artifact.title,
+                "description": artifact.description,
+                "metadata": json_object(artifact.metadata),
+                "downloadable": artifact.downloadable,
             }
-
-            return CheckpointTuple(
-                cfg,
-                cp,
-                meta,
-                parent_config=(
-                    {
-                        "configurable": {
-                            "thread_id": str(thread_id),
-                            "checkpoint_ns": str(checkpoint_ns),
-                            "checkpoint_id": str(parent_cid),
-                        }
-                    }
-                    if parent_cid
-                    else None
-                ),
-                pending_writes=pending_writes,
-            )
-
-    def put(
-        self,
-        config: RunnableConfig,
-        checkpoint: Checkpoint,
-        metadata: CheckpointMetadata,
-        new_versions: ChannelVersions,
-    ) -> RunnableConfig:
-        """Persist checkpoint and metadata for specified thread_id."""
-        thread_id = config.get("configurable", {}).get("thread_id")
-        if not thread_id:
-            return config
-
-        checkpoint_ns = config.get("configurable", {}).get("checkpoint_ns", "")
-        checkpoint_id = checkpoint.get("id")
-        parent_id = config.get("configurable", {}).get("checkpoint_id")
-
-        kind, cp_blob = self._serde.dumps_typed(checkpoint)
-        _, meta_blob = self._serde.dumps_typed(metadata)
-
-        with self._lock, self.conn:
-            self.conn.execute(
-                "INSERT OR REPLACE INTO checkpoints "
-                "(thread_id, checkpoint_ns, checkpoint_id, parent_checkpoint_id, type, checkpoint, metadata) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (
-                    str(thread_id),
-                    str(checkpoint_ns),
-                    str(checkpoint_id),
-                    str(parent_id) if parent_id else None,
-                    kind,
-                    cp_blob,
-                    meta_blob,
-                ),
-            )
-
-        return {
-            "configurable": {
-                "thread_id": str(thread_id),
-                "checkpoint_ns": str(checkpoint_ns),
-                "checkpoint_id": str(checkpoint_id),
-            }
-        }
-
-    def put_writes(
-        self,
-        config: RunnableConfig,
-        writes: Sequence[tuple[str, Any]],
-        task_id: str,
-        task_path: str = "",
-    ) -> None:
-        """Persist pending channel writes."""
-        thread_id = config.get("configurable", {}).get("thread_id")
-        if not thread_id:
-            return
-
-        checkpoint_ns = config.get("configurable", {}).get("checkpoint_ns", "")
-        checkpoint_id = config.get("configurable", {}).get("checkpoint_id")
-        if not checkpoint_id:
-            return
-
-        with self._lock, self.conn:
-            for idx, (channel, val) in enumerate(writes):
-                kind, val_blob = self._serde.dumps_typed(val)
-                self.conn.execute(
-                    "INSERT OR REPLACE INTO writes "
-                    "(thread_id, checkpoint_ns, checkpoint_id, task_id, idx, channel, type, value) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    (
-                        str(thread_id),
-                        str(checkpoint_ns),
-                        str(checkpoint_id),
-                        str(task_id),
-                        idx,
-                        str(channel),
-                        kind,
-                        val_blob,
-                    ),
-                )
-
-    def list(
-        self,
-        config: RunnableConfig | None,
-        *,
-        filter: dict[str, Any] | None = None,
-        before: RunnableConfig | None = None,
-        limit: int | None = None,
-    ) -> Iterator[CheckpointTuple]:
-        """List checkpoint tuples matching filter options."""
-        if not config:
-            return iter([])
-
-        thread_id = config.get("configurable", {}).get("thread_id")
-        if not thread_id:
-            return iter([])
-
-        checkpoint_ns = config.get("configurable", {}).get("checkpoint_ns", "")
-
-        query = (
-            "SELECT checkpoint_id, parent_checkpoint_id, type, checkpoint, metadata "
-            "FROM checkpoints WHERE thread_id = ? AND checkpoint_ns = ? "
-            "ORDER BY checkpoint_id DESC"
         )
-        params: list[Any] = [str(thread_id), str(checkpoint_ns)]
-
-        if limit and limit > 0:
-            query += f" LIMIT {limit}"
-
-        tuples: list[CheckpointTuple] = []
-        with self._lock:
-            cursor = self.conn.cursor()
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-            for row in rows:
-                cid, parent_cid, type_str, cp_blob, meta_blob = row
-                cp = self._serde.loads_typed((type_str, cp_blob))
-                meta = self._serde.loads_typed((type_str, meta_blob))
-
-                cfg: RunnableConfig = {
-                    "configurable": {
-                        "thread_id": str(thread_id),
-                        "checkpoint_ns": str(checkpoint_ns),
-                        "checkpoint_id": str(cid),
-                    }
-                }
-                tuples.append(
-                    CheckpointTuple(
-                        cfg,
-                        cp,
-                        meta,
-                        parent_config=(
-                            {
-                                "configurable": {
-                                    "thread_id": str(thread_id),
-                                    "checkpoint_ns": str(checkpoint_ns),
-                                    "checkpoint_id": str(parent_cid),
-                                }
-                            }
-                            if parent_cid
-                            else None
-                        ),
-                    )
-                )
-
-        return iter(tuples)
-
-    def delete_thread(self, thread_id: str) -> None:
-        """Delete all checkpoints and channel writes associated with a thread_id."""
-        with self._lock, self.conn:
-            self.conn.execute("DELETE FROM checkpoints WHERE thread_id = ?", (str(thread_id),))
-            self.conn.execute("DELETE FROM writes WHERE thread_id = ?", (str(thread_id),))
+    return {
+        "status": result.status.value,
+        "narrative": result.narrative,
+        "artifacts": artifacts,
+        "execution_time_ms": result.execution_time_ms,
+        "source": result.source,
+        "question": result.question,
+        "dataset_hash": result.dataset_hash,
+        "metadata": json_object(result.metadata),
+        "error_type": result.error_type,
+        "error_message": result.error_message,
+    }
 
 
-__all__ = ["SqliteSaver"]
+__all__ = [
+    "AnalysisResultCheckpoint",
+    "JSONValue",
+    "RuntimeArtifactStore",
+    "analysis_result_to_checkpoint",
+    "json_object",
+    "json_safe",
+]

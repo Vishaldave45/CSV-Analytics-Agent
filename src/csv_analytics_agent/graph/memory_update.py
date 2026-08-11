@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from csv_analytics_agent.execution.models import ExecutionResult
 from csv_analytics_agent.graph.message_utils import extract_last_human_text
 from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.memory.models import MetadataValue
@@ -18,7 +17,7 @@ def memory_update_node(
     """LangGraph node persisting conversation question and execution outcome into MemoryService.
 
     Args:
-        state: Active AgentState containing messages and last_result.
+        state: Active AgentState containing messages and last_analysis_result.
         memory_service: MemoryService instance for vector memory persistence.
 
     Returns:
@@ -26,17 +25,17 @@ def memory_update_node(
     """
     messages = state.get("messages", [])
     user_text = extract_last_human_text(messages)
-    last_result: ExecutionResult | None = state.get("last_result")
+    last_result = state.get("last_analysis_result")
 
     if user_text and last_result is not None:
         narrative_text = (
             f"Question: {user_text} | "
-            f"Capability: {last_result.capability_name} | "
-            f"Result: {last_result.message}"
+            f"Capability: {last_result['source']} | "
+            f"Result: {last_result['narrative']}"
         )
         meta_payload: dict[str, MetadataValue] = {
-            "capability": last_result.capability_name,
-            "status": last_result.status.value,
+            "capability": last_result["source"],
+            "status": last_result["status"],
         }
 
         memory_service.store(

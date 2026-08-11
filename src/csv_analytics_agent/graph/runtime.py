@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, cast
 
 import pandas as pd
@@ -11,14 +10,13 @@ from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.base import (
     BaseCheckpointSaver,
-    Checkpoint,
-    CheckpointMetadata,
 )
 from langgraph.checkpoint.memory import InMemorySaver
 
 from csv_analytics_agent.config.setting import Settings, get_settings
 from csv_analytics_agent.execution.registry import CapabilityRegistry
 from csv_analytics_agent.graph.build import build_graph
+from csv_analytics_agent.graph.checkpoint import RuntimeArtifactStore
 from csv_analytics_agent.graph.state import AgentState, create_initial_state
 from csv_analytics_agent.llm.base import BaseLLM
 from csv_analytics_agent.llm.python_generator import (
@@ -57,7 +55,6 @@ class AgentRuntime:
             python_generator: Optional BasePythonCodeGenerator instance.
             python_executor: Optional BasePythonExecutor instance.
             settings: Optional Settings instance (defaults to get_settings()).
-            checkpointer: Optional BaseCheckpointSaver instance (defaults to SqliteSaver).
             callbacks: Optional list of LangChain BaseCallbackHandler instances.
         """
         self._llm = llm
@@ -74,6 +71,7 @@ class AgentRuntime:
             self._checkpointer: BaseCheckpointSaver[Any] = checkpointer
         else:
             self._checkpointer = InMemorySaver()
+        self._artifact_store = RuntimeArtifactStore()
 
         self._graph = build_graph(
             llm=self._llm,
@@ -83,6 +81,7 @@ class AgentRuntime:
             python_generator=self._python_generator,
             python_executor=self._python_executor,
             checkpointer=self._checkpointer,
+            artifact_store=self._artifact_store,
         )
 
     @property
@@ -128,7 +127,7 @@ class AgentRuntime:
         initial_state["messages"] = [HumanMessage(content=prompt)]
 
         result_state = self._graph.invoke(initial_state, config=config)
-        return cast(AgentState, result_state)
+        return self._hydrate_runtime_state(cast(AgentState, result_state))
 
     def resume(self, thread_id: str | None = None) -> AgentState:
         """Resume conversation and return current checkpointed AgentState for a thread_id.
@@ -144,7 +143,7 @@ class AgentRuntime:
 
         state_snapshot = self._graph.get_state(config)
         if state_snapshot and state_snapshot.values:
-            return cast(AgentState, state_snapshot.values)
+            return self._hydrate_runtime_state(cast(AgentState, state_snapshot.values))
 
         return create_initial_state()
 
@@ -166,8 +165,23 @@ class AgentRuntime:
 
         if hasattr(self._checkpointer, "delete_thread"):
             self._checkpointer.delete_thread(str(tid))
+        self._artifact_store.clear()
 
         return clean_state
+
+    def _hydrate_runtime_state(self, state: AgentState) -> AgentState:
+        """Attach payloads only after a checkpointed state leaves the graph."""
+        result = state.get("last_analysis_result")
+        if result is None:
+            return state
+        hydrated = dict(result)
+        hydrated["artifacts"] = [
+            {**artifact, "payload": self._artifact_store.get(artifact["artifact_id"])}
+            for artifact in result["artifacts"]
+        ]
+        returned = dict(state)
+        returned["last_analysis_result"] = cast(Any, hydrated)
+        return cast(AgentState, returned)
 
 
 __all__ = ["AgentRuntime"]

@@ -7,9 +7,7 @@ This document details every confirmed **P0**, **P1**, and **P2** finding identif
 ## 1. Confirmed P0 Findings & Fixes
 
 ### P0-1 & P0-3: Unsafe Thread-State Serialization & Lock Contention in Checkpointer
-- **File:** [src/csv_analytics_agent/graph/checkpoint.py](file:///home/vishal-dave/Desktop/AI-ML/csv-analytics-agent/src/csv_analytics_agent/graph/checkpoint.py)
-- **Root Cause:** Legacy `SqliteSaver` used raw Python `pickle.dumps` for state serialization (which is insecure and fragile across python version upgrades) and lacked thread locking around open SQLite database connection calls, leading to potential multi-threading lock contention under Streamlit.
-- **Implemented Fix:** Upgraded `SqliteSaver` to use native `langgraph.checkpoint.serde.jsonplus.JsonPlusSerializer` (`serde.dumps_typed` and `serde.loads_typed`) and introduced a reentrant `threading.Lock()` across schema initialization, tuple fetching, write persistence, list operations, and thread deletions.
+- **Note:** The legacy SQLite-based `SqliteSaver` was removed in favor of in-memory checkpointing during Stage 8.18D. For production persistence, prefer using an official LangGraph checkpoint backend (Postgres or the official SQLite saver package).
 - **Regression Test:** `test_sqlite_saver_operations` in [tests/graph/test_runtime.py](file:///home/vishal-dave/Desktop/AI-ML/csv-analytics-agent/tests/graph/test_runtime.py).
 - **Verification:** Verified save (`put`), load (`get_tuple`), list (`list`), put_writes (`put_writes`), resume, thread reset, and thread deletion (`delete_thread`) across multiple isolated thread IDs.
 

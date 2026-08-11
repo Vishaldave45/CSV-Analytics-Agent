@@ -282,12 +282,21 @@ class PandasProvider(BaseProvider):
 
         return top_df, f"Retrieved top {n} rows sorted by '{column}'."
 
-    def _execute_describe(self, df: pd.DataFrame, request: ExecutionRequest) -> tuple[dict[str, Any], str]:
-        profile = request.context_metadata.get("profile") if request.context_metadata else None
-        if profile is None:
+    def _execute_describe(
+        self, df: pd.DataFrame, request: ExecutionRequest
+    ) -> tuple[dict[str, Any], str]:
+        profile_data = request.context_metadata.get("profile") if request.context_metadata else None
+
+        from csv_analytics_agent.profiler.models import DatasetProfile
+
+        if profile_data is None:
             from csv_analytics_agent.profiler.profiler import DatasetProfiler
 
             profile = DatasetProfiler().profile(df)
+        elif isinstance(profile_data, dict):
+            profile = DatasetProfile.model_validate(profile_data)
+        else:
+            profile = profile_data
 
         column_summaries: list[dict[str, Any]] = []
         for column in profile.columns:

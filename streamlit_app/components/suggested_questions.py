@@ -71,6 +71,7 @@ def generate_contextual_followups(
 def render_contextual_suggestions(
     last_answer_text: str,
     on_select: Callable[[str], None] | None = None,
+    key_prefix: str = "default",
 ) -> None:
     """Render dynamic contextual follow-up prompt chips below assistant responses."""
     suggestions = generate_contextual_followups(last_answer_text)
@@ -91,7 +92,7 @@ def render_contextual_suggestions(
         with cols[idx]:
             if st.button(
                 f"🔍 {prompt_text}",
-                key=f"btn_ctx_suggest_{idx}_{hash(prompt_text) % 10000}",
+                key=f"btn_ctx_suggest_{key_prefix}_{idx}_{hash(prompt_text) % 10000}",
                 use_container_width=True,
             ):
                 if on_select is not None:

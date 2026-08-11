@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 from langchain_core.messages import AIMessage
@@ -14,11 +14,12 @@ if TYPE_CHECKING:
     from csv_analytics_agent.memory.service import MemoryService
 
 from csv_analytics_agent.execution.registry import CapabilityRegistry
+from csv_analytics_agent.graph.checkpoint import RuntimeArtifactStore
 from csv_analytics_agent.graph.explainer import explainer_node
 from csv_analytics_agent.graph.memory_update import memory_update_node
 from csv_analytics_agent.graph.planner import planner_node
 from csv_analytics_agent.graph.retrieval import retrieval_node
-from csv_analytics_agent.graph.router import RouterDecision, RouterIntent, router_node
+from csv_analytics_agent.graph.router import RouterIntent, router_node
 from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.graph.tool_node import tool_node
 from csv_analytics_agent.llm.base import BaseLLM
@@ -40,40 +41,57 @@ def reset_node(state: AgentState) -> dict[str, Any]:
         "messages": [reset_msg],
         "retrieved_columns": [],
         "active_filters": [],
-        "last_result": None,
+        "last_analysis_result": None,
         "iteration_count": 0,
     }
 
 
-def route_after_router(decision: RouterDecision | dict[str, Any]) -> str:
+def route_after_router(state: AgentState | dict[str, Any] | Any) -> str:
     """Conditional routing function evaluating router outcome.
 
     Args:
-        decision: RouterDecision instance or dict state.
+        state: AgentState instance containing router_decision, or RouterDecision object directly.
 
     Returns:
         Target node identifier string ('retrieval', 'planner', 'reset', 'explainer').
     """
-    if isinstance(decision, RouterDecision):
-        next_node_name = decision.next_node
-        intent: Any = decision.intent
-    elif isinstance(decision, dict):
-        next_node_name = str(decision.get("next_node", ""))
-        intent = decision.get("intent")
+    if hasattr(state, "intent"):
+        intent = getattr(state, "intent", None)
+        next_node_name = str(getattr(state, "next_node", ""))
+    elif isinstance(state, dict):
+        decision = state.get("router_decision") or state
+        if hasattr(decision, "intent"):
+            intent = getattr(decision, "intent", None)
+            next_node_name = str(getattr(decision, "next_node", ""))
+        elif isinstance(decision, dict):
+            next_node_name = str(decision.get("next_node", ""))
+            intent = decision.get("intent")
+        else:
+            intent = None
+            next_node_name = ""
     else:
-        return "planner"
+        intent = None
+        next_node_name = ""
 
-    if next_node_name == "reset" or intent == RouterIntent.RESET:
+    intent_val = (
+        str(intent.value)  # type: ignore[union-attr]
+        if hasattr(intent, "value")
+        else str(intent)
+        if intent is not None
+        else ""
+    )
+
+    if next_node_name == "reset" or intent_val == RouterIntent.RESET.value:
         return "reset"
-    if next_node_name in ("meta", "unknown", "explainer") or intent in (
-        RouterIntent.META,
-        RouterIntent.UNKNOWN,
-        RouterIntent.CHITCHAT,
-        RouterIntent.UNSUPPORTED,
-        RouterIntent.CLARIFICATION,
+    if next_node_name in ("meta", "unknown", "explainer") or intent_val in (
+        RouterIntent.META.value,
+        RouterIntent.UNKNOWN.value,
+        RouterIntent.CHITCHAT.value,
+        RouterIntent.UNSUPPORTED.value,
+        RouterIntent.CLARIFICATION.value,
     ):
         return "explainer"
-    if intent == RouterIntent.NEW_QUERY or next_node_name == "retrieval":
+    if intent_val == RouterIntent.NEW_QUERY.value or next_node_name == "retrieval":
         return "retrieval"
     return "planner"
 
@@ -103,6 +121,7 @@ def build_graph(
     python_generator: BasePythonCodeGenerator | None = None,
     python_executor: BasePythonExecutor | None = None,
     checkpointer: BaseCheckpointSaver[Any] | None = None,
+    artifact_store: RuntimeArtifactStore | None = None,
 ) -> CompiledStateGraph[AgentState, Any, Any]:
     """Construct and compile the LangGraph agent state graph workflow.
 
@@ -142,6 +161,7 @@ def build_graph(
             dataframe=dataframe,
             python_generator=python_generator,
             python_executor=python_executor,
+            artifact_store=artifact_store,
         ),
     )
     builder.add_node(

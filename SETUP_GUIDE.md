@@ -219,7 +219,8 @@ pytest
 ## 8. Database & migrations
 
 The app uses a small local SQLite database (`app_metadata.db` for dataset
-caching, `sessions.db` for LangGraph checkpointing) — both are created
+caching) — LangGraph checkpointing is kept in-memory and does not persist to
+`sessions.db`.
 automatically on first run. If you change the persistence models, generate
 a new migration:
 

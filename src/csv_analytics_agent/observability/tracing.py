@@ -7,7 +7,6 @@ import os
 from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
-from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
 from csv_analytics_agent.observability.callbacks import (
     AgentTracingCallbackHandler,
     register_callback,
@@ -101,7 +100,7 @@ def get_traced_metadata(
     thread_id: str,
     dataset_name: str = "dataset.csv",
     dataset_hash: str | None = None,
-    model_name: str = DEFAULT_MODEL_NAME,
+    model_name: str | None = None,
 ) -> dict[str, Any]:
     """Construct centralized run metadata payload for traced graph executions.
 
@@ -118,6 +117,9 @@ def get_traced_metadata(
         _agent_version = version("csv-analytics-agent")
     except PackageNotFoundError:
         _agent_version = "dev"
+
+    if model_name is None:
+        model_name = os.getenv("DEFAULT_MODEL_NAME", "gemini-flash-lite-latest")
 
     return {
         "thread_id": thread_id,

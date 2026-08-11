@@ -8,13 +8,6 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-from streamlit_app.components.artifact_renderer import (
-    render_analysis_result,
-    render_artifact,
-)
-from streamlit_app.components.evidence import render_evidence_drawer
-from streamlit_app.components.suggested_questions import render_contextual_suggestions
-
 
 def render_chat_messages(
     messages: list[dict[str, Any]],
@@ -28,17 +21,13 @@ def render_chat_messages(
         df: Active pandas DataFrame context.
         on_select_followup: Optional callback for clicking contextual follow-up prompt chips.
     """
-    total_messages = len(messages)
     row_count = len(df) if df is not None else None
+    total_messages = len(messages)
 
-    for idx, msg in enumerate(messages):
+    for msg_index, msg in enumerate(messages):
         role = msg.get("role", "assistant")
         content = msg.get("content", "")
-        metadata = msg.get("metadata")
-        data_preview = msg.get("data")
-        img_bytes = msg.get("image")
-        analysis_result = msg.get("analysis_result")
-        artifacts = msg.get("artifacts")
+        is_last = msg_index == total_messages - 1
 
         if role == "user":
             with st.chat_message("user"):
@@ -52,49 +41,21 @@ def render_chat_messages(
                 )
         else:
             with st.chat_message("assistant"):
-                st.markdown(
-                    f"""
-                    <div style="font-size: 0.95rem; color: #e2e8f0; line-height: 1.6; margin-bottom: 0.75rem;">
-                        {content}
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                agent_resp = msg.get("agent_response")
+                if agent_resp:
+                    from streamlit_app.components.agent_response import render_agent_response
 
-                # Render unified AnalysisResult if attached to message
-                if analysis_result is not None:
-                    render_analysis_result(analysis_result)
-
-                # Render artifacts list if attached directly
-                elif artifacts and isinstance(artifacts, list):
-                    for art in artifacts:
-                        render_artifact(art)
-
+                    render_agent_response(
+                        agent_resp,
+                        row_count=row_count,
+                        on_select_followup=on_select_followup,
+                        msg_index=msg_index,
+                        is_last=is_last,
+                    )
                 else:
-                    if img_bytes is not None and isinstance(img_bytes, bytes):
-                        st.image(img_bytes, use_container_width=True)
-                        st.download_button(
-                            label="Export Chart PNG",
-                            data=img_bytes,
-                            file_name="chart.png",
-                            mime="image/png",
-                            key=f"btn_dl_chat_img_{idx}",
-                        )
-
-                    if (
-                        data_preview
-                        and data_preview != "None"
-                        and not str(data_preview).startswith("b'\\x89PNG")
-                    ):
-                        with st.expander("View Data Preview", expanded=False):
-                            st.code(str(data_preview), language="text")
-
-                # Render Evidence & Trust Attribution Drawer
-                render_evidence_drawer(metadata=metadata, row_count=row_count)
-
-                # Render contextual follow-up prompt chips for the latest assistant message
-                if idx == total_messages - 1 and content:
-                    render_contextual_suggestions(content, on_select=on_select_followup)
+                    # Fallback for old unnormalized state payloads if any
+                    if content:
+                        st.markdown(content)
 
 
 __all__ = ["render_chat_messages"]

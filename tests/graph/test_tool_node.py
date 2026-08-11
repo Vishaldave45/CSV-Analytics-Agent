@@ -7,7 +7,6 @@ import pytest
 from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 
 from csv_analytics_agent.execution.domain.analytics import AnalyticsEngine
-from csv_analytics_agent.execution.models import ExecutionStatus
 from csv_analytics_agent.execution.registry import CapabilityRegistry
 from csv_analytics_agent.graph.state import create_initial_state
 from csv_analytics_agent.graph.tool_node import tool_node
@@ -61,8 +60,10 @@ def test_tool_node_single_tool_execution(
     assert content["status"] == "success"
     assert content["data"] == "60000.0"
 
-    assert update["last_result"] is not None
-    assert update["last_result"].data == 60000.0
+    assert update["last_analysis_result"] is not None
+    assert update["last_analysis_result"]["status"] == "success"
+    assert update["last_analysis_result"]["source"] == "deterministic_engine"
+    assert "payload" not in update["last_analysis_result"]["artifacts"][0]
 
 
 def test_tool_node_multiple_tool_calls_order_preserved(
@@ -151,7 +152,8 @@ def test_tool_node_unknown_capability_handled(
 
     assert content["status"] == "failed"
     assert "not registered" in content["message"]
-    assert update["last_result"].status == ExecutionStatus.FAILED
+    assert update["last_analysis_result"]["status"] == "failed"
+    assert update["last_analysis_result"]["source"] == "deterministic_engine"
 
 
 def test_tool_node_no_tool_calls_returns_empty(

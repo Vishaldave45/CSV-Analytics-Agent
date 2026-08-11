@@ -282,11 +282,11 @@ csv-analytics-agent/
 
 #### Finding P0-1: Unsafe Pickling & Stubbed Methods in SQLite Checkpointer
 - **Severity:** P0
-- **File:** [src/csv_analytics_agent/graph/checkpoint.py](file:///home/vishal-dave/Desktop/AI-ML/csv-analytics-agent/src/csv_analytics_agent/graph/checkpoint.py#L21-L134)
+ - **File:** Removed legacy `graph/checkpoint.py` (replaced by in-memory checkpointer)
 - **Line/Function:** `SqliteSaver`, `get_tuple` (L58), `put` (L84), `put_writes` (L114), `list` (L124)
 - **Problem:** `SqliteSaver` serializes state using Python `pickle.dumps` and `pickle.loads`. Additionally, `put_writes` and `list` are no-op stubs (`return iter([])`), which discards pending channel writes and breaks LangGraph state time-travel. State is saved using only `PRIMARY KEY (thread_id)`, overwriting previous checkpoints instead of maintaining a checkpoint chain.
 - **Root Cause:** Incomplete custom implementation of `BaseCheckpointSaver` using unsafe pickling instead of standard LangGraph checkpointers.
-- **Recommended Fix:** Replace custom `SqliteSaver` with standard `langgraph.checkpoint.sqlite.SqliteSaver` or an explicit JSON-based serializer with complete `checkpoint_id` and channel write support.
+ - **Recommended Fix:** Legacy SQLite checkpointer has been removed; the runtime now uses LangGraph's `InMemorySaver` for ephemeral session state. For persistent checkpointing, consider standard LangGraph backends (Postgres/Sqlite) via official packages.
 - **Safe to Delete/Change:** Safe to change.
 
 #### Finding P0-2: Subprocess Execution Mode Lacks Process Isolation

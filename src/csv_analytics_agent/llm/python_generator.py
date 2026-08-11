@@ -21,37 +21,13 @@ from csv_analytics_agent.llm.python_models import (
 
 # Avoid importing execution backends or subprocess in generator
 from csv_analytics_agent.profiler.models import DatasetProfile
+from csv_analytics_agent.prompts import get_python_prompt
 from csv_analytics_agent.python_engine.models import (
     PythonArtifactType,
     PythonExecutionRequest,
 )
 
-SYSTEM_PROMPT_TEMPLATE = """You are an expert Python data analysis code generator.
-Your job is to generate Python code to answer analytical questions on a pandas DataFrame named `df`.
-
-DATASET SCHEMA & PROFILES:
-{schema_summary}
-
-RETRIEVED COLUMNS:
-{retrieved_columns_summary}
-
-ADDITIONAL CONTEXT:
-{additional_context}
-
-CRITICAL RULES:
-1. The DataFrame is pre-loaded as `df`. Do NOT read files from disk.
-2. The code MUST assign its final answer to a variable named `result`.
-3. Do NOT modify the original `df` inplace (avoid inplace=True).
-4. Do NOT use filesystem access, network sockets, environment variables, credentials, or system calls.
-5. Do NOT use dangerous functions (exec, eval, __import__, open, input, breakpoint).
-6. Do NOT call external APIs, LLMs, or databases.
-7. Do NOT attempt to run package management commands (pip, apt).
-8. Use ONLY approved libraries: pandas, numpy, scipy, matplotlib, plotly.
-9. Keep operations vectorized, efficient, and concise.
-10. Ensure referenced column names match the dataset schema exactly.
-
-Return your response matching the requested structured schema.
-"""
+SYSTEM_PROMPT_TEMPLATE = get_python_prompt()
 
 
 class BasePythonCodeGenerator(ABC):
@@ -90,7 +66,12 @@ class GeminiPythonCodeGenerator(BasePythonCodeGenerator):
         Args:
             llm: Optional BaseLLM implementation (defaults to GeminiLLM()).
         """
-        self._llm = llm or GeminiLLM()
+        if llm is None:
+            from csv_analytics_agent.llm.gemini import GeminiLLM
+
+            self._llm = GeminiLLM()
+        else:
+            self._llm = llm
 
     @property
     def llm(self) -> BaseLLM:

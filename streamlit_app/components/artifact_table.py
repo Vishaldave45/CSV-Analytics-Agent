@@ -57,13 +57,34 @@ def render_table(artifact: AnalysisArtifact | dict[str, Any]) -> None:
             cols = p_dict.get("columns", [])
             idx = p_dict.get("index", [])
             data = p_dict.get("data", [])
-            df = pd.DataFrame(data, index=idx if idx else None, columns=cols if cols else None)
+            try:
+                df = pd.DataFrame(data, index=idx if idx else None, columns=cols if cols else None)
+            except Exception:
+                df = None
         elif "columns" in payload and "data" in payload:
-            df = pd.DataFrame(payload["data"], columns=payload["columns"])
+            try:
+                df = pd.DataFrame(payload["data"], columns=payload["columns"])
+            except Exception:
+                df = None
         else:
-            df = pd.DataFrame(payload)
+            try:
+                df = pd.DataFrame(payload)
+            except Exception:
+                try:
+                    df = pd.DataFrame([payload])
+                except Exception:
+                    try:
+                        df = pd.DataFrame(list(payload.items()), columns=["Key", "Value"])
+                    except Exception:
+                        df = None
     elif isinstance(payload, list):
-        df = pd.DataFrame(payload)
+        try:
+            df = pd.DataFrame(payload)
+        except Exception:
+            try:
+                df = pd.json_normalize(payload)
+            except Exception:
+                df = None
 
     if df is not None and not df.empty:
         r_cnt = row_count or len(df)

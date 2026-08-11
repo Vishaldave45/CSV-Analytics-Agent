@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from langchain_core.messages import BaseMessage, HumanMessage
 
-from csv_analytics_agent.execution.models import ExecutionResult, ExecutionStatus
 from csv_analytics_agent.graph.memory_update import memory_update_node
 from csv_analytics_agent.graph.state import create_initial_state
 from csv_analytics_agent.memory.service import MemoryService
@@ -16,14 +15,19 @@ def test_memory_update_node_stores_context() -> None:
 
     state = create_initial_state()
     msg: BaseMessage = HumanMessage(content="What is the average salary?")
-    res: ExecutionResult = ExecutionResult(
-        capability_name="aggregate",
-        status=ExecutionStatus.SUCCESS,
-        message="Calculated mean salary.",
-        data=77000.0,
-    )
     state["messages"] = [msg]
-    state["last_result"] = res
+    state["last_analysis_result"] = {
+        "status": "success",
+        "narrative": "Calculated mean salary.",
+        "artifacts": [],
+        "execution_time_ms": 12.5,
+        "source": "aggregate",
+        "question": "What is the average salary?",
+        "dataset_hash": None,
+        "metadata": {},
+        "error_type": None,
+        "error_message": None,
+    }
 
     update = memory_update_node(state, memory_service=mock_memory)
     assert update == {}
@@ -42,7 +46,7 @@ def test_memory_update_node_no_op_when_last_result_missing() -> None:
     state = create_initial_state()
     msg: BaseMessage = HumanMessage(content="Hello")
     state["messages"] = [msg]
-    state["last_result"] = None
+    state["last_analysis_result"] = None
 
     update = memory_update_node(state, memory_service=mock_memory)
     assert update == {}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 from typing import Any
 
@@ -14,19 +15,17 @@ from csv_analytics_agent.execution.domain.analytics import AnalyticsEngine
 from csv_analytics_agent.execution.domain.visualization import VisualizationEngine
 from csv_analytics_agent.execution.registry import CapabilityRegistry
 from csv_analytics_agent.graph.runtime import AgentRuntime
-from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.insights.generator import InsightGenerator
 from csv_analytics_agent.insights.models import Insight
 from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME, GeminiLLM
 from csv_analytics_agent.llm.rate_limiter import build_gemini_limiter
 from csv_analytics_agent.logging_config import get_logger
 from csv_analytics_agent.memory.service import MemoryService
-from csv_analytics_agent.persistence.db import get_session
-from csv_analytics_agent.persistence.hashing import compute_content_hash
-from csv_analytics_agent.persistence.repository import DatasetRepository
+from csv_analytics_agent.models.response import AgentResponse
 from csv_analytics_agent.preprocessing.coercion import coerce_dataframe
 from csv_analytics_agent.profiler.models import DatasetProfile
 from csv_analytics_agent.profiler.profiler import DatasetProfiler
+from csv_analytics_agent.services.result_normalizer import normalize_state_to_response
 from csv_analytics_agent.visualization.exceptions import NoSuitableVisualizationError
 from csv_analytics_agent.visualization.models import ChartSpecification
 from csv_analytics_agent.visualization.recommender import recommend_visualizations
@@ -36,7 +35,7 @@ logger = get_logger(__name__)
 
 
 def upload_dataset(content: bytes, filename: str) -> tuple[pd.DataFrame, DatasetProfile, str]:
-    """Load DataFrame and compute/fetch cached DatasetProfile for uploaded CSV bytes.
+    """Load DataFrame and compute DatasetProfile for uploaded CSV bytes.
 
     Args:
         content: Raw bytes of the uploaded CSV file.
@@ -50,29 +49,13 @@ def upload_dataset(content: bytes, filename: str) -> tuple[pd.DataFrame, Dataset
         CSVEncodingError: If the file cannot be decoded.
         CSVParsingError: If the file cannot be parsed as CSV.
     """
-    content_hash = compute_content_hash(content)
-    repo = DatasetRepository(get_session())
-
+    content_hash = hashlib.sha256(content).hexdigest()
     df = CSVLoader.load_from_bytes(content, filename=filename)
     coerced_df, report = coerce_dataframe(df)
     logger.info("dataset_coerced", filename=filename, **report.summary())
 
-    cached_profile = repo.get_cached_profile(content_hash)
-    if cached_profile is not None:
-        logger.info("profile_cache_hit", content_hash=content_hash, filename=filename)
-        return coerced_df, cached_profile, content_hash
-
-    logger.info("profile_cache_miss", content_hash=content_hash, filename=filename)
     profiler = DatasetProfiler()
     profile = profiler.profile(coerced_df)
-
-    dataset = repo.get_by_hash(content_hash) or repo.create(
-        filename=filename,
-        content_hash=content_hash,
-        row_count=len(coerced_df),
-        column_count=len(coerced_df.columns),
-    )
-    repo.cache_profile(dataset.id, profile)
     return coerced_df, profile, content_hash
 
 
@@ -194,9 +177,10 @@ def ask_agent(
     prompt: str,
     thread_id: str,
     profile: DatasetProfile | None = None,
-) -> AgentState:
-    """Execute query prompt via AgentRuntime."""
-    return runtime.run(prompt, thread_id=thread_id, profile=profile)
+) -> AgentResponse:
+    """Execute query prompt via AgentRuntime and return normalized response."""
+    state = runtime.run(prompt, thread_id=thread_id, profile=profile)
+    return normalize_state_to_response(state)
 
 
 __all__ = [

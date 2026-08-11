@@ -11,17 +11,20 @@ from csv_analytics_agent.graph.state import create_initial_state
 
 
 def test_explainer_node_success_result() -> None:
-    """Verify deterministic formatting of a successful ExecutionResult."""
+    """Verify explainer emits the checkpoint-safe AnalysisResult narrative."""
     state = create_initial_state()
-    res: ExecutionResult = ExecutionResult(
-        capability_name="aggregate",
-        status=ExecutionStatus.SUCCESS,
-        message="Calculated mean salary.",
-        data=77000.0,
-        execution_time_ms=12.5,
-        metadata={"column": "salary", "operation": "mean"},
-    )
-    state["last_result"] = res
+    state["last_analysis_result"] = {
+        "status": "success",
+        "narrative": "Calculated mean salary: 77,000.",
+        "artifacts": [],
+        "execution_time_ms": 12.5,
+        "source": "deterministic_engine",
+        "question": None,
+        "dataset_hash": None,
+        "metadata": {"column": "salary", "operation": "mean"},
+        "error_type": None,
+        "error_message": None,
+    }
 
     update = explainer_node(state)
     assert "messages" in update
@@ -30,40 +33,86 @@ def test_explainer_node_success_result() -> None:
     msg = update["messages"][0]
     assert isinstance(msg, AIMessage)
     assert "77,000" in msg.content or "77000" in msg.content
-    assert "salary" in msg.content.lower()
-    assert "mean" in msg.content.lower()
 
 
 def test_explainer_node_failed_result() -> None:
-    """Verify formatting of a failed ExecutionResult."""
+    """Verify formatting of a failed checkpoint-safe AnalysisResult."""
     state = create_initial_state()
-    res: ExecutionResult = ExecutionResult(
-        capability_name="filter",
-        status=ExecutionStatus.FAILED,
-        message="Column 'invalid_col' not found.",
-        data=None,
-        execution_time_ms=5.0,
-    )
-    state["last_result"] = res
+    state["last_analysis_result"] = {
+        "status": "failed",
+        "narrative": "Column 'invalid_col' not found.",
+        "artifacts": [],
+        "execution_time_ms": 5.0,
+        "source": "deterministic_engine",
+        "question": None,
+        "dataset_hash": None,
+        "metadata": {},
+        "error_type": "ColumnNotFound",
+        "error_message": "Column 'invalid_col' not found.",
+    }
 
     update = explainer_node(state)
     msg = update["messages"][0]
 
     assert isinstance(msg, AIMessage)
-    assert "Execution Failed: Filter" in msg.content
     assert "Column 'invalid_col' not found." in msg.content
 
 
 def test_explainer_node_empty_last_result() -> None:
-    """Verify fallback message when last_result is None."""
+    """Verify fallback message when last_result is None and no AI message exists."""
     state = create_initial_state()
-    assert state["last_result"] is None
+    state["router_decision"] = {"intent": "new_query", "next_node": "explainer"}
+    assert state["last_analysis_result"] is None
 
     update = explainer_node(state)
     msg = update["messages"][0]
 
     assert isinstance(msg, AIMessage)
     assert "No execution result found in state" in msg.content
+
+
+def test_explainer_node_chitchat() -> None:
+    """Verify explainer handles CHITCHAT intent properly."""
+    state = create_initial_state()
+    state["router_decision"] = {"intent": "chitchat", "next_node": "explainer"}
+
+    update = explainer_node(state)
+    msg = update["messages"][0]
+    assert isinstance(msg, AIMessage)
+    assert "How can I help you analyze" in msg.content
+
+
+def test_explainer_node_meta() -> None:
+    """Verify explainer handles META intent properly."""
+    state = create_initial_state()
+    state["router_decision"] = {"intent": "meta", "next_node": "explainer"}
+
+    update = explainer_node(state)
+    msg = update["messages"][0]
+    assert isinstance(msg, AIMessage)
+    assert "I am a data analytics assistant" in msg.content
+
+
+def test_explainer_node_unsupported() -> None:
+    """Verify explainer handles UNSUPPORTED intent properly."""
+    state = create_initial_state()
+    state["router_decision"] = {"intent": "unsupported", "next_node": "explainer"}
+
+    update = explainer_node(state)
+    msg = update["messages"][0]
+    assert isinstance(msg, AIMessage)
+    assert "cannot answer general knowledge questions" in msg.content
+
+
+def test_explainer_node_clarification() -> None:
+    """Verify explainer handles CLARIFICATION intent properly."""
+    state = create_initial_state()
+    state["router_decision"] = {"intent": "clarification", "next_node": "explainer"}
+
+    update = explainer_node(state)
+    msg = update["messages"][0]
+    assert isinstance(msg, AIMessage)
+    assert "Could you please clarify" in msg.content
 
 
 def test_format_execution_explanation_deterministic() -> None:

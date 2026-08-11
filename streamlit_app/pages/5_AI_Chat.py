@@ -8,7 +8,6 @@ import os
 import streamlit as st
 
 from csv_analytics_agent.exceptions.data_errors import CSVAnalyticsError
-from csv_analytics_agent.graph.message_utils import normalize_message_content
 from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
 from streamlit_app.components.chat_box import render_chat_messages
 from streamlit_app.components.footer import render_footer
@@ -85,101 +84,38 @@ def run_query_pipeline(prompt_text: str) -> None:
 
     with st.spinner("Analyzing dataset..."):
         try:
-            result_state = ask_agent(
+            agent_response = ask_agent(
                 runtime,
                 prompt=prompt_text,
                 thread_id=thread_id,
                 profile=profile,
             )
 
-            response_msgs = result_state.get("messages", [])
-            last_result = result_state.get("last_result")
-
-            last_msg_text = "Analysis complete."
-            if response_msgs:
-                last_msg = response_msgs[-1]
-                last_msg_text = normalize_message_content(
-                    getattr(last_msg, "content", str(last_msg))
-                )
-
-            if not last_msg_text or last_msg_text in ("", "Analysis complete."):
-                if last_result is not None:
-                    last_msg_text = (
-                        f"✅ {last_result.message}"
-                        if hasattr(last_result, "message")
-                        else str(last_result)
-                    )
-                else:
-                    last_msg_text = "⚠️ The agent completed but produced no result. Please try rephrasing your question."
-
-            retrieved_cols = result_state.get("retrieved_columns") or []
-            iteration_count = result_state.get("iteration_count", 1)
-            executed_tools = result_state.get("executed_tools") or []
-
-            cap_name = "analytics.query"
-            if last_result is not None:
-                cap_name = last_result.capability_name
-            elif executed_tools:
-                cap_name = executed_tools[-1]
-
-            if cap_name in ("render_visualization", "recommend_visualization"):
-                engine_name = "VisualizationProvider"
-            elif cap_name in ("aggregate", "filter", "group", "sort", "top_n"):
-                engine_name = "PandasProvider"
-            else:
-                engine_name = "AnalyticsEngine"
-
-            metadata = {
-                "router_node": "analytics_query",
-                "planner_rule": cap_name if cap_name != "analytics.query" else "direct_query",
-                "tool_name": cap_name,
-                "engine_provider": engine_name,
-                "retrieved_columns": retrieved_cols if retrieved_cols else list(df.columns[:2]),
-                "iteration_count": iteration_count,
-                "thread_id": thread_id,
-            }
-
-            image_bytes: bytes | None = result_state.get("chart_bytes")
-            if image_bytes is None and last_result is not None:
-                if isinstance(last_result.data, bytes):
-                    image_bytes = last_result.data
-
-            data_str = (
-                str(last_result)
-                if last_result is not None and not isinstance(last_result.data, bytes)
-                else None
-            )
-            last_analysis_result = result_state.get("last_analysis_result")
-
             messages.append(
                 {
                     "role": "assistant",
-                    "content": last_msg_text,
-                    "metadata": metadata,
-                    "data": data_str,
-                    "image": image_bytes,
-                    "analysis_result": last_analysis_result,
+                    "agent_response": agent_response,
                 }
             )
             set_state("messages", messages)
-            set_state("last_result", last_result)
-            set_state("active_filters", result_state.get("active_filters", []))
+            # Retain any context needed for followups if we were tracking them in state
+            set_state("last_result", agent_response)
 
         except CSVAnalyticsError as domain_err:
             logger.exception("Domain error during agent query for thread %s", thread_id)
+            from csv_analytics_agent.models.response import AgentResponse, AgentResponseType
+
+            domain_resp = AgentResponse(
+                type=AgentResponseType.ERROR,
+                error=f"⚠️ {domain_err}",
+                answer="I couldn't process your dataset operation.",
+                metadata={"thread_id": thread_id},
+            )
+
             messages.append(
                 {
                     "role": "assistant",
-                    "content": f"⚠️ {domain_err}",
-                    "metadata": {
-                        "router_node": "DOMAIN ERROR",
-                        "planner_rule": "error",
-                        "tool_name": "error",
-                        "engine_provider": "None",
-                        "retrieved_columns": [],
-                        "iteration_count": 0,
-                        "thread_id": thread_id,
-                    },
+                    "agent_response": domain_resp,
                 }
             )
             set_state("messages", messages)
@@ -195,19 +131,19 @@ def run_query_pipeline(prompt_text: str) -> None:
             else:
                 display_msg = "⚠️ Something went wrong while analyzing your data."
 
+            from csv_analytics_agent.models.response import AgentResponse, AgentResponseType
+
+            error_resp = AgentResponse(
+                type=AgentResponseType.ERROR,
+                error=display_msg,
+                answer="I couldn't complete that analysis.",
+                metadata={"thread_id": thread_id},
+            )
+
             messages.append(
                 {
                     "role": "assistant",
-                    "content": display_msg,
-                    "metadata": {
-                        "router_node": "EXECUTION ERROR",
-                        "planner_rule": "error",
-                        "tool_name": "error",
-                        "engine_provider": "None",
-                        "retrieved_columns": [],
-                        "iteration_count": 0,
-                        "thread_id": thread_id,
-                    },
+                    "agent_response": error_resp,
                 }
             )
             set_state("messages", messages)
