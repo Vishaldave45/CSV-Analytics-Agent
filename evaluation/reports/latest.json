@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-08-11T05:23:36.296529+00:00",
+  "dataset_version": "1.0",
+  "model": "gemini-2.5-flash",
+  "judge_model": "gemini-2.5-flash",
+  "total_cases": 54,
+  "passed": 54,
+  "failed": 0,
+  "pass_rate": 1.0,
+  "metrics": {
+    "answer_relevancy": 1.0,
+    "faithfulness": 1.0,
+    "numerical_correctness": 1.0,
+    "tool_selection_quality": 1.0,
+    "artifact_accuracy": 1.0,
+    "security_pass_rate": 1.0
+  },
+  "failures": []
+}

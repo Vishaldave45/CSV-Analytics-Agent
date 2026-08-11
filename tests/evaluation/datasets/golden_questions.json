@@ -519,6 +519,28 @@
     }
   },
   {
+    "id": "business_insight_003",
+    "question": "Which category has the highest net profit?",
+    "category": "business_insight",
+    "expected_behavior": {
+      "tool": "none",
+      "artifact_types": ["text"],
+      "requires_python": false,
+      "expected_grounding_facts": {"missing_column": "profit"}
+    }
+  },
+  {
+    "id": "follow_up_003",
+    "question": ["Show revenue by category.", "Which one is highest?", "Show its top products."],
+    "category": "follow_up",
+    "expected_behavior": {
+      "tool": "deterministic",
+      "artifact_types": ["table", "text", "table"],
+      "requires_python": false,
+      "expected_grounding_facts": {"resolved_entity": "Electronics"}
+    }
+  },
+  {
     "id": "stage88_regression_001",
     "question": "hii",
     "category": "invalid_query",
