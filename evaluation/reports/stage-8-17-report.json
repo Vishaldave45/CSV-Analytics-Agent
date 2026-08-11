@@ -1,0 +1,364 @@
+{
+  "metadata": {
+    "timestamp": "2026-08-11T07:36:33.700297+00:00",
+    "git_commit": "4700c21",
+    "dataset_version": "1.0",
+    "model": "google/gemini-2.5-flash",
+    "judge_model": "evaluator_deterministic_mock",
+    "use_mock_llm": true,
+    "total_cases": 54,
+    "passed_cases": 54,
+    "failed_cases": 0,
+    "overall_pass_rate": 1.0,
+    "system_classification": "READY WITH LIMITATIONS"
+  },
+  "scorecard": {
+    "numerical_correctness": 1.0,
+    "table_correctness": 1.0,
+    "artifact_correctness": 1.0,
+    "visualization_correctness": 1.0,
+    "capability_selection": 1.0,
+    "followup_correctness": 1.0,
+    "security": 1.0,
+    "grounding": 1.0,
+    "answer_relevance": 1.0,
+    "error_handling": 1.0,
+    "unnecessary_python_rate": 0.0,
+    "median_latency_ms": 2.98,
+    "p95_latency_ms": 3.06
+  },
+  "failures": [],
+  "cases": [
+    {
+      "case_id": "basic_001",
+      "category": "basic",
+      "passed": true,
+      "latency_ms": 4.55
+    },
+    {
+      "case_id": "basic_002",
+      "category": "basic",
+      "passed": true,
+      "latency_ms": 3.18
+    },
+    {
+      "case_id": "aggregation_001",
+      "category": "aggregation",
+      "passed": true,
+      "latency_ms": 3.0
+    },
+    {
+      "case_id": "aggregation_002",
+      "category": "aggregation",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "grouping_001",
+      "category": "grouping",
+      "passed": true,
+      "latency_ms": 3.06
+    },
+    {
+      "case_id": "grouping_002",
+      "category": "grouping",
+      "passed": true,
+      "latency_ms": 3.0
+    },
+    {
+      "case_id": "ranking_001",
+      "category": "ranking",
+      "passed": true,
+      "latency_ms": 3.03
+    },
+    {
+      "case_id": "ranking_002",
+      "category": "ranking",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "comparison_001",
+      "category": "comparison",
+      "passed": true,
+      "latency_ms": 2.93
+    },
+    {
+      "case_id": "comparison_002",
+      "category": "comparison",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "filtering_001",
+      "category": "filtering",
+      "passed": true,
+      "latency_ms": 3.01
+    },
+    {
+      "case_id": "filtering_002",
+      "category": "filtering",
+      "passed": true,
+      "latency_ms": 2.97
+    },
+    {
+      "case_id": "multi_condition_001",
+      "category": "multi_condition",
+      "passed": true,
+      "latency_ms": 2.95
+    },
+    {
+      "case_id": "multi_condition_002",
+      "category": "multi_condition",
+      "passed": true,
+      "latency_ms": 2.95
+    },
+    {
+      "case_id": "sorting_001",
+      "category": "sorting",
+      "passed": true,
+      "latency_ms": 3.01
+    },
+    {
+      "case_id": "sorting_002",
+      "category": "sorting",
+      "passed": true,
+      "latency_ms": 2.91
+    },
+    {
+      "case_id": "date_analysis_001",
+      "category": "date_analysis",
+      "passed": true,
+      "latency_ms": 2.92
+    },
+    {
+      "case_id": "date_analysis_002",
+      "category": "date_analysis",
+      "passed": true,
+      "latency_ms": 3.05
+    },
+    {
+      "case_id": "time_series_001",
+      "category": "time_series",
+      "passed": true,
+      "latency_ms": 2.99
+    },
+    {
+      "case_id": "time_series_002",
+      "category": "time_series",
+      "passed": true,
+      "latency_ms": 2.97
+    },
+    {
+      "case_id": "multi_dimensional_001",
+      "category": "multi_dimensional",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "multi_dimensional_002",
+      "category": "multi_dimensional",
+      "passed": true,
+      "latency_ms": 2.93
+    },
+    {
+      "case_id": "pivot_001",
+      "category": "pivot",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "pivot_002",
+      "category": "pivot",
+      "passed": true,
+      "latency_ms": 2.97
+    },
+    {
+      "case_id": "statistics_001",
+      "category": "statistics",
+      "passed": true,
+      "latency_ms": 2.95
+    },
+    {
+      "case_id": "statistics_002",
+      "category": "statistics",
+      "passed": true,
+      "latency_ms": 2.89
+    },
+    {
+      "case_id": "distribution_001",
+      "category": "distribution",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "distribution_002",
+      "category": "distribution",
+      "passed": true,
+      "latency_ms": 3.01
+    },
+    {
+      "case_id": "outliers_001",
+      "category": "outliers",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "outliers_002",
+      "category": "outliers",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "data_quality_001",
+      "category": "data_quality",
+      "passed": true,
+      "latency_ms": 2.93
+    },
+    {
+      "case_id": "data_quality_002",
+      "category": "data_quality",
+      "passed": true,
+      "latency_ms": 2.94
+    },
+    {
+      "case_id": "visualization_001",
+      "category": "visualization",
+      "passed": true,
+      "latency_ms": 2.97
+    },
+    {
+      "case_id": "visualization_002",
+      "category": "visualization",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "interactive_visualization_001",
+      "category": "interactive_visualization",
+      "passed": true,
+      "latency_ms": 2.9
+    },
+    {
+      "case_id": "interactive_visualization_002",
+      "category": "interactive_visualization",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "table_001",
+      "category": "table",
+      "passed": true,
+      "latency_ms": 2.95
+    },
+    {
+      "case_id": "table_002",
+      "category": "table",
+      "passed": true,
+      "latency_ms": 2.95
+    },
+    {
+      "case_id": "multi_artifact_001",
+      "category": "multi_artifact",
+      "passed": true,
+      "latency_ms": 2.97
+    },
+    {
+      "case_id": "multi_artifact_002",
+      "category": "multi_artifact",
+      "passed": true,
+      "latency_ms": 2.99
+    },
+    {
+      "case_id": "follow_up_001",
+      "category": "follow_up",
+      "passed": true,
+      "latency_ms": 3.04
+    },
+    {
+      "case_id": "follow_up_002",
+      "category": "follow_up",
+      "passed": true,
+      "latency_ms": 3.03
+    },
+    {
+      "case_id": "business_insight_001",
+      "category": "business_insight",
+      "passed": true,
+      "latency_ms": 2.95
+    },
+    {
+      "case_id": "business_insight_002",
+      "category": "business_insight",
+      "passed": true,
+      "latency_ms": 2.87
+    },
+    {
+      "case_id": "python_analysis_001",
+      "category": "python_analysis",
+      "passed": true,
+      "latency_ms": 2.95
+    },
+    {
+      "case_id": "python_analysis_002",
+      "category": "python_analysis",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "security_001",
+      "category": "security",
+      "passed": true,
+      "latency_ms": 2.96
+    },
+    {
+      "case_id": "security_002",
+      "category": "security",
+      "passed": true,
+      "latency_ms": 2.98
+    },
+    {
+      "case_id": "security_003",
+      "category": "security",
+      "passed": true,
+      "latency_ms": 3.0
+    },
+    {
+      "case_id": "invalid_query_001",
+      "category": "invalid_query",
+      "passed": true,
+      "latency_ms": 2.92
+    },
+    {
+      "case_id": "invalid_query_002",
+      "category": "invalid_query",
+      "passed": true,
+      "latency_ms": 3.03
+    },
+    {
+      "case_id": "business_insight_003",
+      "category": "business_insight",
+      "passed": true,
+      "latency_ms": 2.96
+    },
+    {
+      "case_id": "follow_up_003",
+      "category": "follow_up",
+      "passed": true,
+      "latency_ms": 2.97
+    },
+    {
+      "case_id": "stage88_regression_001",
+      "category": "invalid_query",
+      "passed": true,
+      "latency_ms": 2.98
+    }
+  ],
+  "recommendations": [
+    "1. Maintain deterministic routing for simple group-by and aggregate queries to minimize LLM latency.",
+    "2. Expand golden dataset cases to cover multi-file join and complex time-series windowing.",
+    "3. Upgrade Docker sandbox backend configuration to enforce micro-container CPU quotas in production deployment.",
+    "4. Implement cached query planner responses for identical dataset column schema hashes.",
+    "5. Enable live Gemini 2.5 Flash LLM judge evaluation runs in continuous integration pipeline with secure API keys."
+  ]
+}
