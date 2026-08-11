@@ -63,6 +63,7 @@ class PandasProvider(BaseProvider):
             )
 
         start_time = time.perf_counter()
+        data: Any = None
         try:
             if request.capability_name == "describe":
                 data, msg = self._execute_describe(df, request)

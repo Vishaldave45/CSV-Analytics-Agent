@@ -66,6 +66,7 @@ class GeminiPythonCodeGenerator(BasePythonCodeGenerator):
         Args:
             llm: Optional BaseLLM implementation (defaults to GeminiLLM()).
         """
+        self._llm: BaseLLM
         if llm is None:
             from csv_analytics_agent.llm.gemini import GeminiLLM
 

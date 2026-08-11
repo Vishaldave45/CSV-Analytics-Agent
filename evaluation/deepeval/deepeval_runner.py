@@ -6,9 +6,9 @@ import logging
 import sys
 from typing import Any
 
+from csv_analytics_agent.evaluation.schemas import GoldenTestCase
 from csv_analytics_agent.results.models import AnalysisResult
 from evaluation.config import EvaluationConfig
-from tests.evaluation.schemas import GoldenTestCase
 
 logger = logging.getLogger(__name__)
 

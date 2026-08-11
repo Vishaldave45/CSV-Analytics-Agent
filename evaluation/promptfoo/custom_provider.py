@@ -6,10 +6,10 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from csv_analytics_agent.evaluation.runner import EvaluationRunner
+from csv_analytics_agent.evaluation.schemas import ExpectedBehavior, GoldenTestCase
 from csv_analytics_agent.results.models import AnalysisResult
 from evaluation.judge import sanitize_payload
-from tests.evaluation.runner import EvaluationRunner
-from tests.evaluation.schemas import ExpectedBehavior, GoldenTestCase
 
 
 def call_api(prompt: str, options: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:

@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from csv_analytics_agent.evaluation.runner import EvaluationRunner
 from csv_analytics_agent.results.models import AnalysisResult
 from evaluation.config import EvaluationConfig
 from evaluation.evaluators import (
@@ -26,7 +27,6 @@ from evaluation.evaluators import (
     ToolSelectionQualityEvaluator,
 )
 from evaluation.judge import StructuredLLMJudge, sanitize_payload
-from tests.evaluation.runner import EvaluationRunner
 
 logger = logging.getLogger(__name__)
 
