@@ -43,7 +43,7 @@ packages = ["src/csv_analytics_agent"]
 
 [tool.pyright]
 include = ["src", "streamlit_app", "tests"]
-executionEnvironments = [
-  { root = "." }
-]
+venvPath = "."
+venv = ".venv"
 extraPaths = [".", "src"]
+

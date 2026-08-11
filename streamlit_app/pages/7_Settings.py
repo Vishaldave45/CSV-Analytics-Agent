@@ -111,6 +111,7 @@ if st.button("Save Observability Settings"):
                     line
                     for line in f.readlines()
                     if not line.startswith("LANGCHAIN_API_KEY=")
+                    and not line.startswith("LANGCHAIN_PROJECT=")
                     and not line.startswith("LANGCHAIN_TRACING_V2=")
                     and not line.startswith("LANGSMITH_")
                 ]

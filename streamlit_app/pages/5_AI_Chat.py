@@ -8,6 +8,7 @@ import os
 import streamlit as st
 
 from csv_analytics_agent.exceptions.data_errors import CSVAnalyticsError
+from csv_analytics_agent.graph.message_utils import normalize_message_content
 from csv_analytics_agent.llm.gemini import DEFAULT_MODEL_NAME
 from streamlit_app.components.chat_box import render_chat_messages
 from streamlit_app.components.followup_buttons import render_followup_buttons
@@ -116,9 +117,11 @@ def run_query_pipeline(prompt_text: str) -> None:
             last_msg_text = "Analysis complete."
             if response_msgs:
                 last_msg = response_msgs[-1]
-                last_msg_text = getattr(last_msg, "content", str(last_msg))
+                last_msg_text = normalize_message_content(
+                    getattr(last_msg, "content", str(last_msg))
+                )
 
-            if not last_msg_text or last_msg_text.strip() in ("", "Analysis complete."):
+            if not last_msg_text or last_msg_text in ("", "Analysis complete."):
                 if last_result is not None:
                     last_msg_text = (
                         f"✅ {last_result.message}"
@@ -189,6 +192,8 @@ def run_query_pipeline(prompt_text: str) -> None:
                 else None
             )
 
+            last_analysis_result = result_state.get("last_analysis_result")
+
             messages.append(
                 {
                     "role": "assistant",
@@ -196,6 +201,7 @@ def run_query_pipeline(prompt_text: str) -> None:
                     "metadata": metadata,
                     "data": data_str,
                     "image": image_bytes,
+                    "analysis_result": last_analysis_result,
                 }
             )
             set_state("messages", messages)

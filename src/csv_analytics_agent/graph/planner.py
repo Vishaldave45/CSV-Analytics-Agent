@@ -96,7 +96,8 @@ def planner_node(
         "   Call the matching deterministic capability tool (e.g. 'aggregate', 'group', 'filter', 'top_n', 'sort', 'render_visualization').\n"
         "2. For open-ended Python analysis, complex statistical tests, custom mathematical formulas, multi-step data transformations, or custom Plotly/Matplotlib charts:\n"
         "   Call the 'python_analysis' tool with a clear, detailed analytical question string.\n"
-        "3. Always execute a tool to answer analytical data questions. Do NOT respond with plain text guesses."
+        "3. When a tool has ALREADY been executed and returned data in a ToolMessage:\n"
+        "   Do NOT call the tool again. Synthesize a clear, concise narrative answer based on the tool output."
     )
 
     from langchain_core.messages import SystemMessage

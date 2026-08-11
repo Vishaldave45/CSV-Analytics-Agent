@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, ConfigDict, Field
 
 from csv_analytics_agent.execution.models import ExecutionResult, ExecutionStatus
+from csv_analytics_agent.graph.message_utils import normalize_message_content
 from csv_analytics_agent.llm.base import BaseLLM
 from csv_analytics_agent.visualization.models import (
     Axis,
@@ -197,7 +198,7 @@ def _interpret_grouped_data(
                 f"Answer:"
             )
             response = llm.invoke([sys_msg, HumanMessage(content=user_prompt)])
-            llm_text = getattr(response, "content", "").strip()
+            llm_text = normalize_message_content(getattr(response, "content", ""))
             if llm_text:
                 direct_answer = llm_text
         except Exception:

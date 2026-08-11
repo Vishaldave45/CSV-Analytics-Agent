@@ -11,6 +11,7 @@ from enum import Enum
 from langchain_core.messages import BaseMessage, HumanMessage
 from pydantic import BaseModel, ConfigDict, Field
 
+from csv_analytics_agent.graph.message_utils import normalize_message_content
 from csv_analytics_agent.graph.state import AgentState
 
 RESET_KEYWORDS = {
@@ -96,17 +97,11 @@ def _extract_last_user_text(messages: list[BaseMessage] | None) -> str:
 
     for msg in reversed(messages):
         if isinstance(msg, HumanMessage) or getattr(msg, "type", "") == "human":
-            content = msg.content
-            if isinstance(content, str):
-                return content.strip().lower()
-            if isinstance(content, list):
-                # Handle multimodal text blocks if present
-                texts = [str(item) for item in content if isinstance(item, str)]
-                return " ".join(texts).strip().lower()
+            return normalize_message_content(msg.content).lower()
 
     # Fallback to last message string representation if no explicit HumanMessage found
     last_content = messages[-1].content
-    return str(last_content).strip().lower() if last_content else ""
+    return normalize_message_content(last_content).lower()
 
 
 def router_node(state: AgentState) -> RouterDecision:

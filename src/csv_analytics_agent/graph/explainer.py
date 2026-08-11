@@ -9,7 +9,10 @@ from langchain_core.messages import AIMessage
 
 from csv_analytics_agent.execution.models import ExecutionResult, ExecutionStatus
 from csv_analytics_agent.graph.interpreter import interpret_execution_result
-from csv_analytics_agent.graph.message_utils import extract_last_human_text
+from csv_analytics_agent.graph.message_utils import (
+    extract_last_human_text,
+    normalize_message_content,
+)
 from csv_analytics_agent.graph.state import AgentState
 from csv_analytics_agent.llm.base import BaseLLM
 
@@ -90,9 +93,9 @@ def explainer_node(
     if last_result is None:
         for msg in reversed(messages):
             if isinstance(msg, AIMessage) and msg.content and not getattr(msg, "tool_calls", None):
-                content_str = str(msg.content).strip()
+                content_str = normalize_message_content(msg.content)
                 if content_str and content_str != "No execution result found in state to explain.":
-                    return {"messages": [msg]}
+                    return {"messages": [AIMessage(content=content_str)]}
         fallback_msg = AIMessage(content="No execution result found in state to explain.")
         return {"messages": [fallback_msg]}
 
