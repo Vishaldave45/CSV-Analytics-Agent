@@ -1,0 +1,13 @@
+{
+  "include": [
+    "src",
+    "streamlit_app",
+    "tests"
+  ],
+  "extraPaths": [
+    ".",
+    "src"
+  ],
+  "venvPath": ".",
+  "venv": ".venv"
+}

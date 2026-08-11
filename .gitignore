@@ -51,7 +51,6 @@ coverage.xml
 .pytype/
 .dmypy.json
 dmypy.json
-pyrightconfig.json
 
 # Jupyter Notebooks & Data Science
 .ipynb_checkpoints/
@@ -65,6 +64,7 @@ pyrightconfig.json
 .env.test.local
 .env.production.local
 *.env
+!.env.example
 *.pem
 *.key
 *.cert
