@@ -79,6 +79,9 @@ class EvaluationResult:
     grounding_passed: bool = True
     security_passed: bool = True
     actual_result: Any = None
+    deterministic_metrics: dict[str, Any] = field(default_factory=dict)
+    deepeval_metrics: dict[str, float] = field(default_factory=dict)
+    agent_metrics: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
