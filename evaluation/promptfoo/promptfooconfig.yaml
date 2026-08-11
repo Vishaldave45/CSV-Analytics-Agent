@@ -2,7 +2,9 @@
 description: "CSV Analytics Agent Tool Selection & Prompt Regression"
 
 prompts:
-  - "You are a CSV Analytics Agent. Analyze the user question and select the exact tool required."
+  - "file://../../prompts/router/system.md"
+  - "file://../../prompts/planner/system.md"
+  - "file://../../prompts/python/system.md"
 
 providers:
   - id: "echo"

@@ -1,6 +1,6 @@
 # Stage 8.17 — Real Agent Evaluation Benchmark Report
 
-- **Timestamp (UTC)**: `2026-08-11T07:36:33.700297+00:00`
+- **Timestamp (UTC)**: `2026-08-11T11:32:27.338429+00:00`
 - **Git Commit**: `4700c21`
 - **Dataset Version**: `1.0`
 - **Model**: `google/gemini-2.5-flash`
@@ -22,8 +22,8 @@
 | **Answer Relevance** | `>= 90.0%` | `100.0%` | ✅ PASS | Question intent matching |
 | **Error Handling** | `>= 90.0%` | `100.0%` | ✅ PASS | Graceful error recovery |
 | **Unnecessary Python Rate** | `<= 15.0%` | `0.0%` | ✅ PASS | Routing efficiency metric |
-| **Median Latency** | Benchmark | `2.98 ms` | ⚡ Fast | End-to-end execution |
-| **P95 Latency** | Benchmark | `3.06 ms` | ⚡ Fast | End-to-end execution |
+| **Median Latency** | Benchmark | `3.18 ms` | ⚡ Fast | End-to-end execution |
+| **P95 Latency** | Benchmark | `3.43 ms` | ⚡ Fast | End-to-end execution |
 
 ---
 

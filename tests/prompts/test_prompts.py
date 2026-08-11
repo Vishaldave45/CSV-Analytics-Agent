@@ -105,3 +105,29 @@ def test_json_safe_nan_sanitization() -> None:
     assert safe_payload["b"] is None
     assert safe_payload["c"] is None
     assert safe_payload["d"] == 42.0
+
+
+def test_gemini_retry_predicate_policy() -> None:
+    """Verify GeminiLLM retry predicate fails fast on API_KEY_INVALID and INVALID_ARGUMENT."""
+    from csv_analytics_agent.llm.gemini import _should_retry_exception
+
+    assert not _should_retry_exception(ValueError("API_KEY_INVALID: key invalid"))
+    assert not _should_retry_exception(ValueError("INVALID_ARGUMENT: Bad JSON"))
+    assert not _should_retry_exception(ValueError("RESOURCE_EXHAUSTED: quota exceeded"))
+
+
+def test_python_generator_structured_schema_parsing() -> None:
+    """Verify GeminiPythonCodeGenerator parses structured output into GeneratedPythonProgram."""
+    from csv_analytics_agent.llm.python_models import GeneratedPythonProgram
+
+    sample_dict = {
+        "code": "result = df['Revenue'].sum()",
+        "explanation": "Compute sum of revenue column.",
+        "expected_output_type": "scalar",
+        "dependencies": ["pandas"],
+        "confidence": 1.0,
+        "referenced_columns": ["Revenue"],
+    }
+    program = GeneratedPythonProgram(**sample_dict)
+    assert program.code == "result = df['Revenue'].sum()"
+    assert program.confidence == 1.0

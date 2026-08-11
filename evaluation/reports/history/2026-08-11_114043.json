@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-08-11T11:45:13.960899+00:00",
+    "timestamp": "2026-08-11T11:40:43.997701+00:00",
     "dataset": "golden_questions.jsonl",
     "model": "gemini-flash-lite-latest (mock)",
     "total_cases": 35,
@@ -32,7 +32,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 4.53,
+      "latency_ms": 6.15,
       "failures": []
     },
     {
@@ -41,7 +41,7 @@
       "category": "dataset_metadata",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 3.27,
+      "latency_ms": 3.43,
       "failures": []
     },
     {
@@ -50,7 +50,7 @@
       "category": "dataset_metadata",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 3.05,
+      "latency_ms": 3.25,
       "failures": []
     },
     {
@@ -61,7 +61,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 3.02,
+      "latency_ms": 3.32,
       "failures": []
     },
     {
@@ -72,7 +72,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 2.93,
+      "latency_ms": 3.31,
       "failures": []
     },
     {
@@ -83,7 +83,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 3.07,
+      "latency_ms": 3.26,
       "failures": []
     },
     {
@@ -94,7 +94,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 2.95,
+      "latency_ms": 3.31,
       "failures": []
     },
     {
@@ -105,7 +105,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 2.98,
+      "latency_ms": 3.24,
       "failures": []
     },
     {
@@ -116,7 +116,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 2.93,
+      "latency_ms": 3.35,
       "failures": []
     },
     {
@@ -127,7 +127,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 3.0,
+      "latency_ms": 3.19,
       "failures": []
     },
     {
@@ -138,7 +138,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 3.06,
+      "latency_ms": 3.26,
       "failures": []
     },
     {
@@ -149,7 +149,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 2.98,
+      "latency_ms": 3.2,
       "failures": []
     },
     {
@@ -160,7 +160,7 @@
       "actual_tools": [
         "python_analysis"
       ],
-      "latency_ms": 2.96,
+      "latency_ms": 3.34,
       "failures": []
     },
     {
@@ -171,7 +171,7 @@
       "actual_tools": [
         "python_analysis"
       ],
-      "latency_ms": 3.01,
+      "latency_ms": 3.25,
       "failures": []
     },
     {
@@ -182,7 +182,7 @@
       "actual_tools": [
         "python_analysis"
       ],
-      "latency_ms": 3.07,
+      "latency_ms": 3.19,
       "failures": []
     },
     {
@@ -193,7 +193,7 @@
       "actual_tools": [
         "python_analysis"
       ],
-      "latency_ms": 3.03,
+      "latency_ms": 3.25,
       "failures": []
     },
     {
@@ -204,7 +204,7 @@
       "actual_tools": [
         "python_analysis"
       ],
-      "latency_ms": 3.05,
+      "latency_ms": 3.39,
       "failures": []
     },
     {
@@ -215,7 +215,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 3.03,
+      "latency_ms": 3.32,
       "failures": []
     },
     {
@@ -226,7 +226,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 3.16,
+      "latency_ms": 3.21,
       "failures": []
     },
     {
@@ -235,7 +235,7 @@
       "category": "clarification",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 3.17,
+      "latency_ms": 3.38,
       "failures": []
     },
     {
@@ -244,7 +244,7 @@
       "category": "unsupported",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 3.11,
+      "latency_ms": 3.44,
       "failures": []
     },
     {
@@ -259,7 +259,7 @@
         "deterministic_engine",
         "deterministic_engine"
       ],
-      "latency_ms": 3.0,
+      "latency_ms": 3.23,
       "failures": []
     },
     {
@@ -274,7 +274,7 @@
         "deterministic_engine",
         "deterministic_engine"
       ],
-      "latency_ms": 3.1,
+      "latency_ms": 3.29,
       "failures": []
     },
     {
@@ -291,7 +291,7 @@
         "deterministic_engine",
         "deterministic_engine"
       ],
-      "latency_ms": 3.1,
+      "latency_ms": 3.34,
       "failures": []
     },
     {
@@ -300,7 +300,7 @@
       "category": "security",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 3.08,
+      "latency_ms": 3.43,
       "failures": []
     },
     {
@@ -309,7 +309,7 @@
       "category": "security",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 3.04,
+      "latency_ms": 3.24,
       "failures": []
     },
     {
@@ -318,7 +318,7 @@
       "category": "security",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 3.11,
+      "latency_ms": 3.1,
       "failures": []
     },
     {
@@ -327,7 +327,7 @@
       "category": "chitchat",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 3.02,
+      "latency_ms": 3.28,
       "failures": []
     },
     {
@@ -336,7 +336,7 @@
       "category": "meta",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 3.23,
+      "latency_ms": 3.37,
       "failures": []
     },
     {
@@ -347,7 +347,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 3.07,
+      "latency_ms": 3.25,
       "failures": []
     },
     {
@@ -358,7 +358,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 3.04,
+      "latency_ms": 3.32,
       "failures": []
     },
     {
@@ -369,7 +369,7 @@
       "actual_tools": [
         "deterministic_engine"
       ],
-      "latency_ms": 3.03,
+      "latency_ms": 3.36,
       "failures": []
     },
     {
@@ -380,7 +380,7 @@
       "actual_tools": [
         "python_analysis"
       ],
-      "latency_ms": 3.04,
+      "latency_ms": 3.4,
       "failures": []
     },
     {
@@ -391,7 +391,7 @@
       "actual_tools": [
         "python_analysis"
       ],
-      "latency_ms": 3.05,
+      "latency_ms": 3.25,
       "failures": []
     },
     {
@@ -400,9 +400,9 @@
       "category": "security",
       "passed": true,
       "actual_tools": [],
-      "latency_ms": 2.98,
+      "latency_ms": 3.26,
       "failures": []
     }
   ],
-  "run_id": "2026-08-11_114513"
+  "run_id": "2026-08-11_114043"
 }

@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-08-11T07:36:33.700297+00:00",
+    "timestamp": "2026-08-11T11:32:27.338429+00:00",
     "git_commit": "4700c21",
     "dataset_version": "1.0",
     "model": "google/gemini-2.5-flash",
@@ -24,8 +24,8 @@
     "answer_relevance": 1.0,
     "error_handling": 1.0,
     "unnecessary_python_rate": 0.0,
-    "median_latency_ms": 2.98,
-    "p95_latency_ms": 3.06
+    "median_latency_ms": 3.18,
+    "p95_latency_ms": 3.43
   },
   "failures": [],
   "cases": [
@@ -33,325 +33,325 @@
       "case_id": "basic_001",
       "category": "basic",
       "passed": true,
-      "latency_ms": 4.55
+      "latency_ms": 5.29
     },
     {
       "case_id": "basic_002",
       "category": "basic",
       "passed": true,
-      "latency_ms": 3.18
+      "latency_ms": 3.43
     },
     {
       "case_id": "aggregation_001",
       "category": "aggregation",
       "passed": true,
-      "latency_ms": 3.0
+      "latency_ms": 3.21
     },
     {
       "case_id": "aggregation_002",
       "category": "aggregation",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.25
     },
     {
       "case_id": "grouping_001",
       "category": "grouping",
       "passed": true,
-      "latency_ms": 3.06
+      "latency_ms": 3.17
     },
     {
       "case_id": "grouping_002",
       "category": "grouping",
       "passed": true,
-      "latency_ms": 3.0
+      "latency_ms": 3.2
     },
     {
       "case_id": "ranking_001",
       "category": "ranking",
       "passed": true,
-      "latency_ms": 3.03
+      "latency_ms": 3.13
     },
     {
       "case_id": "ranking_002",
       "category": "ranking",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.23
     },
     {
       "case_id": "comparison_001",
       "category": "comparison",
       "passed": true,
-      "latency_ms": 2.93
+      "latency_ms": 3.31
     },
     {
       "case_id": "comparison_002",
       "category": "comparison",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.09
     },
     {
       "case_id": "filtering_001",
       "category": "filtering",
       "passed": true,
-      "latency_ms": 3.01
+      "latency_ms": 3.12
     },
     {
       "case_id": "filtering_002",
       "category": "filtering",
       "passed": true,
-      "latency_ms": 2.97
+      "latency_ms": 3.17
     },
     {
       "case_id": "multi_condition_001",
       "category": "multi_condition",
       "passed": true,
-      "latency_ms": 2.95
+      "latency_ms": 3.25
     },
     {
       "case_id": "multi_condition_002",
       "category": "multi_condition",
       "passed": true,
-      "latency_ms": 2.95
+      "latency_ms": 3.11
     },
     {
       "case_id": "sorting_001",
       "category": "sorting",
       "passed": true,
-      "latency_ms": 3.01
+      "latency_ms": 3.22
     },
     {
       "case_id": "sorting_002",
       "category": "sorting",
       "passed": true,
-      "latency_ms": 2.91
+      "latency_ms": 3.24
     },
     {
       "case_id": "date_analysis_001",
       "category": "date_analysis",
       "passed": true,
-      "latency_ms": 2.92
+      "latency_ms": 3.38
     },
     {
       "case_id": "date_analysis_002",
       "category": "date_analysis",
       "passed": true,
-      "latency_ms": 3.05
+      "latency_ms": 3.16
     },
     {
       "case_id": "time_series_001",
       "category": "time_series",
       "passed": true,
-      "latency_ms": 2.99
+      "latency_ms": 3.54
     },
     {
       "case_id": "time_series_002",
       "category": "time_series",
       "passed": true,
-      "latency_ms": 2.97
+      "latency_ms": 3.21
     },
     {
       "case_id": "multi_dimensional_001",
       "category": "multi_dimensional",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.3
     },
     {
       "case_id": "multi_dimensional_002",
       "category": "multi_dimensional",
       "passed": true,
-      "latency_ms": 2.93
+      "latency_ms": 3.15
     },
     {
       "case_id": "pivot_001",
       "category": "pivot",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.18
     },
     {
       "case_id": "pivot_002",
       "category": "pivot",
       "passed": true,
-      "latency_ms": 2.97
+      "latency_ms": 3.27
     },
     {
       "case_id": "statistics_001",
       "category": "statistics",
       "passed": true,
-      "latency_ms": 2.95
+      "latency_ms": 3.1
     },
     {
       "case_id": "statistics_002",
       "category": "statistics",
       "passed": true,
-      "latency_ms": 2.89
+      "latency_ms": 3.09
     },
     {
       "case_id": "distribution_001",
       "category": "distribution",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.21
     },
     {
       "case_id": "distribution_002",
       "category": "distribution",
       "passed": true,
-      "latency_ms": 3.01
+      "latency_ms": 3.15
     },
     {
       "case_id": "outliers_001",
       "category": "outliers",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.1
     },
     {
       "case_id": "outliers_002",
       "category": "outliers",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.05
     },
     {
       "case_id": "data_quality_001",
       "category": "data_quality",
       "passed": true,
-      "latency_ms": 2.93
+      "latency_ms": 3.03
     },
     {
       "case_id": "data_quality_002",
       "category": "data_quality",
       "passed": true,
-      "latency_ms": 2.94
+      "latency_ms": 3.09
     },
     {
       "case_id": "visualization_001",
       "category": "visualization",
       "passed": true,
-      "latency_ms": 2.97
+      "latency_ms": 3.22
     },
     {
       "case_id": "visualization_002",
       "category": "visualization",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.04
     },
     {
       "case_id": "interactive_visualization_001",
       "category": "interactive_visualization",
       "passed": true,
-      "latency_ms": 2.9
+      "latency_ms": 3.03
     },
     {
       "case_id": "interactive_visualization_002",
       "category": "interactive_visualization",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.15
     },
     {
       "case_id": "table_001",
       "category": "table",
       "passed": true,
-      "latency_ms": 2.95
+      "latency_ms": 3.19
     },
     {
       "case_id": "table_002",
       "category": "table",
       "passed": true,
-      "latency_ms": 2.95
+      "latency_ms": 3.09
     },
     {
       "case_id": "multi_artifact_001",
       "category": "multi_artifact",
       "passed": true,
-      "latency_ms": 2.97
+      "latency_ms": 3.15
     },
     {
       "case_id": "multi_artifact_002",
       "category": "multi_artifact",
       "passed": true,
-      "latency_ms": 2.99
+      "latency_ms": 3.1
     },
     {
       "case_id": "follow_up_001",
       "category": "follow_up",
       "passed": true,
-      "latency_ms": 3.04
+      "latency_ms": 3.26
     },
     {
       "case_id": "follow_up_002",
       "category": "follow_up",
       "passed": true,
-      "latency_ms": 3.03
+      "latency_ms": 3.19
     },
     {
       "case_id": "business_insight_001",
       "category": "business_insight",
       "passed": true,
-      "latency_ms": 2.95
+      "latency_ms": 3.21
     },
     {
       "case_id": "business_insight_002",
       "category": "business_insight",
       "passed": true,
-      "latency_ms": 2.87
+      "latency_ms": 3.15
     },
     {
       "case_id": "python_analysis_001",
       "category": "python_analysis",
       "passed": true,
-      "latency_ms": 2.95
+      "latency_ms": 3.41
     },
     {
       "case_id": "python_analysis_002",
       "category": "python_analysis",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.09
     },
     {
       "case_id": "security_001",
       "category": "security",
       "passed": true,
-      "latency_ms": 2.96
+      "latency_ms": 3.11
     },
     {
       "case_id": "security_002",
       "category": "security",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.09
     },
     {
       "case_id": "security_003",
       "category": "security",
       "passed": true,
-      "latency_ms": 3.0
+      "latency_ms": 3.19
     },
     {
       "case_id": "invalid_query_001",
       "category": "invalid_query",
       "passed": true,
-      "latency_ms": 2.92
+      "latency_ms": 3.22
     },
     {
       "case_id": "invalid_query_002",
       "category": "invalid_query",
       "passed": true,
-      "latency_ms": 3.03
+      "latency_ms": 3.32
     },
     {
       "case_id": "business_insight_003",
       "category": "business_insight",
       "passed": true,
-      "latency_ms": 2.96
+      "latency_ms": 3.08
     },
     {
       "case_id": "follow_up_003",
       "category": "follow_up",
       "passed": true,
-      "latency_ms": 2.97
+      "latency_ms": 3.4
     },
     {
       "case_id": "stage88_regression_001",
       "category": "invalid_query",
       "passed": true,
-      "latency_ms": 2.98
+      "latency_ms": 3.21
     }
   ],
   "recommendations": [
