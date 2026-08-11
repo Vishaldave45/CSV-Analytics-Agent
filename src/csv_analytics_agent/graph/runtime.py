@@ -104,6 +104,8 @@ class AgentRuntime:
         prompt: str,
         thread_id: str | None = None,
         profile: DatasetProfile | None = None,
+        metadata: dict[str, Any] | None = None,
+        tags: list[str] | None = None,
     ) -> AgentState:
         """Execute agent workflow for a given user prompt under a thread_id session.
 
@@ -112,6 +114,8 @@ class AgentRuntime:
             thread_id: Optional thread identifier (defaults to settings.default_thread_id).
             profile: Optional DatasetProfile to seed into the AgentState so visualization
                      capabilities can access column statistics without re-profiling.
+            metadata: Optional dictionary of diagnostic metadata to attach to LangChain/LangSmith trace runs.
+            tags: Optional list of tag strings to attach to LangChain/LangSmith trace runs.
 
         Returns:
             Updated AgentState dictionary.
@@ -120,6 +124,10 @@ class AgentRuntime:
         config_dict: dict[str, Any] = {"configurable": {"thread_id": tid}}
         if self._callbacks:
             config_dict["callbacks"] = self._callbacks
+        if metadata:
+            config_dict["metadata"] = metadata
+        if tags:
+            config_dict["tags"] = tags
 
         config: RunnableConfig = cast(RunnableConfig, config_dict)
 

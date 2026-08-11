@@ -48,7 +48,7 @@ def load_previous_baseline(reports_dir: Path) -> dict[str, Any] | None:
     # Pick the most recent history file before the current run (if at least 2 exist, pick second last)
     target_file = history_files[-2] if len(history_files) >= 2 else history_files[-1]
     try:
-        with open(target_file, "r", encoding="utf-8") as f:
+        with open(target_file, encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return None
@@ -71,7 +71,11 @@ def generate_html_report(data: dict[str, Any]) -> str:
         q_text = html.escape(q_raw[0] if isinstance(q_raw, list) else str(q_raw))
         cat = html.escape(str(c.get("category", "")))
         passed = c.get("passed", False)
-        st_badge = '<span class="badge pass">✓ PASS</span>' if passed else '<span class="badge fail">❌ FAIL</span>'
+        st_badge = (
+            '<span class="badge pass">✓ PASS</span>'
+            if passed
+            else '<span class="badge fail">❌ FAIL</span>'
+        )
 
         tools_used = ", ".join(c.get("actual_tools", [])) or "None (Direct response)"
         lat = c.get("latency_ms", 0.0)
@@ -258,22 +262,22 @@ def generate_html_report(data: dict[str, Any]) -> str:
             <div class="card">
                 <div class="label">Router Accuracy</div>
                 <div class="value pass">{metrics.get("router_accuracy", metrics.get("answer_relevance", 1.0)) * 100:.1f}%</div>
-                <div class="progress-bar"><div class="progress-fill" style="width: {metrics.get('router_accuracy', metrics.get('answer_relevance', 1.0)) * 100}%;"></div></div>
+                <div class="progress-bar"><div class="progress-fill" style="width: {metrics.get("router_accuracy", metrics.get("answer_relevance", 1.0)) * 100}%;"></div></div>
             </div>
             <div class="card">
                 <div class="label">Planner Accuracy</div>
                 <div class="value pass">{metrics.get("planner_accuracy", metrics.get("tool_selection_quality", 1.0)) * 100:.1f}%</div>
-                <div class="progress-bar"><div class="progress-fill" style="width: {metrics.get('planner_accuracy', metrics.get('tool_selection_quality', 1.0)) * 100}%;"></div></div>
+                <div class="progress-bar"><div class="progress-fill" style="width: {metrics.get("planner_accuracy", metrics.get("tool_selection_quality", 1.0)) * 100}%;"></div></div>
             </div>
             <div class="card">
                 <div class="label">Numerical Correctness</div>
                 <div class="value pass">{metrics.get("numerical_correctness", 1.0) * 100:.1f}%</div>
-                <div class="progress-bar"><div class="progress-fill" style="width: {metrics.get('numerical_correctness', 1.0) * 100}%;"></div></div>
+                <div class="progress-bar"><div class="progress-fill" style="width: {metrics.get("numerical_correctness", 1.0) * 100}%;"></div></div>
             </div>
             <div class="card">
                 <div class="label">Security Pass Rate</div>
                 <div class="value pass">{metrics.get("security_pass_rate", metrics.get("security", 1.0)) * 100:.1f}%</div>
-                <div class="progress-bar"><div class="progress-fill" style="width: {metrics.get('security_pass_rate', metrics.get('security', 1.0)) * 100}%;"></div></div>
+                <div class="progress-bar"><div class="progress-fill" style="width: {metrics.get("security_pass_rate", metrics.get("security", 1.0)) * 100}%;"></div></div>
             </div>
         </div>
 

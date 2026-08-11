@@ -9,18 +9,16 @@ Workflow:
 from __future__ import annotations
 
 import argparse
-import sys
-from pathlib import Path
 from typing import Any
-import dotenv
 
-dotenv.load_dotenv()
+import dotenv
 
 from csv_analytics_agent.prompts import load_prompt
 
 
 def run_llm_prompt_evaluation(use_mock: bool = True) -> dict[str, Any]:
     """Evaluate router, planner, and response system prompts."""
+    dotenv.load_dotenv()
     print("\nCSV Analytics Agent — LLM Prompt Evaluation")
     print("────────────────────────────────────────────")
     print(f"Evaluator Mode: {'Mock Baseline' if use_mock else 'Live Gemini LLM'}")
@@ -57,11 +55,15 @@ def run_llm_prompt_evaluation(use_mock: bool = True) -> dict[str, Any]:
 
     print("\nResponse Prompt")
     print("────────────────────")
-    print(f"Cases: 35 | Faithfulness: {faithfulness:.2f} | Relevance: {relevance:.2f} | Format: {format_score:.0f}%")
+    print(
+        f"Cases: 35 | Faithfulness: {faithfulness:.2f} | Relevance: {relevance:.2f} | Format: {format_score:.0f}%"
+    )
     print("Passes: data-grounded narrative, zero hallucinated facts")
 
     print("\nPrompt Evaluation Summary:")
-    print(f"  - Status: {'✅ ALL PROMPTS VALIDATED' if prompts_valid else '❌ PROMPT LOAD ERROR'}\n")
+    print(
+        f"  - Status: {'✅ ALL PROMPTS VALIDATED' if prompts_valid else '❌ PROMPT LOAD ERROR'}\n"
+    )
 
     return {
         "router_accuracy": router_acc,
@@ -74,7 +76,9 @@ def run_llm_prompt_evaluation(use_mock: bool = True) -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prompt-Only LLM Evaluator")
-    parser.add_argument("--live-llm", action="store_true", help="Execute evaluation using live Gemini LLM API")
+    parser.add_argument(
+        "--live-llm", action="store_true", help="Execute evaluation using live Gemini LLM API"
+    )
     args = parser.parse_args()
 
     run_llm_prompt_evaluation(use_mock=not args.live_llm)
