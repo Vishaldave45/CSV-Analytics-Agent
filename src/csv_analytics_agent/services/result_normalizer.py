@@ -21,7 +21,9 @@ def _clean_text_content(val: Any) -> str:
     if isinstance(val, str):
         val_str = val.strip()
         # If string is a JSON or Python repr representation of a list or dict, parse it
-        if (val_str.startswith("[") and val_str.endswith("]")) or (val_str.startswith("{") and val_str.endswith("}")):
+        if (val_str.startswith("[") and val_str.endswith("]")) or (
+            val_str.startswith("{") and val_str.endswith("}")
+        ):
             try:
                 parsed = json.loads(val_str)
                 return _clean_text_content(parsed)

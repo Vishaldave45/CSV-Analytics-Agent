@@ -1,6 +1,6 @@
-import logging
 import time
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()

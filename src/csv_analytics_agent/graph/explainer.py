@@ -159,8 +159,9 @@ def explainer_node(
     # If LLM is available and narrative needs rich synthesis, invoke LLM explanation writer
     if llm is not None and narrative_text:
         try:
+            from langchain_core.messages import HumanMessage, SystemMessage
+
             from csv_analytics_agent.prompts import get_response_prompt
-            from langchain_core.messages import SystemMessage, HumanMessage
 
             sys_prompt = get_response_prompt()
             user_question = ""
@@ -175,11 +176,15 @@ def explainer_node(
                 f"Execution Metadata:\n{checkpoint_result.get('metadata', {})}"
             )
 
-            response_msg = llm.invoke([
-                SystemMessage(content=sys_prompt),
-                HumanMessage(content=evidence_summary),
-            ])
-            extracted_narrative = response_msg.content if hasattr(response_msg, "content") else str(response_msg)
+            response_msg = llm.invoke(
+                [
+                    SystemMessage(content=sys_prompt),
+                    HumanMessage(content=evidence_summary),
+                ]
+            )
+            extracted_narrative = (
+                response_msg.content if hasattr(response_msg, "content") else str(response_msg)
+            )
             if extracted_narrative and str(extracted_narrative).strip():
                 return {"messages": [AIMessage(content=str(extracted_narrative).strip())]}
         except Exception:

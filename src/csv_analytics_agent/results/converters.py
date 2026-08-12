@@ -147,12 +147,29 @@ def python_result_to_analysis_result(
             # Generate a specific narrative from artifacts if available
             descriptions: list[str] = []
             for art in artifacts:
-                if art.artifact_type in (PythonArtifactType.SCALAR, PythonArtifactType.TEXT) and art.payload is not None:
-                    descriptions.append(f"The calculated value for **{art.title}** is **{art.payload}**.")
-                elif art.artifact_type in (PythonArtifactType.TABLE, PythonArtifactType.DATAFRAME) and art.payload is not None:
-                    row_cnt = len(art.payload) if isinstance(art.payload, pd.DataFrame) else art.metadata.get("row_count", "")
-                    descriptions.append(f"Generated data table **{art.title}** ({row_cnt} records).")
-                elif art.artifact_type in (PythonArtifactType.IMAGE, PythonArtifactType.INTERACTIVE):
+                if (
+                    art.artifact_type in (PythonArtifactType.SCALAR, PythonArtifactType.TEXT)
+                    and art.payload is not None
+                ):
+                    descriptions.append(
+                        f"The calculated value for **{art.title}** is **{art.payload}**."
+                    )
+                elif (
+                    art.artifact_type in (PythonArtifactType.TABLE, PythonArtifactType.DATAFRAME)
+                    and art.payload is not None
+                ):
+                    row_cnt = (
+                        len(art.payload)
+                        if isinstance(art.payload, pd.DataFrame)
+                        else art.metadata.get("row_count", "")
+                    )
+                    descriptions.append(
+                        f"Generated data table **{art.title}** ({row_cnt} records)."
+                    )
+                elif art.artifact_type in (
+                    PythonArtifactType.IMAGE,
+                    PythonArtifactType.INTERACTIVE,
+                ):
                     descriptions.append(f"Generated chart visualization **{art.title}**.")
 
             if descriptions:
@@ -268,7 +285,9 @@ def deterministic_result_to_analysis_result(
                         "Data Type": col.get("dtype"),
                         "Missing (%)": f"{col.get('missing_percentage', 0):.1f}%",
                         "Unique Values": col.get("unique_count"),
-                        "Mean / Top": num_stats.get("mean") if num_stats.get("mean") is not None else cat_stats.get("top"),
+                        "Mean / Top": num_stats.get("mean")
+                        if num_stats.get("mean") is not None
+                        else cat_stats.get("top"),
                         "Min": num_stats.get("min"),
                         "Max": num_stats.get("max"),
                     }

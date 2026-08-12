@@ -14,6 +14,7 @@ def retry(func):
 
     return wrapper
 
+
 @retry
 def fetch_data():
     raise ConnectionError("Server unavailable")

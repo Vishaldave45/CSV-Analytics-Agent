@@ -26,26 +26,55 @@ Built upon **Domain-Driven Design (DDD)** and **Clean Architecture** principles,
 
 ---
 
-## ✨ System Features & Capabilities
+## 🎯 Problem Statement
+
+Traditional tabular data analysis requires users to manually load files, understand missingness distributions, write complex Pandas data transformations, write visualization code, and interpret mathematical outputs.
+
+The **CSV Analytics Agent** bridges this gap by accepting natural language queries, automatically routing intent to deterministic computation capability engines or AST-sandboxed Python environments, generating supporting Plotly/Matplotlib visual artifacts, and synthesizing clear narrative explanations.
+
+---
+
+## ✨ Key Features & Capabilities
 
 | Capability | Module / Layer | Description |
 | :--- | :--- | :--- |
-| 🛡️ **Robust Ingestion & Coercion** | `preprocessing/` | Auto-detects encodings (`utf-8`, `latin-1`, `cp1252`, `iso-8859-1`), validates structural integrity, coercively parses numeric/date types, and generates SHA256 dataset hashes. |
-| 📊 **Column Statistical DNA** | `profiler/` | Computes pure summary statistics (row/col count, missingness ratios, exact row duplicates, cardinality, memory distribution, min/max/mean/std, quantiles) without side effects. |
-| 🔍 **Proactive Evidence Engine** | `insights/` | Pure business rules evaluate immutable dataset profiles to synthesize ranked findings (`Insight`) paired with empirical data facts (`Evidence`). |
-| 🎨 **Visualization Engine** | `visualization/` | Rule-based recommender maps statistical metadata to renderer-independent chart specifications (`HISTOGRAM`, `BAR`, `LINE`, `SCATTER`, `BOXPLOT`, `PIE`, `HEATMAP`) and renders high-res Matplotlib PNGs or Plotly charts. |
-| ⚡ **Capability Execution Framework** | `execution/` | Decouples domain capabilities (`AnalyticsEngine`, `VisualizationEngine`) from underlying providers (`PandasProvider`) registered inside a centralized `CapabilityRegistry`. |
-| 🧠 **Semantic Vector Memory** | `memory/` | Index dataset column schemas and metadata into a local FAISS vector store (`SentenceTransformers`) for semantic column retrieval during agentic planning. |
-| 🛡️ **Multi-Layer Python Sandbox** | `python_engine/` | Executes dynamic, LLM-generated Python analysis code within an isolated subprocess (`SubprocessBackend`) or hardened unprivileged Docker container (`DockerBackend`) guarded by AST static analysis. |
-| 🔄 **LangGraph Stateful Runtime** | `graph/` | StateGraph workflow featuring in-memory state checkpointing, plan-execute loops, memory retrieval nodes, and conversational state persistence. |
+| 🛡️ **Robust Ingestion & Coercion** | `preprocessing/` | Auto-detects encodings (`utf-8`, `latin-1`, `cp1252`), validates structural integrity, parses numeric/date strings (e.g. `$1,099`, `64%`), and generates SHA256 hashes. |
+| 📊 **Column Statistical DNA** | `profiler/` | Computes summary statistics (row/col count, missingness ratios, cardinality, quantiles) without side effects. |
+| 🔍 **Proactive Evidence Engine** | `insights/` | Pure business rules evaluate dataset profiles to synthesize ranked findings (`Insight`) paired with empirical data facts. |
+| 🎨 **Visualization Engine** | `visualization/` | Rule-based recommender maps statistical metadata to chart specifications (`HISTOGRAM`, `BAR`, `LINE`, `SCATTER`, `BOXPLOT`, `PIE`, `HEATMAP`) rendered as Plotly or Matplotlib charts. |
+| ⚡ **Capability Execution Framework** | `execution/` | Decouples domain capabilities (`AnalyticsEngine`, `VisualizationEngine`) from underlying providers (`PandasProvider`) registered inside a `CapabilityRegistry`. |
+| 🧠 **Semantic Vector Memory** | `memory/` | Indexes dataset column schemas into a local FAISS vector store (`SentenceTransformers`) for semantic column retrieval during agentic planning. |
+| 🛡️ **Multi-Layer Python Sandbox** | `python_engine/` | Executes dynamic, LLM-generated Python analysis code within an isolated subprocess (`SubprocessBackend`) or unprivileged Docker container (`DockerBackend`) guarded by AST static analysis. |
+| 🔄 **LangGraph Stateful Runtime** | `graph/` | StateGraph workflow featuring state checkpointing, plan-execute loops, memory retrieval nodes, and conversational state persistence. |
 | 🔄 **Response Normalizer** | `services/` | Traverses content blocks and Python single-quote repr strings (`ast.literal_eval`), extracting clean Markdown text into `AgentResponse` while discarding internal metadata (`extras`, `signature`). |
-| 🖥️ **Streamlit Web Dashboard** | `streamlit_app/` | Multi-page Streamlit application providing interactive dataset exploration, Bento-style statistical cards, insights tables, chart rendering, settings, and AI chat workspace. |
+| 🖥️ **Streamlit Web Dashboard** | `streamlit_app/` | Multi-page Streamlit application providing interactive dataset exploration, Bento-style statistical cards, insights tables, chart rendering, and AI chat workspace. |
+
+---
+
+## 📸 Demo
+
+```text
+<!-- Add CSV Upload & Dataset Summary Screenshot Here -->
+<!-- Add Conversational Chat & Plotly Visualization Screenshot Here -->
+```
+
+---
+
+## ❓ Supported Analytical Questions
+
+| Category | Example Question | Target Capability |
+| :--- | :--- | :--- |
+| **Summary** | *"Give me a complete statistical overview of this dataset."* | `DatasetProfiler` + Column Profiling |
+| **Aggregation** | *"What is the average rating across all products?"* | `AnalyticsEngine.aggregate` |
+| **Ranking** | *"Which are the top 10 products by review count?"* | `AnalyticsEngine.top_n` |
+| **Distribution** | *"Show me the distribution of product ratings."* | `VisualizationEngine` (Histogram) |
+| **Filtering** | *"Find products with discounts exceeding 50%."* | `AnalyticsEngine.filter` |
+| **Comparison** | *"Which product category has the highest average rating?"* | `AnalyticsEngine.groupby` + Bar Chart |
+| **Relationship** | *"Is price correlated with customer ratings?"* | `VisualizationEngine` (Scatter Plot / Correlation) |
 
 ---
 
 ## 🏗️ Architecture & Pipeline Flow
-
-The platform separates data ingestion, statistical profiling, memory indexing, graph orchestration, response normalization, and sandboxed code execution into distinct, modular layers:
 
 ```mermaid
 flowchart TD
@@ -84,11 +113,13 @@ flowchart TD
     Normalizer --> FinalResponse["🚀 User Response & Visualizations"]
 ```
 
+For full architecture details, inspect [docs/architecture.md](docs/architecture.md).
+
 ---
 
 ## 🔄 Response Normalization & UI Pipeline
 
-When modern LLMs (such as Google Gemini via `langchain-google-genai`) produce response content blocks, the raw string representation contains internal metadata dictionaries (`extras`, `signature`, `tool_call_id`).
+When modern LLMs (such as Google Gemini via `langchain-google-genai`) produce response content blocks, raw string representations contain internal metadata dictionaries (`extras`, `signature`, `tool_call_id`).
 
 To guarantee clean, human-readable UI rendering:
 
@@ -96,6 +127,8 @@ To guarantee clean, human-readable UI rendering:
 2. Uses `json.loads` and `ast.literal_eval` to safely parse single-quoted Python repr strings.
 3. Filters strictly for `"type": "text"` payloads, stripping away internal signatures and metadata.
 4. Returns a clean, strong `AgentResponse` contract consumed by Streamlit's `st.markdown()` renderer.
+
+For full normalization specifications, see [docs/response-normalization.md](docs/response-normalization.md).
 
 ---
 
@@ -128,19 +161,72 @@ The **CSV Analytics Agent** features a dedicated multi-layer execution domain (`
 
 1. **AST Static Code Analysis (`validate_python_code`)**:
    - Inspects AST nodes prior to execution without running code.
-   - Rejects unapproved or high-risk imports (`os`, `sys`, `subprocess`, `socket`, `pathlib`, `shutil`, `ctypes`, `importlib`, etc.).
+   - Rejects unapproved or high-risk imports (`os`, `sys`, `subprocess`, `socket`, `pathlib`, `shutil`, `ctypes`, `importlib`).
    - Rejects dangerous builtins (`exec`, `eval`, `compile`, `__import__`, `open`, `input`, `breakpoint`).
    - Blocks dangerous attribute introspection (`__subclasses__`, `__globals__`, `__code__`, `__closure__`, `__builtins__`).
 2. **Subprocess Backend (`SubprocessBackend`)**:
    - Executes validated code in a clean, isolated temporary workspace (`py_sandbox_*`).
-   - Purges parent process secrets and API keys (`GOOGLE_API_KEY`, etc.) from environment variables.
-   - Enforces execution timeouts and stdout/stderr byte caps.
+   - Purges parent process secrets and API keys (`GOOGLE_API_KEY`) from environment variables.
+   - Enforces execution timeouts (default 30s) and stdout/stderr byte caps.
 3. **Docker Container Backend (`DockerBackend`)**:
    - Executes code inside an unprivileged Docker container (`--user 1000:1000`).
    - Disables network access by default (`--network none`).
    - Mounts read-only root filesystem (`--read-only`) with isolated temporary workspace (`/workspace`).
    - Drops Linux capabilities (`--cap-drop=ALL`, `--security-opt no-new-privileges:true`).
    - Restricts system resources (`--memory 512m`, `--cpus 1.0`, `--pids-limit 64`).
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology | Responsibility |
+| :--- | :--- | :--- |
+| **Language** | Python 3.10+ | Core application logic and strict typing |
+| **Data Engine** | Pandas & NumPy | Deterministic dataset ingestion, coercion, profiling, and analytics |
+| **Agent Framework** | LangChain & LangGraph | Stateful `StateGraph` workflow, routing, planning, and execution loops |
+| **LLM Provider** | Google Gemini (`ChatGoogleGenerativeAI`) | Natural language intent routing, tool calling, and explanation synthesis |
+| **Vector Store** | FAISS (`faiss-cpu`) + SentenceTransformers | Local vector indexing and semantic schema column retrieval |
+| **Visualization** | Plotly & Matplotlib | High-resolution interactive charts and static visualization PNGs |
+| **Sandboxing** | Subprocess / Docker (`DockerBackend`) | AST-validated, isolated Python code execution sandboxes |
+| **Presentation** | Streamlit | Multi-page conversational AI web workspace with custom dark glassmorphism styling |
+| **Testing & Quality** | pytest, Ruff, MyPy | Automated test suite, strict type checking, and linting |
+
+---
+
+## 📁 Project Directory Structure
+
+```text
+csv-analytics-agent/
+├── src/csv_analytics_agent/
+│   ├── config/             # Pydantic Settings & environment config management
+│   ├── exceptions/         # System-wide base exception hierarchy
+│   ├── llm/                # LangChain LLM abstraction & Gemini API integration
+│   ├── preprocessing/      # Stage 1: Data loading, encoding detection & coercion
+│   ├── profiler/           # Stage 2: Column statistics & dataset profiling
+│   ├── insights/           # Stage 3: Proactive evidence & business rules engine
+│   ├── visualization/      # Stage 4: Chart recommendation & Matplotlib/Plotly renderers
+│   ├── execution/          # Stage 5: CapabilityRegistry, AnalyticsEngine, PandasProvider
+│   ├── persistence/        # SQLite metadata storage & SHA256 hashing
+│   ├── memory/             # FAISS vector store & column semantic search
+│   ├── observability/      # LangSmith callback handlers & tracing setup
+│   ├── services/           # Result normalizer & API boundary converters
+│   ├── graph/              # LangGraph StateGraph & AgentRuntime engine
+│   └── python_engine/      # AST pre-validator, subprocess & Docker sandbox
+├── streamlit_app/          # Streamlit Multi-Page Web Application
+│   ├── app.py              # Application entrypoint
+│   ├── components/         # Reusable Streamlit UI components
+│   ├── pages/              # Overview, Dataset, Insights, Chat, Settings
+│   └── services/           # Backend gateway service bridge
+├── sandbox/                # Docker sandbox container build context
+├── docs/                   # System architecture & technical interview guides
+│   ├── architecture.md
+│   ├── response-normalization.md
+│   └── interview-guide.md
+├── tests/                  # Complete unit and result normalization test suite
+├── .env.example            # Environment variable template
+├── pyproject.toml          # Project configuration & dependencies (uv / hatchling)
+└── README.md               # Master GitHub technical documentation
+```
 
 ---
 
@@ -210,52 +296,65 @@ Open your browser at `http://localhost:8501`.
 
 ---
 
-## 🛠️ Repository & Project Directory Structure
+## ⚙️ Environment Configuration
 
-```text
-csv-analytics-agent/
-├── src/csv_analytics_agent/
-│   ├── config/             # Pydantic Settings & environment config management
-│   ├── exceptions/         # System-wide base exception hierarchy
-│   ├── llm/                # LangChain LLM abstraction & Gemini API integration
-│   ├── preprocessing/      # Data loading, encoding detection & coercion
-│   ├── profiler/           # Column statistics & dataset profiling
-│   ├── insights/           # Proactive evidence & business rules engine
-│   ├── visualization/      # Chart recommendation & Matplotlib/Plotly renderers
-│   ├── execution/          # CapabilityRegistry, AnalyticsEngine, PandasProvider
-│   ├── persistence/        # SQLite metadata storage & SHA256 hashing
-│   ├── memory/             # FAISS vector store & column semantic search
-│   ├── observability/      # LangSmith callback handlers & tracing setup
-│   ├── services/           # Result normalizer & API boundary converters
-│   ├── graph/              # LangGraph StateGraph & AgentRuntime engine
-│   └── python_engine/      # AST pre-validator, subprocess & Docker sandbox
-├── streamlit_app/          # Streamlit Multi-Page Web Application
-│   ├── app.py              # Application entrypoint
-│   ├── components/         # Reusable Streamlit UI components
-│   ├── pages/              # Overview, Dataset, Insights, Chat, Settings
-│   └── services/           # Backend gateway service bridge
-├── sandbox/                # Docker sandbox container build context
-├── docs/                   # System architecture & normalization docs
-├── tests/                  # Complete unit and result normalization test suite
-├── .env.example            # Environment variable template
-├── pyproject.toml          # Project configuration & dependencies (uv / hatchling)
-└── README.md               # Master GitHub technical documentation
+| Variable | Required | Default | Description |
+| :--- | :---: | :--- | :--- |
+| `GOOGLE_API_KEY` | **Yes** | None | Google Gemini API Key for LLM reasoning and explanation synthesis |
+| `PYTHON_EXECUTION_BACKEND` | No | `subprocess` | Execution mode for dynamic code (`subprocess` or `container`) |
+| `PYTHON_SANDBOX_IMAGE` | No | `csv-analytics-python:latest` | Docker image name when using `container` mode |
+| `PYTHON_SANDBOX_MEMORY_MB` | No | `512` | Memory limit in MB for Docker sandbox container |
+| `PYTHON_SANDBOX_CPU_LIMIT` | No | `1.0` | CPU limit for Docker sandbox container |
+| `PYTHON_SANDBOX_TIMEOUT_SECONDS` | No | `30` | Execution timeout in seconds for sandboxed operations |
+| `LANGCHAIN_TRACING_V2` | No | `false` | Enable LangSmith observability tracing |
+| `LANGCHAIN_API_KEY` | No | None | API Key for LangSmith telemetry |
+
+---
+
+## 🧪 Testing & Verification
+
+The repository maintains strict static typing (MyPy strict mode), zero linter errors (Ruff), and full test coverage:
+
+```bash
+# 1. Run Ruff Linter & Formatter Check
+uv run ruff check .
+uv run ruff format --check .
+
+# 2. Run MyPy Static Type Checker
+uv run mypy src
+
+# 3. Run Result Normalizer & Serialization Test Suite
+uv run pytest tests/results/ -v
 ```
 
 ---
 
-## 🧪 Quality Assurance & Test Verification
+## ⚠️ System Limitations
 
-```bash
-# 1. Run Ruff Linter
-uv run ruff check .
+- **Dataset Size**: Processed in-memory using Pandas; optimal performance for datasets up to 1GB.
+- **File Formats**: Currently optimized exclusively for tabular `.csv` files.
+- **Execution Limits**: Dynamic Python execution is constrained by timeout (30s) and memory limits (512MB).
 
-# 2. Run MyPy Static Type Checker (Strict Mode)
-uv run mypy src
+---
 
-# 3. Run Unit Test Suite
-uv run pytest tests/results/ -v
-```
+## 🚀 Future Roadmap
+
+- [ ] **Multi-Format Support**: Support for `.parquet`, `.xlsx`, and `.json` tabular uploads.
+- [ ] **Persistent Database Connectors**: Direct integration with PostgreSQL, Snowflake, and BigQuery.
+- [ ] **MicroVM Sandboxing**: Integration with gVisor / Firecracker microVMs for cloud multi-tenant code isolation.
+- [ ] **Multi-Dataset Joins**: Cross-file relational analytics and join recommendations.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/amazing-feature`).
+3. Ensure formatting and type checks pass (`uv run ruff check .` & `uv run mypy src`).
+4. Run unit tests (`uv run pytest`).
+5. Open a Pull Request.
 
 ---
 

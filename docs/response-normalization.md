@@ -9,9 +9,7 @@ When modern LLMs (such as Google Gemini via `langchain-google-genai`) return res
     {
         "type": "text",
         "text": "The dataset contains 1,465 product records across 16 columns...",
-        "extras": {
-            "signature": "EI4K..."
-        }
+        "extras": {"signature": "EI4K..."},
     }
 ]
 ```
