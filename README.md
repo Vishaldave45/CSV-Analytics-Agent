@@ -51,12 +51,37 @@ The **CSV Analytics Agent** bridges this gap by accepting natural language queri
 
 ---
 
-## 📸 Demo
+## 📸 Demo & Application Walkthrough
+
+Below is a demonstration of the conversational analytics workflow in the Streamlit AI Workspace:
 
 ```text
-<!-- Add CSV Upload & Dataset Summary Screenshot Here -->
-<!-- Add Conversational Chat & Plotly Visualization Screenshot Here -->
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │ 📊 CSV Analytics Agent — AI Workspace                                                  │
+ ├────────────────────────────────────────────────────────────────────────────────────────┤
+ │ [📁 Upload Dataset: amazon_products.csv] -> 1,465 Rows × 16 Columns (SHA256: 8f9a...)  │
+ ├────────────────────────────────────────────────────────────────────────────────────────┤
+ │ 💬 User: "Which product category has the highest average rating?"                      │
+ │                                                                                        │
+ │ 🤖 Assistant:                                                                          │
+ │ Electronics and Computers have the highest average ratings across the dataset, averaging│
+ │ 4.35 and 4.28 stars respectively out of 5.0.                                          │
+ │                                                                                        │
+ │ ### Key Insights                                                                       │
+ │ • Ratings are strongly concentrated between 4.0 and 4.5.                               │
+ │ • Products with discounts > 50% show high average satisfaction (4.2+).                 │
+ │                                                                                        │
+ │ 📈 [Interactive Plotly Bar Chart: Average Rating by Category]                          │
+ │ 📋 [Data Table: Bounded Preview of Top Categories (CSV Export Available)]              │
+ │ 🔽 [Expandable Evidence Drawer: View Calculation & Tools Used]                         │
+ └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+> [!TIP]
+> Place image files in `streamlit_app/assets/demo.png` or `docs/images/demo.gif` to display visual screenshots in GitHub:
+> ```markdown
+> ![CSV Analytics Agent Demo Workspace](streamlit_app/assets/demo.png)
+> ```
 
 ---
 
