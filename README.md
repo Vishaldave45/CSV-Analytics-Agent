@@ -15,23 +15,20 @@
 
 ## 📸 Demo
 
-The **CSV Analytics Agent** provides a modern conversational workspace for exploring uploaded CSV datasets through natural language queries.
+The **CSV Analytics Agent** provides an interactive workspace for exploring uploaded datasets through natural language queries.
 
 <p align="center">
   <img src="docs/images/demo.png" alt="CSV Analytics Agent AI Workspace" width="100%">
 </p>
 
-### Key Interaction Screens
+### Feature Screens
 
-| Feature Screen | Image Placeholder | Description |
+| Feature Screen | Image Asset Link | Description |
 | :--- | :--- | :--- |
 | **Dataset Upload & Profiling** | `![Upload Screen](docs/images/dataset-overview.png)` | Upload CSV datasets with auto-encoding detection, coercing numeric/date fields, and rendering dataset DNA profiles. |
 | **Natural Language Reasoning** | `![AI Chat Narrative](docs/images/analysis-result.png)` | Explains complex analytical questions in Markdown while separating textual answers from data artifacts. |
 | **Interactive Visual Analytics** | `![Plotly Chart](docs/images/visualization.png)` | Generates interactive Plotly and Matplotlib charts (Histograms, Bar Charts, Scatter Plots, Heatmaps). |
 | **DataFrame & CSV Export** | `![Data Table](docs/images/dataframe-result.png)` | Displays bounded DataFrame tables with interactive sorting and CSV export options. |
-
-> [!NOTE]
-> Add screenshot files to `docs/images/` to embed live visual assets directly inside GitHub.
 
 ---
 
@@ -39,7 +36,7 @@ The **CSV Analytics Agent** provides a modern conversational workspace for explo
 
 The **CSV Analytics Agent** is an end-to-end tabular data intelligence platform built upon **Clean Architecture** and **Domain-Driven Design (DDD)** principles.
 
-The platform enforces a strict architectural rule:
+The platform combines **LangGraph-based workflow orchestration**, **LangChain Core** and **Gemini** for LLM interaction, **Sentence Transformers** and **FAISS** for semantic column retrieval, and **Python/Pandas** for deterministic tabular analysis. Analytical results are transformed into textual explanations and structured artifacts such as charts and tables before being rendered through Streamlit.
 
 > [!IMPORTANT]
 > **Deterministic First, LLM Second**: All statistical calculations, dataset profiling, rule evaluations, and chart specifications are calculated **deterministically** using pure Python, Pandas, and immutable Pydantic v2 models. The LLM (Gemini via LangChain/LangGraph) serves purely as an intent router, query planner, and narrative synthesizer. This design completely eliminates mathematical hallucinations.
@@ -48,16 +45,18 @@ The platform enforces a strict architectural rule:
 
 ## 🎯 Problem Statement
 
-Traditional tabular data analysis requires users to manually load files, calculate missingness ratios, write complex Pandas transformation scripts, write visualization code, and interpret mathematical outputs.
+Traditional CSV analysis requires users to manually inspect schemas, write Pandas transformations, and generate visualization code.
 
 The **CSV Analytics Agent** provides a conversational workflow:
 
 ```text
 User Question
      ↓
-Agent Planning & Schema Retrieval
+Semantic Column Retrieval (Sentence Transformers + FAISS)
      ↓
-Deterministic Computation / AST Sandbox
+Agent Planning (LangGraph + Gemini)
+     ↓
+Deterministic Computation / AST Python Sandbox
      ↓
 Plotly / Matplotlib Visualization
      ↓
@@ -68,11 +67,11 @@ Natural-Language Explanation & Response Normalization
 
 ## ✨ Key Features
 
-- 📂 **Robust CSV Upload & Preprocessing**: Auto-detects encodings (`utf-8`, `latin-1`, `cp1252`), parses currency strings (`$1,099`), percentages (`64%`), and dates.
+- 📂 **CSV Dataset Upload**: Auto-detects encodings (`utf-8`, `latin-1`, `cp1252`), parses currency strings (`$1,099`), percentages (`64%`), and dates.
 - 📊 **Dataset Statistical DNA**: Computes summary statistics (row/col count, missingness ratios, cardinality, quantiles) without side effects.
-- 🔍 **Proactive Evidence Engine**: Business rules evaluate dataset profiles to synthesize ranked findings (`Insight`) paired with empirical data facts (`Evidence`).
-- 💬 **Natural Language Agent**: LangGraph state machine orchestrating query routing, semantic schema retrieval, planning, tool calls, and explanation synthesis.
-- 🧠 **FAISS Vector Schema Memory**: Local vector store (`SentenceTransformers`) indexing dataset column schemas for semantic retrieval during planning.
+- 💬 **Natural Language Queries**: Interactive conversational workflow powered by Gemini and LangGraph.
+- 🔎 **Semantic Column Retrieval**: Indexes column schemas into FAISS using Sentence Transformers (`all-MiniLM-L6-v2`) for schema discovery.
+- 🧠 **LangGraph State Machine**: Orchestrates query routing, semantic retrieval, planning, tool calls, and explanation synthesis.
 - 🔒 **Multi-Layer Python Execution Sandbox**: AST-validated Python code executor supporting isolated subprocesses (`SubprocessBackend`) or Docker containers (`DockerBackend`).
 - 📈 **Interactive Visual Analytics**: Renderer-agnostic chart recommender generating interactive Plotly charts and high-res Matplotlib PNGs.
 - 📋 **DataFrame & Artifact Protocol**: Structured `AgentResponse` encapsulating plain Markdown text narrative, interactive tables, charts, metrics, and download buttons.
@@ -81,44 +80,90 @@ Natural-Language Explanation & Response Normalization
 
 ---
 
-## ⚙️ How It Works
+## 🏗️ Architecture
 
-```mermaid
-flowchart TD
-    UserQuery["💬 User Query / Question"] --> AgentRuntime["🤖 LangGraph Agent Runtime"]
-    
-    subgraph Data Pipeline
-        RawCSV["📄 Raw CSV File"] --> Loader["🛡️ Data Loader & Coercion"]
-        Loader --> Profiler["📊 Dataset Profiler"]
-        Profiler --> Profile["❄️ Immutable DatasetProfile"]
-        Profile --> InsightsEngine["🔍 Insights Engine"]
-        Profile & InsightsEngine --> VizEngine["🎨 Visualization Engine"]
-    end
-
-    subgraph Vector Memory
-        Profile --> MemoryService["🧠 FAISS Vector Indexer"]
-        MemoryService --> VectorStore[("⚡ FAISS Vector Store")]
-    end
-
-    subgraph Agent Execution & Tooling
-        AgentRuntime --> RetrievalNode["🔍 Semantic Retrieval Node"]
-        VectorStore -.-> RetrievalNode
-        AgentRuntime --> CapabilityReg["⚡ Capability Registry"]
-        AgentRuntime --> PythonEngine["🔒 Security AST Sandbox"]
-        
-        PythonEngine --> ASTValidator{"🛡️ AST Pre-Validator"}
-        ASTValidator -->|Valid| SandboxBackend["🐳 Subprocess / Docker Sandbox"]
-        ASTValidator -->|Violation| ErrorResult["❌ PythonValidationError"]
-    end
-
-    CapabilityReg --> DeterministicResult["📦 ExecutionResult"]
-    SandboxBackend --> SandboxResult["📦 PythonExecutionResult"]
-    
-    DeterministicResult --> Explainer["💬 Synthesizer / Explainer Node"]
-    SandboxResult --> Explainer
-    Explainer --> Normalizer["🔄 Response Normalizer"]
-    Normalizer --> FinalResponse["🚀 Streamlit Renderer"]
+```text
+                         USER
+                           │
+                           ▼
+                     STREAMLIT UI
+                           │
+                           ▼
+                    CSV DATASET
+                           │
+                           ▼
+                    PANDAS DATAFRAME
+                           │
+                           ▼
+                 DATASET PROFILING
+                           │
+                           ▼
+                    USER QUESTION
+                           │
+                           ▼
+                      LANGGRAPH
+                           │
+                           ▼
+                SEMANTIC RETRIEVAL
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+              ▼                         ▼
+       Sentence Transformers          FAISS
+          Embeddings              Vector Store
+              │                         │
+              └────────────┬────────────┘
+                           ▼
+                 RELEVANT COLUMNS
+                           │
+                           ▼
+                        PLANNER
+                           │
+                           ▼
+                  PYTHON GENERATOR
+                           │
+                           ▼
+                    PANDAS ENGINE
+                           │
+                           ▼
+                  VERIFIED RESULTS
+                     │          │
+                     ▼          ▼
+              VISUALIZATION   GEMINI
+                              EXPLANATION
+                     │          │
+                     └────┬─────┘
+                          ▼
+                 RESPONSE NORMALIZER
+                          │
+                          ▼
+                    AGENT RESPONSE
+                          │
+                          ▼
+                     STREAMLIT UI
 ```
+
+---
+
+## 🔎 Semantic Column Retrieval
+
+The system contains a dedicated semantic retrieval layer (`src/csv_analytics_agent/memory/`):
+
+```text
+Column / Schema Text
+       ↓
+Sentence Transformer (all-MiniLM-L6-v2)
+       ↓
+Embedding Vector (384D)
+       ↓
+FAISS Vector Store (IndexFlatL2)
+       ↓
+Similarity Search
+       ↓
+Relevant Columns (retrieved_columns)
+```
+
+For full details on semantic retrieval, read [docs/semantic-retrieval.md](docs/semantic-retrieval.md).
 
 ---
 
@@ -126,31 +171,21 @@ flowchart TD
 
 ### Separation of Responsibilities
 
-| Component | Technology | Responsibility |
+| Layer | Technology | Responsibility |
 | :--- | :--- | :--- |
-| **LLM Orchestrator** | Google Gemini (`ChatGoogleGenerativeAI`) | Natural language intent routing, query planning, tool selection, and narrative synthesis. |
-| **Agent Workflow** | LangGraph `StateGraph` | Stateful execution graph, iteration control, memory retrieval nodes, and state checkpointing. |
-| **Vector Memory** | FAISS + `SentenceTransformers` | Indexes column schemas and metadata for semantic schema retrieval during planning. |
-| **Deterministic Engine** | Pandas & NumPy | Executes numerical calculations, aggregations, groupings, and statistics. |
-| **Security Sandbox** | AST Inspector + Docker / Subprocess | Safely executes LLM-generated Python analysis code in isolated boundaries. |
-| **Response Normalizer** | `result_normalizer.py` | Parses raw LLM block representations into plain Markdown, stripping internal metadata. |
-| **Presentation Layer** | Streamlit | Multi-page conversational UI rendering text, interactive charts, and DataFrames. |
-
----
-
-## 🧩 Prompting Strategy
-
-The agent uses structured prompt templates (`prompts/`) for analytical reasoning:
-
-1. **System Prompt (`prompts/agent/system.md`)**: Configures agent identity, analytical domain rules, tool selection criteria, and safety constraints.
-2. **Planning Prompt**: Directs the LLM to select appropriate capabilities (`AnalyticsEngine`, `VisualizationEngine`) or Python code execution.
-3. **Response Synthesis Prompt (`prompts/response/system.md`)**: Enforces text-first narrative explanations grounded in verified Pandas computation outputs.
+| **Semantic Retrieval** | Sentence Transformers + FAISS | Determine which dataset columns are semantically relevant |
+| **LLM Orchestrator** | Google Gemini (`ChatGoogleGenerativeAI`) | Understand natural language questions, plan analysis, and explain verified results |
+| **Agent Workflow** | LangGraph `StateGraph` | Manage node state transitions, iterations, and checkpointing |
+| **Analytical Engine** | Pandas & NumPy | Perform deterministic numerical operations, aggregations, and statistics |
+| **Security Sandbox** | AST Inspector + Docker / Subprocess | Safely execute LLM-generated Python analysis code |
+| **Response Normalizer** | `result_normalizer.py` | Parse raw content blocks into plain Markdown, stripping internal metadata |
+| **Presentation Layer** | Streamlit | Render text, interactive charts, DataFrames, and export buttons |
 
 ---
 
 ## 🔄 Response Normalization
 
-When modern LLMs (such as Google Gemini via `langchain-google-genai`) return content block structures, the raw representation contains internal metadata:
+When modern LLMs (such as Google Gemini via `langchain-google-genai`) return content block structures, raw representations contain internal metadata:
 
 ```python
 [
@@ -164,9 +199,8 @@ When modern LLMs (such as Google Gemini via `langchain-google-genai`) return con
 ]
 ```
 
-Without normalization, stringifying this object directly renders Python dictionary quotes in the UI.
+The normalization pipeline strips this metadata:
 
-### Implemented Normalization Pipeline:
 ```text
 Raw AIMessage / Content Blocks
               ↓
@@ -181,28 +215,13 @@ Raw AIMessage / Content Blocks
   st.markdown() UI Rendering
 ```
 
-For full normalization architecture details, inspect [docs/response-normalization.md](docs/response-normalization.md).
-
----
-
-## 📊 Visualization & Analytical Artifacts
-
-The system separates narrative explanations from structured analytical artifacts:
-
-| Analysis Task | Generated Artifact | Interactive Features |
-| :--- | :--- | :--- |
-| **Distribution Analysis** | Histogram Chart | Plotly hover tooltips, bin adjustments |
-| **Group Comparison** | Bar Chart | Interactive legend toggles, sorting |
-| **Correlation Analysis** | Scatter Plot / Heatmap | Trendlines, zoom, pan, hover metadata |
-| **Outlier Detection** | Box Plot | Spread inspection, outlier identification |
-| **Filtered Data View** | Bounded DataFrame Table | Interactive sorting, column search, CSV export |
-| **KPI Metrics** | Scalar Metric Card | Formatted numeric values with thousands separators |
+For full details on response normalization, see [docs/response-normalization.md](docs/response-normalization.md).
 
 ---
 
 ## 💬 Example Questions
 
-| Category | Example Question | Target Engine |
+| Category | Example Question | Target Capability |
 | :--- | :--- | :--- |
 | **Summary** | *"Give me a summary of this dataset."* | `DatasetProfiler` |
 | **Aggregation** | *"What is the average rating across all products?"* | `AnalyticsEngine.aggregate` |
@@ -211,58 +230,60 @@ The system separates narrative explanations from structured analytical artifacts
 | **Filtering** | *"Find products with discounts exceeding 50%."* | `AnalyticsEngine.filter` |
 | **Comparison** | *"Which product category has the highest average rating?"* | `AnalyticsEngine.groupby` + Bar Chart |
 | **Relationship** | *"Is price correlated with customer ratings?"* | `VisualizationEngine` (Scatter Plot) |
+| **Semantic Query** | *"Find columns related to customer satisfaction."* | Semantic FAISS Retrieval |
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Language** | Python 3.10+ | Core application and strict type checking |
-| **UI Framework** | Streamlit | Multi-page conversational analytics workspace |
-| **Data Processing** | Pandas & NumPy | Tabular data parsing, coercion, and computation |
-| **LLM Provider** | Google Gemini (`ChatGoogleGenerativeAI`) | Natural language intent routing and explanation synthesis |
-| **Agent Framework** | LangChain & LangGraph | Stateful agentic workflow, router, and tool execution loops |
-| **Vector Store** | FAISS (`faiss-cpu`) | Column schema semantic search index |
-| **Visualization** | Plotly & Matplotlib | High-resolution interactive charts and static PNGs |
-| **Sandboxing** | Subprocess / Docker (`DockerBackend`) | AST-validated isolated Python code execution |
-| **Testing** | pytest, Ruff, MyPy | Automated test suite (475 passed), linting, and type checking |
+| Layer | Technology |
+| :--- | :--- |
+| **Language** | Python 3.10+ |
+| **UI Framework** | Streamlit |
+| **Data Processing** | Pandas & NumPy |
+| **LLM Provider** | Google Gemini (`ChatGoogleGenerativeAI`) |
+| **LLM Core** | LangChain Core |
+| **Agent Orchestration** | LangGraph |
+| **Embeddings** | Sentence Transformers (`all-MiniLM-L6-v2`) |
+| **Vector Search** | FAISS Vector Store (`faiss-cpu`) |
+| **Visualization** | Plotly & Matplotlib |
+| **Sandboxing** | Subprocess / Docker (`DockerBackend`) |
+| **Testing** | pytest (475 passed tests), Ruff, MyPy |
 
 ---
 
-## 📁 Project Directory Structure
+## 📁 Project Structure
 
 ```text
 csv-analytics-agent/
-├── src/csv_analytics_agent/
-│   ├── config/             # Pydantic Settings & environment configuration
-│   ├── exceptions/         # Base exception hierarchy
-│   ├── llm/                # LangChain LLM abstraction & Gemini integration
-│   ├── preprocessing/      # CSV loading, encoding detection & coercion
-│   ├── profiler/           # Column statistical DNA & profiling
-│   ├── insights/           # Proactive business rules & evidence engine
-│   ├── visualization/      # Chart recommendation & Plotly/Matplotlib renderers
-│   ├── execution/          # CapabilityRegistry, AnalyticsEngine, PandasProvider
-│   ├── persistence/        # SQLite metadata storage & SHA256 hashing
-│   ├── memory/             # FAISS vector store & column semantic search
-│   ├── observability/      # LangSmith callback handlers & tracing setup
-│   ├── services/           # Result normalizer & API gateway converters
-│   ├── graph/              # LangGraph StateGraph & AgentRuntime engine
-│   └── python_engine/      # AST pre-validator, subprocess & Docker sandbox
-├── streamlit_app/          # Streamlit Multi-Page Web Application
-│   ├── app.py              # Application entrypoint
-│   ├── components/         # Reusable UI components
-│   ├── pages/              # Overview, Dataset, Insights, Chat, Settings
-│   └── services/           # Backend service bridge
-├── sandbox/                # Docker sandbox container build context
-├── docs/                   # Architecture, normalization & interview documentation
+│
+├── src/
+│   └── csv_analytics_agent/
+│       ├── graph/            # LangGraph StateGraph, retrieval, planner & runtime
+│       ├── memory/           # FAISS vector store, Sentence Transformers & embeddings
+│       ├── execution/        # CapabilityRegistry, AnalyticsEngine, PandasProvider
+│       ├── preprocessing/    # Data loading, encoding detection & coercion
+│       ├── profiler/         # Column statistical DNA & profiling
+│       ├── visualization/    # Chart recommendation & Plotly/Matplotlib renderers
+│       ├── services/         # Result normalizer & API gateway converters
+│       └── python_engine/    # AST pre-validator, subprocess & Docker sandbox
+│
+├── streamlit_app/            # Streamlit Multi-Page Web Application
+│   ├── app.py                # Application entrypoint
+│   ├── components/           # Reusable Streamlit UI components
+│   └── services/             # Backend service bridge
+│
+├── sandbox/                  # Docker sandbox container build context
+├── docs/                     # System architecture & documentation docs
 │   ├── architecture.md
+│   ├── langchain-langgraph.md
+│   ├── semantic-retrieval.md
 │   ├── response-normalization.md
 │   └── interview-guide.md
-├── tests/                  # Complete unit, integration, and evaluation suite (475 passed)
-├── .env.example            # Environment variable template
-├── pyproject.toml          # Project configuration (uv / hatchling)
-└── README.md               # Master GitHub README
+│
+├── tests/                    # Complete unit, integration, and memory test suite (475 passed)
+├── pyproject.toml            # Project configuration (uv / hatchling)
+└── README.md                 # Master GitHub README
 ```
 
 ---
@@ -272,25 +293,20 @@ csv-analytics-agent/
 ### 1. Prerequisites
 - **Python**: 3.10 or higher
 - **Package Manager**: [`uv`](https://github.com/astral-sh/uv) (recommended) or `pip`
-- **Docker** (optional, required only for containerized sandbox execution)
 
 ### 2. Clone & Install Dependencies
 
 ```bash
-# Clone the repository
 git clone https://github.com/Vishaldave45/CSV-Analytics-Agent.git
 cd CSV-Analytics-Agent
 
-# Install dependencies using uv (creates .venv automatically)
 uv sync
-
-# Or using standard pip
-pip install -e ".[dev]"
+# Or using pip: pip install -e ".[dev]"
 ```
 
 ### 3. Environment Configuration
 
-Copy `.env.example` to `.env` and add your API key:
+Copy `.env.example` to `.env` and configure your API key:
 
 ```bash
 cp .env.example .env
@@ -298,28 +314,11 @@ cp .env.example .env
 
 Edit `.env`:
 ```ini
-# Application & Gemini LLM Settings
 GOOGLE_API_KEY=AIzaSy_your_key_here
-
-# Python Execution Engine Sandbox Configuration
-PYTHON_EXECUTION_BACKEND=subprocess  # Options: 'subprocess' or 'container'
-PYTHON_SANDBOX_IMAGE=csv-analytics-python:latest
-PYTHON_SANDBOX_MEMORY_MB=512
-PYTHON_SANDBOX_CPU_LIMIT=1.0
-PYTHON_SANDBOX_TIMEOUT_SECONDS=30
-
-# LangSmith Tracing (Optional)
-LANGCHAIN_TRACING_V2=false
-LANGCHAIN_API_KEY=your_langsmith_key_here
+PYTHON_EXECUTION_BACKEND=subprocess
 ```
 
-### 4. Build Docker Sandbox Image (Optional)
-
-```bash
-docker build -t csv-analytics-python:latest ./sandbox
-```
-
-### 5. Launch Application
+### 4. Run Application
 
 ```bash
 uv run streamlit run streamlit_app/app.py
@@ -331,60 +330,45 @@ Open browser at `http://localhost:8501`.
 
 ## 🧪 Testing
 
-The repository maintains strict quality controls with 475 passing unit and integration tests:
-
 ```bash
-# 1. Run Ruff Linter & Format Check
-uv run ruff check src/ tests/
-uv run ruff format --check src/ tests/
+# Run pytest suite
+uv run pytest
 
-# 2. Run MyPy Static Type Checker (Strict Mode)
+# Run semantic retrieval & memory tests
+uv run pytest tests/memory/ -v
+
+# Run linting and type checks
+uv run ruff check .
 uv run mypy src/
-
-# 3. Run Pytest Suite
-uv run pytest -m "not llm" --cov=csv_analytics_agent --cov-report=term-missing
 ```
 
 ---
 
-## 📚 Deep Technical Documentation
-
-Comprehensive documentation is available in the `/docs` directory:
+## 📚 Detailed Documentation
 
 | Document | Description |
 | :--- | :--- |
-| **[docs/architecture.md](docs/architecture.md)** | End-to-end query execution pipeline, state machine nodes, and execution engine contracts. |
-| **[docs/response-normalization.md](docs/response-normalization.md)** | Text extraction cleaner (`_clean_text_content`), content block parsing, and `AgentResponse` contract. |
-| **[docs/interview-guide.md](docs/interview-guide.md)** | 30s/1m/3m technical project explanation, architectural design decisions, and system trade-offs. |
+| **[docs/architecture.md](docs/architecture.md)** | End-to-end system architecture and pipeline flow. |
+| **[docs/semantic-retrieval.md](docs/semantic-retrieval.md)** | Sentence Transformers + FAISS vector index architecture. |
+| **[docs/langchain-langgraph.md](docs/langchain-langgraph.md)** | LangGraph state machine, nodes, and LLM bindings. |
+| **[docs/response-normalization.md](docs/response-normalization.md)** | Text cleaner (`_clean_text_content`) and `AgentResponse` protocol. |
+| **[docs/interview-guide.md](docs/interview-guide.md)** | 30s/1m/3m technical project explanation & engineering decisions. |
 
 ---
 
 ## ⚠️ Limitations
 
-- **Memory Constraints**: Processes datasets in-memory using Pandas; optimal performance for CSVs up to 1GB.
-- **File Formats**: Designed specifically for tabular `.csv` datasets.
-- **Sandbox Caps**: Dynamic code execution is restricted to 30 seconds and 512MB RAM memory limits.
+- **In-Memory Scale**: Optimized for CSV datasets up to 1GB loaded into memory.
+- **Execution Timeout**: Dynamic Python code execution is capped at 30 seconds and 512MB RAM.
 
 ---
 
 ## 🗺️ Future Roadmap
 
-- [ ] **Multi-Format Ingestion**: Support for Parquet, Excel (`.xlsx`), and JSON datasets.
-- [ ] **Database Connectors**: Direct querying for PostgreSQL, Snowflake, and BigQuery databases.
-- [ ] **MicroVM Isolation**: Integration with gVisor / Firecracker microVM execution sandboxes.
-- [ ] **Multi-Table Analytics**: Multi-file relational joins and schema mapping.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/amazing-feature`).
-3. Ensure formatting and type checks pass (`uv run ruff check src/ tests/` & `uv run mypy src/`).
-4. Run unit tests (`uv run pytest`).
-5. Open a Pull Request.
+- [ ] Support Parquet, Excel (`.xlsx`), and JSON formats
+- [ ] Connectors for PostgreSQL, Snowflake, and BigQuery
+- [ ] Pluggable vector store backends (Chroma / Qdrant)
+- [ ] MicroVM sandbox execution (gVisor / Firecracker)
 
 ---
 
