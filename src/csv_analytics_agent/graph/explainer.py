@@ -154,7 +154,38 @@ def explainer_node(
         return {"messages": [fallback_msg]}
 
     # Payloads are not checkpointed; the UI rehydrates them from its runtime store.
-    return {"messages": [AIMessage(content=checkpoint_result["narrative"])]}
+    narrative_text = str(checkpoint_result.get("narrative", ""))
+
+    # If LLM is available and narrative needs rich synthesis, invoke LLM explanation writer
+    if llm is not None and narrative_text:
+        try:
+            from csv_analytics_agent.prompts import get_response_prompt
+            from langchain_core.messages import SystemMessage, HumanMessage
+
+            sys_prompt = get_response_prompt()
+            user_question = ""
+            for m in reversed(messages):
+                if getattr(m, "type", "") == "human" or m.__class__.__name__ == "HumanMessage":
+                    user_question = str(getattr(m, "content", ""))
+                    break
+
+            evidence_summary = (
+                f"User Question: {user_question}\n\n"
+                f"Verified Execution Result Narrative:\n{narrative_text}\n\n"
+                f"Execution Metadata:\n{checkpoint_result.get('metadata', {})}"
+            )
+
+            response_msg = llm.invoke([
+                SystemMessage(content=sys_prompt),
+                HumanMessage(content=evidence_summary),
+            ])
+            extracted_narrative = response_msg.content if hasattr(response_msg, "content") else str(response_msg)
+            if extracted_narrative and str(extracted_narrative).strip():
+                return {"messages": [AIMessage(content=str(extracted_narrative).strip())]}
+        except Exception:
+            pass
+
+    return {"messages": [AIMessage(content=narrative_text)]}
 
 
 __all__ = [

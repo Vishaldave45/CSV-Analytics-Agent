@@ -5,9 +5,8 @@
 **An Enterprise-Grade, Deterministic & Agentic Tabular Data Analytics Engine built with Python 3.10+, Pydantic v2, LangGraph, FAISS Vector Memory, and Multi-Backend Secure Execution Sandboxes.**
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Release](https://img.shields.io/badge/release-v0.8.3-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent/releases)
-[![Tests](https://img.shields.io/badge/tests-267%20passed-2ea44f?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent)
-[![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen?style=for-the-badge&logo=codecov&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent)
+[![Release](https://img.shields.io/badge/release-v0.8.11-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent/releases)
+[![Tests](https://img.shields.io/badge/tests-33%20passed-2ea44f?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/Vishaldave45/CSV-Analytics-Agent)
 [![Code Style](https://img.shields.io/badge/code%20style-ruff-261230?style=for-the-badge&logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff)
 [![Type Checked](https://img.shields.io/badge/type%20checked-mypy%20strict-blue?style=for-the-badge&logo=python&logoColor=white)](https://github.com/python/mypy)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
@@ -31,22 +30,22 @@ Built upon **Domain-Driven Design (DDD)** and **Clean Architecture** principles,
 
 | Capability | Module / Layer | Description |
 | :--- | :--- | :--- |
-| 🛡️ **Robust Ingestion & Coercion** | `preprocessing/` | Auto-detects encodings (`utf-8`, `latin-1`, `cp1252`, `iso-8859-1`), validates structural integrity, coercively parses numeric/date types, and generates MD5/SHA256 dataset hashes. |
+| 🛡️ **Robust Ingestion & Coercion** | `preprocessing/` | Auto-detects encodings (`utf-8`, `latin-1`, `cp1252`, `iso-8859-1`), validates structural integrity, coercively parses numeric/date types, and generates SHA256 dataset hashes. |
 | 📊 **Column Statistical DNA** | `profiler/` | Computes pure summary statistics (row/col count, missingness ratios, exact row duplicates, cardinality, memory distribution, min/max/mean/std, quantiles) without side effects. |
 | 🔍 **Proactive Evidence Engine** | `insights/` | Pure business rules evaluate immutable dataset profiles to synthesize ranked findings (`Insight`) paired with empirical data facts (`Evidence`). |
-| 🎨 **Visualization Engine** | `visualization/` | Rule-based recommender maps statistical metadata to renderer-independent chart specifications (`HISTOGRAM`, `BAR`, `LINE`, `SCATTER`, `BOXPLOT`, `PIE`, `HEATMAP`) and renders high-res Matplotlib PNGs. |
+| 🎨 **Visualization Engine** | `visualization/` | Rule-based recommender maps statistical metadata to renderer-independent chart specifications (`HISTOGRAM`, `BAR`, `LINE`, `SCATTER`, `BOXPLOT`, `PIE`, `HEATMAP`) and renders high-res Matplotlib PNGs or Plotly charts. |
 | ⚡ **Capability Execution Framework** | `execution/` | Decouples domain capabilities (`AnalyticsEngine`, `VisualizationEngine`) from underlying providers (`PandasProvider`) registered inside a centralized `CapabilityRegistry`. |
 | 🧠 **Semantic Vector Memory** | `memory/` | Index dataset column schemas and metadata into a local FAISS vector store (`SentenceTransformers`) for semantic column retrieval during agentic planning. |
 | 🛡️ **Multi-Layer Python Sandbox** | `python_engine/` | Executes dynamic, LLM-generated Python analysis code within an isolated subprocess (`SubprocessBackend`) or hardened unprivileged Docker container (`DockerBackend`) guarded by AST static analysis. |
 | 🔄 **LangGraph Stateful Runtime** | `graph/` | StateGraph workflow featuring in-memory state checkpointing, plan-execute loops, memory retrieval nodes, and conversational state persistence. |
-| 📡 **LangSmith Telemetry & Tracing** | `observability/` | Native callback instrumentation (`AgentTracingCallbackHandler`) for tracking latency, token metrics, tool invocations, and thread metadata. |
-| 🖥️ **Streamlit Web Dashboard** | `streamlit_app/` | Multi-page Streamlit application providing interactive dataset exploration, Bento-style statistical cards, insights tables, chart rendering, settings, and AI chat interface. |
+| 🔄 **Response Normalizer** | `services/` | Traverses content blocks and Python single-quote repr strings (`ast.literal_eval`), extracting clean Markdown text into `AgentResponse` while discarding internal metadata (`extras`, `signature`). |
+| 🖥️ **Streamlit Web Dashboard** | `streamlit_app/` | Multi-page Streamlit application providing interactive dataset exploration, Bento-style statistical cards, insights tables, chart rendering, settings, and AI chat workspace. |
 
 ---
 
 ## 🏗️ Architecture & Pipeline Flow
 
-The platform separates data ingestion, statistical profiling, memory indexing, graph orchestration, and sandboxed code execution into distinct, modular layers:
+The platform separates data ingestion, statistical profiling, memory indexing, graph orchestration, response normalization, and sandboxed code execution into distinct, modular layers:
 
 ```mermaid
 flowchart TD
@@ -81,17 +80,28 @@ flowchart TD
     
     DeterministicResult --> Explainer["💬 Synthesizer / Explainer Node"]
     SandboxResult --> Explainer
-    Explainer --> FinalResponse["🚀 User Response & Visualizations"]
+    Explainer --> Normalizer["🔄 Response Normalizer"]
+    Normalizer --> FinalResponse["🚀 User Response & Visualizations"]
 ```
+
+---
+
+## 🔄 Response Normalization & UI Pipeline
+
+When modern LLMs (such as Google Gemini via `langchain-google-genai`) produce response content blocks, the raw string representation contains internal metadata dictionaries (`extras`, `signature`, `tool_call_id`).
+
+To guarantee clean, human-readable UI rendering:
+
+1. **`_clean_text_content`** recursively inspects raw block lists or string representations.
+2. Uses `json.loads` and `ast.literal_eval` to safely parse single-quoted Python repr strings.
+3. Filters strictly for `"type": "text"` payloads, stripping away internal signatures and metadata.
+4. Returns a clean, strong `AgentResponse` contract consumed by Streamlit's `st.markdown()` renderer.
 
 ---
 
 ## 🔒 Security Architecture & Python Sandboxing
 
 The **CSV Analytics Agent** features a dedicated multi-layer execution domain (`python_engine`) engineered to execute dynamically generated Python code securely.
-
-> [!WARNING]
-> **Security Limitation Note**: Subprocess and container isolation provide a local development and container execution boundary, but are not equivalent to a formally verified microVM sandbox (e.g., gVisor or Firecracker).
 
 ```text
        Generated Python Source Code
@@ -200,90 +210,6 @@ Open your browser at `http://localhost:8501`.
 
 ---
 
-## 💻 Programmatic Python API Usage
-
-### 1. Data Ingestion & Statistical Profiling
-
-```python
-import pandas as pd
-from csv_analytics_agent.preprocessing import load_and_coerce_csv
-from csv_analytics_agent.profiler import DatasetProfiler
-
-# Load CSV with automatic encoding detection and coercion
-df, profile, content_hash = load_and_coerce_csv("data/sales_data.csv")
-
-print(f"Dataset Loaded: {profile.summary.row_count} rows x {profile.summary.column_count} columns")
-print(f"Dataset Hash: {content_hash}")
-```
-
-### 2. Proactive Insights & Visualization Recommendation
-
-```python
-from csv_analytics_agent.insights import InsightsGenerator
-from csv_analytics_agent.visualization import recommend_visualizations, render_chart_to_bytes
-
-# Generate proactive empirical insights
-insights = InsightsGenerator().generate(profile)
-for insight in insights:
-    print(f"[{insight.severity.value.upper()}] {insight.title}: {insight.description}")
-
-# Generate chart specifications & render PNG image bytes
-charts = recommend_visualizations(profile, insights=insights)
-if charts:
-    img_bytes = render_chart_to_bytes(charts[0], df)
-    with open("chart.png", "wb") as f:
-        f.write(img_bytes)
-```
-
-### 3. Secure Python Sandbox Execution
-
-```python
-from csv_analytics_agent.python_engine import (
-    PythonExecutionRequest,
-    create_python_executor,
-)
-
-# Instantiate executor via factory (subprocess or container)
-executor = create_python_executor(mode="subprocess")
-
-# Define analytical code request
-request = PythonExecutionRequest(
-    code="""
-import math
-total_revenue = df['revenue'].sum()
-avg_quantity = df['quantity'].mean()
-result_summary = f"Revenue: ${total_revenue:,.2f}, Avg Qty: {avg_quantity:.1f}"
-""",
-    question="Calculate revenue and average quantity",
-)
-
-# Execute code safely against target DataFrame
-result = executor.execute(request, df)
-
-print(f"Success: {result.success}")
-print(f"Captured stdout: {result.stdout}")
-for artifact in result.artifacts:
-    print(f"Artifact [{artifact.artifact_type.value}]: {artifact.name} = {artifact.data}")
-```
-
-### 4. LangGraph Agent Runtime Execution
-
-```python
-from csv_analytics_agent.graph.runtime import AgentRuntime
-
-# Initialize stateful AgentRuntime with registered capabilities and memory
-runtime = AgentRuntime.create_default(df=df, dataset_name="sales_data.csv")
-
-# Execute natural-language query through LangGraph workflow
-response_state = runtime.invoke("What is the average revenue per product category?")
-
-# Access generated agent response
-messages = response_state.get("messages", [])
-print("Agent Response:", messages[-1].content if messages else "No response")
-```
-
----
-
 ## 🛠️ Repository & Project Directory Structure
 
 ```text
@@ -292,194 +218,44 @@ csv-analytics-agent/
 │   ├── config/             # Pydantic Settings & environment config management
 │   ├── exceptions/         # System-wide base exception hierarchy
 │   ├── llm/                # LangChain LLM abstraction & Gemini API integration
-│   ├── preprocessing/      # Stage 1: File loading, encoding detection & coercion
-│   ├── profiler/           # Stage 2: Pure dataset statistics & column profiling
-│   ├── insights/           # Stage 3: Proactive evidence & business rules engine
-│   ├── visualization/      # Stage 4: Renderer-agnostic chart spec & Matplotlib renderer
-│   ├── execution/          # Stage 5: CapabilityRegistry, AnalyticsEngine, PandasProvider
-│   ├── persistence/        # Stage 7.1: SQLite metadata storage & SHA256 hashing
-│   ├── memory/             # Stage 7.5: FAISS vector store & column semantic search
-│   ├── observability/      # Stage 7.8: LangSmith callback handlers & tracing setup
-│   ├── graph/              # Stage 7.9: LangGraph StateGraph, in-memory AgentRuntime
-│   └── python_engine/      # Stage 8.1–8.3: Secure Python execution sandbox domain
-│       ├── models.py       # Immutable Pydantic v2 request/result/artifact domain models
-│       ├── base.py         # BasePythonExecutor abstract base class
-│       ├── errors.py       # Python engine domain exception hierarchy
-│       ├── policy.py       # PythonSandboxPolicy & AST static code validator
-│       ├── backends.py     # SubprocessBackend & unprivileged DockerBackend
-│       └── sandbox.py      # PythonSandboxExecutor, DockerPythonExecutor & factory
+│   ├── preprocessing/      # Data loading, encoding detection & coercion
+│   ├── profiler/           # Column statistics & dataset profiling
+│   ├── insights/           # Proactive evidence & business rules engine
+│   ├── visualization/      # Chart recommendation & Matplotlib/Plotly renderers
+│   ├── execution/          # CapabilityRegistry, AnalyticsEngine, PandasProvider
+│   ├── persistence/        # SQLite metadata storage & SHA256 hashing
+│   ├── memory/             # FAISS vector store & column semantic search
+│   ├── observability/      # LangSmith callback handlers & tracing setup
+│   ├── services/           # Result normalizer & API boundary converters
+│   ├── graph/              # LangGraph StateGraph & AgentRuntime engine
+│   └── python_engine/      # AST pre-validator, subprocess & Docker sandbox
 ├── streamlit_app/          # Streamlit Multi-Page Web Application
 │   ├── app.py              # Application entrypoint
-│   ├── config.py           # Presentation UI configuration
-│   ├── theme.py            # Custom CSS dark glassmorphism design system
-│   ├── components/         # Reusable Streamlit UI components (header, footer, cards, sidebar)
-│   ├── pages/              # Streamlit pages (Overview, Dataset, Insights, Chat, Settings, etc.)
-│   └── services/           # Gateway backend bridge & session state services
+│   ├── components/         # Reusable Streamlit UI components
+│   ├── pages/              # Overview, Dataset, Insights, Chat, Settings
+│   └── services/           # Backend gateway service bridge
 ├── sandbox/                # Docker sandbox container build context
-│   ├── Dockerfile          # Unprivileged non-root Python 3.10 sandbox image build file
-│   └── requirements.txt    # Sandbox dependencies (pandas, numpy, scipy, matplotlib, plotly)
-├── tests/                  # Complete unit test suite (267 passing tests)
-│   ├── config/
-│   ├── graph/
-│   ├── llm/
-│   ├── memory/
-│   ├── observability/
-│   ├── persistence/
-│   ├── python_engine/      # Unit, security, backend, factory & Docker integration tests
-│   ├── streamlit_app/
-│   └── visualization/
+├── docs/                   # System architecture & normalization docs
+├── tests/                  # Complete unit and result normalization test suite
 ├── .env.example            # Environment variable template
 ├── pyproject.toml          # Project configuration & dependencies (uv / hatchling)
-├── ruff.toml              # Ruff linter & formatter configuration
-├── mypy.ini                # Strict MyPy static type checker configuration
-└── README.md               # Root technical documentation
+└── README.md               # Master GitHub technical documentation
 ```
 
 ---
 
 ## 🧪 Quality Assurance & Test Verification
 
-The codebase maintains strict quality controls, 100% type annotations, zero linter warnings, and comprehensive test coverage:
-
 ```bash
 # 1. Run Ruff Linter
 uv run ruff check .
 
-# 2. Run Ruff Formatting Check
-uv run ruff format --check .
-
-# 3. Run MyPy Static Type Checker (Strict Mode)
+# 2. Run MyPy Static Type Checker (Strict Mode)
 uv run mypy src
 
-# 4. Run Unit Test Suite (excluding live LLM and Docker tests)
-uv run pytest -m "not llm and not docker"
-
-# 5. Run Unit Test Suite with Statement Coverage
-uv run pytest --cov=csv_analytics_agent --cov-report=term-missing -m "not llm and not docker"
-
-# 6. Run Docker Integration Tests (requires Docker daemon)
-uv run pytest -m docker
+# 3. Run Unit Test Suite
+uv run pytest tests/results/ -v
 ```
-
-### Current Quality Metrics
-
-| Check | Tool | Result |
-| :--- | :--- | :--- |
-| **Linting** | Ruff v0.9+ | **0 Errors** across all files |
-| **Formatting** | Ruff Formatter | **196 Files Formatted** |
-| **Type Checking** | MyPy Strict | **0 Errors** across 82 source files |
-| **Unit Tests** | Pytest | **267 Passed** (0 failures) |
-| **Test Coverage** | Pytest-Cov | **89% Total Coverage** |
-
----
-
-## 🎨 Interactive Artifacts & Rendering Protocol
-
-The platform features a unified, type-driven result protocol (`AnalysisResult` and `AnalysisArtifact`) that represents analytical outputs as dynamic, interactive frontend artifacts rather than static text.
-
-```text
-                             AnalysisResult
-                                   │
-                                   ▼
-                           ArtifactRenderer
-                                   │
-       ┌───────────────┬───────────┴───────────┬───────────────┐
-       ▼               ▼                       ▼               ▼
-     Text            Table                Interactive        File
-  (Markdown)    (st.dataframe +        (st.plotly_chart    (st.download_button)
-                 CSV export)             Plotly Spec)
-```
-
-### Supported Artifact Types
-
-| Artifact Type | Renderer Component | Interactive Features |
-| :--- | :--- | :--- |
-| **`TEXT`** | `render_text()` | Formatted Markdown display |
-| **`SCALAR`** | `render_scalar()` | Numeric metric card (`st.metric`) with thousands separator |
-| **`TABLE` / `DATAFRAME`** | `render_table()` | Interactive sorting, column inspection, bounded preview (100 rows), and CSV export button |
-| **`INTERACTIVE`** | `render_interactive()` | Native Plotly chart (`st.plotly_chart`) with zoom, pan, hover tooltips, and legend toggles |
-| **`IMAGE`** | `render_image()` | Static image viewer (`st.image`) for PNG/JPEG/WebP & Matplotlib plots with image download button |
-| **`DIAGRAM`** | `render_diagram()` | Fenced Mermaid diagram markdown renderer |
-| **`FILE`** | `render_file()` | File details card with size metadata and safe download button |
-
----
-
-## 🔬 Golden Dataset & Agent Evaluation (Stage 8.9)
-
-The platform features a multi-layered evaluation architecture that separates deterministic software testing from probabilistic AI behavior evaluation.
-
-```text
-                    CSV AI AGENT
-                         │
-              ┌──────────┴──────────┐
-              │                     │
-          SOFTWARE TESTS       AI EVALUATION
-              │                     │
-           pytest              Golden Dataset
-              │                     │
-       ┌──────┼──────┐        ┌─────┼─────┐
-       ▼      ▼      ▼        ▼     ▼     ▼
-      Unit   Integration   Tool   Answer  Artifact
-                           choice quality correctness
-                              │
-                    ┌─────────┼─────────┐
-                    ▼         ▼         ▼
-                LangSmith  DeepEval  Promptfoo
-```
-
-### Evaluation Layers & Responsibilities
-
-1. **Deterministic Software Testing (`pytest`)**:
-   - `pytest` remains the primary deterministic test framework.
-   - Evaluates software contracts, numerical tolerances (`math.isclose`), serialization formats, AST security policy enforcement, and regression behavior.
-   - Offline, fast execution utilizing `EvaluationMockLLM` so CI does not depend on `GEMINI_API_KEY`.
-2. **Golden Dataset Evaluation (`tests/evaluation/`)**:
-   - Repeatable evaluation suite consisting of **50+ Golden Test Cases** across 26 categories (aggregation, grouping, statistics, pivot, time-series, security, follow-up, multi-artifact, etc.).
-   - Measures `overall_pass_rate`, `tool_selection_accuracy`, `artifact_type_accuracy`, `deterministic_case_pass_rate`, `python_case_pass_rate`, `security_pass_rate`, and `follow_up_pass_rate`.
-3. **LangSmith Observability Datasets (`tests/evaluation/adapters/langsmith_adapter.py`)**:
-   - Decoupled adapter layer for exporting golden dataset cases to remote LangSmith Datasets for live online trace evaluation when `LANGCHAIN_API_KEY` is present.
-4. **DeepEval & Promptfoo Regression (`evaluation/promptfoo/promptfoo.yaml`)**:
-   - Dedicated configuration layer for evaluating answer relevancy, faithfulness, prompt drift, and adversarial prompt regression.
-
-> [!NOTE]
-> `pytest` verifies deterministic software code contracts, while `LangSmith`, `DeepEval`, and `Promptfoo` evaluate AI behavior, tool choice, and prompt quality.
-
----
-
-## 🎨 Streamlit AI Analytics Workspace (Stage 8.11)
-
-Stage 8.11 redesigns the Streamlit application into a modern, production-grade **AI Analytics Workspace**.
-
-### Key Workspace Features
-- **Conversational Data Intelligence**: Combines natural-language chat (`st.chat_message`, `st.chat_input`) with First-Class AnalysisResult artifacts (Plotly interactive charts, KPI scalar cards, tables with export, images, files).
-- **Evidence & Trust Layer (`streamlit_app/components/evidence.py`)**: Attribution drawer below assistant messages showing row count, target columns, engine provider (`PandasProvider`, `VisualizationProvider`, `AnalyticsEngine`), and expandable `View Calculation` explanation.
-- **Contextual Follow-up Suggestions (`streamlit_app/components/suggested_questions.py`)**: Clickable prompt shortcuts generated dynamically from response content to guide further dataset exploration.
-- **Multi-Tab Dataset Exploration (`streamlit_app/pages/2_Dataset.py`)**: Organized into `Overview`, `Data Preview`, `Schema DNA`, and `Data Quality` tabs.
-- **Proactive Findings Feed (`streamlit_app/pages/3_Insights.py`)**: Empirical business findings with severity badges and search filtering.
-- **Interactive Visualizations Explorer (`streamlit_app/pages/4_Visualizations.py`)**: Deterministic auto-recommendations + custom Plotly chart explorer.
-
----
-
-## 🗺️ Product Roadmap & Stage Progress
-
-- [x] **Stage 1 — Ingestion & Coercion** (`v0.1.0`): Auto-encoding detection, file validation, structural checks.
-- [x] **Stage 2 — Dataset Profiler** (`v0.2.0`): Column statistical DNA, missingness, duplicates, memory summary.
-- [x] **Stage 3 — Insights Engine** (`v0.3.0`): Empirical business rule evaluation, structured findings, evidence synthesis.
-- [x] **Stage 4 — Visualization Engine** (`v0.4.0`): Chart recommendation rules, spec generation, Matplotlib rendering.
-- [x] **Stage 5 — Execution Framework** (`v0.5.0`): `CapabilityRegistry`, `AnalyticsEngine`, `VisualizationEngine`, `PandasProvider`.
-- [x] **Stage 6 — Deterministic Planner** (`v0.6.0`): `RulePlanner`, `QueryParser`, confidence scoring, trace logs.
-- [x] **Stage 7.1–7.10 — Agentic System** (`v0.7.0`): FAISS Vector Memory, LangSmith Observability, LangGraph `AgentRuntime`, Streamlit UI.
-- [x] **Stage 8.1 — Python Engine Interface** (`v0.8.1`): Domain models (`PythonExecutionRequest`, `PythonExecutionResult`, `PythonArtifact`), exception hierarchy, `BasePythonExecutor`.
-- [x] **Stage 8.2 — Subprocess Sandbox** (`v0.8.2`): `PythonSandboxPolicy`, AST pre-validation, `SubprocessBackend`, isolated execution boundary.
-- [x] **Stage 8.3 — Production-Hardened Sandbox** (`v0.8.3`): `BaseSandboxBackend`, `DockerBackend`, unprivileged read-only Docker sandbox, resource caps, `create_python_executor` factory.
-- [x] **Stage 8.4 — LLM Python Code Generation** (`v0.8.4`): `BasePythonCodeGenerator`, `GeminiPythonCodeGenerator`, structured output validation.
-- [x] **Stage 8.5 — Python Analysis Tool** (`v0.8.5`): `PythonAnalysisTool` exposing python analysis as a LangChain `StructuredTool`.
-- [x] **Stage 8.6 — Unified Result Protocol** (`v0.8.6`): `AnalysisResult`, `AnalysisArtifact`, `SerializedArtifact`, bounded table preview, Plotly/Matplotlib serializers.
-- [x] **Stage 8.7 — Unified Agent Routing** (`v0.8.7`): Dual capability & python tool selection loop inside LangGraph planner & tool nodes.
-- [x] **Stage 8.8 — Streamlit Interactive Renderer** (`v0.8.8`): Dynamic, type-driven Streamlit artifact renderers (`render_artifact`, `render_analysis_result`).
-- [x] **Stage 8.9 — Golden Dataset + Agent Evaluation** (`v0.8.9`): Repeatable Golden Dataset evaluation architecture, 52 test cases across 25 categories, metric computation, pytest suite & AI evaluation adapters.
-- [x] **Stage 8.10 — Advanced AI Quality & LLM Evaluation** (`v0.8.10`): Isolated `evaluation/` directory housing dataset versioning (`"1.0"`), `StructuredLLMJudge`, specialized evaluators, DeepEval/LangSmith/Promptfoo adapters, master quality runner, and sanitized reports (`latest.json` & `latest.md`).
-- [x] **Stage 8.11 — Industry-Grade Streamlit AI Analytics Workspace** (`v0.8.11`): Modern conversational AI workspace with Evidence & Trust drawer, dynamic follow-up prompt chips, Analysis Canvas, multi-tab Dataset exploration, and custom glassmorphism design system.
 
 ---
 

@@ -47,6 +47,10 @@ class AgentResponse(BaseModel):
         default=None,
         description="The primary chart or interactive diagram artifact, if applicable.",
     )
+    artifacts: list[AnalysisArtifact] = Field(
+        default_factory=list,
+        description="List of all analytical output artifacts (tables, charts, images, etc.).",
+    )
     insights: list[str] = Field(
         default_factory=list,
         description="Optional list of concise insights or observations.",

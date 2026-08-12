@@ -124,3 +124,27 @@ def test_normalize_table_and_chart() -> None:
     assert response.type == AgentResponseType.TABLE_AND_CHART
     assert response.table is not None
     assert response.visualization is not None
+    assert len(response.artifacts) == 2
+    assert response.artifacts[0].artifact_id == "t1"
+    assert response.artifacts[1].artifact_id == "c1"
+
+
+def test_normalize_raw_json_block_message() -> None:
+    """Verify raw block JSON lists are recursively parsed into clean text."""
+    state = create_initial_state()
+    state["messages"] = [AIMessage(content='[{"type": "text", "text": "This is a clean explanation narrative."}]')]
+
+    response = normalize_state_to_response(state)
+    assert response.type == AgentResponseType.TEXT
+    assert response.answer == "This is a clean explanation narrative."
+
+
+def test_normalize_python_repr_block_message() -> None:
+    """Verify Python repr single-quote string representations with extras are parsed cleanly."""
+    state = create_initial_state()
+    raw_repr = "[{'type': 'text', 'text': 'Clean narrative text.', 'extras': {'signature': 'EI4K...'}}]"
+    state["messages"] = [AIMessage(content=raw_repr)]
+
+    response = normalize_state_to_response(state)
+    assert response.type == AgentResponseType.TEXT
+    assert response.answer == "Clean narrative text."

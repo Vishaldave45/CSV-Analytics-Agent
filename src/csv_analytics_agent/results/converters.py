@@ -144,7 +144,21 @@ def python_result_to_analysis_result(
     narrative = res.stdout.strip()
     if not narrative:
         if status == AnalysisStatus.SUCCESS:
-            narrative = "Python analysis executed successfully."
+            # Generate a specific narrative from artifacts if available
+            descriptions: list[str] = []
+            for art in artifacts:
+                if art.artifact_type in (PythonArtifactType.SCALAR, PythonArtifactType.TEXT) and art.payload is not None:
+                    descriptions.append(f"The calculated value for **{art.title}** is **{art.payload}**.")
+                elif art.artifact_type in (PythonArtifactType.TABLE, PythonArtifactType.DATAFRAME) and art.payload is not None:
+                    row_cnt = len(art.payload) if isinstance(art.payload, pd.DataFrame) else art.metadata.get("row_count", "")
+                    descriptions.append(f"Generated data table **{art.title}** ({row_cnt} records).")
+                elif art.artifact_type in (PythonArtifactType.IMAGE, PythonArtifactType.INTERACTIVE):
+                    descriptions.append(f"Generated chart visualization **{art.title}**.")
+
+            if descriptions:
+                narrative = " ".join(descriptions)
+            else:
+                narrative = "Analysis executed successfully."
         else:
             narrative = res.error_message or "Python analysis execution failed."
 
@@ -242,6 +256,32 @@ def deterministic_result_to_analysis_result(
                         downloadable=True,
                     )
                 )
+            elif "columns" in dict_data and isinstance(dict_data["columns"], list):
+                # Format 'describe' schema profile dict into a clean tabular DataFrame artifact
+                cols_list = dict_data["columns"]
+                formatted_rows = []
+                for col in cols_list:
+                    num_stats = col.get("numeric_stats") or {}
+                    cat_stats = col.get("categorical_stats") or {}
+                    row_item = {
+                        "Column": col.get("name"),
+                        "Data Type": col.get("dtype"),
+                        "Missing (%)": f"{col.get('missing_percentage', 0):.1f}%",
+                        "Unique Values": col.get("unique_count"),
+                        "Mean / Top": num_stats.get("mean") if num_stats.get("mean") is not None else cat_stats.get("top"),
+                        "Min": num_stats.get("min"),
+                        "Max": num_stats.get("max"),
+                    }
+                    formatted_rows.append(row_item)
+                desc_df = pd.DataFrame(formatted_rows)
+                artifacts.append(
+                    dataframe_to_analysis_artifact(
+                        desc_df,
+                        name="dataset_summary",
+                        title="Dataset Column Summary",
+                        description="Comprehensive column schema breakdown including datatypes, missingness, and key statistics.",
+                    )
+                )
             else:
                 artifacts.append(
                     AnalysisArtifact(
@@ -259,6 +299,16 @@ def deterministic_result_to_analysis_result(
         if status == AnalysisStatus.SUCCESS
         else "Deterministic capability execution failed."
     )
+    if capability_name == "describe" and isinstance(res.data, dict) and "summary" in res.data:
+        summ = res.data["summary"]
+        r_cnt = summ.get("row_count", 0)
+        c_cnt = summ.get("column_count", 0)
+        missing_cnt = summ.get("total_missing_values", 0)
+        narrative = (
+            f"Here is the dataset summary overview. The dataset contains **{r_cnt:,} rows** and **{c_cnt} columns** "
+            f"with **{missing_cnt:,} missing values** across all fields.\n\n"
+            f"Below is the complete breakdown of column data types, missingness, and summary statistics:"
+        )
 
     return AnalysisResult(
         status=status,

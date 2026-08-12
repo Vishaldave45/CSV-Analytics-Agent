@@ -38,29 +38,33 @@ def render_agent_response(
                 st.caption(response.calculation)
         return
 
-    # 2. Render Text / Answer
+    # 2. Render Text / Answer Narrative
     if response.answer:
-        st.markdown(
-            f"""
-            <div style="font-size: 0.95rem; color: #e2e8f0; line-height: 1.6; margin-bottom: 0.75rem;">
-                {response.answer}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(response.answer)
 
-    # 3. Render Artifacts (Table, Chart, Scalar)
+    # 3. Render Artifacts (Table, Chart, Scalar, Images, etc.)
     has_artifacts = False
 
-    if response.table:
-        st.write("")
-        render_artifact(response.table)
-        has_artifacts = True
+    rendered_ids: set[str] = set()
 
-    if response.visualization:
-        st.write("")
-        render_artifact(response.visualization)
-        has_artifacts = True
+    if response.artifacts:
+        for artifact in response.artifacts:
+            art_id = getattr(artifact, "artifact_id", None) or str(id(artifact))
+            if art_id not in rendered_ids:
+                st.write("")
+                render_artifact(artifact)
+                rendered_ids.add(art_id)
+                has_artifacts = True
+    else:
+        if response.table:
+            st.write("")
+            render_artifact(response.table)
+            has_artifacts = True
+
+        if response.visualization:
+            st.write("")
+            render_artifact(response.visualization)
+            has_artifacts = True
 
     # 4. Render Insights
     if response.insights:
